@@ -1,0 +1,27 @@
+﻿<Page x:Class="MLM2PRO_BT_APP.AboutPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d" 
+      d:DesignHeight="720" d:DesignWidth="1280"
+      Title="AboutPage">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="220" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- GSPro Section -->
+        <StackPanel Grid.Row="0" Grid.Column="0" VerticalAlignment="Top" Margin="20">
+            <TextBlock Text="About" FontSize="48" Margin="0,0,0,20" HorizontalAlignment="Center" Foreground="White"/>
+            <TextBlock Text="early days for this connector, placeholder page" FontSize="20" Margin="0,0,0,20" HorizontalAlignment="Center" Foreground="White"/>
+            <Button x:Name="GitHub_Link" Content="GitHub"  FontSize="18" HorizontalAlignment="Center" Background="White" Width="100" Height="50"/>
+        </StackPanel>
+    </Grid>
+    <!-- NavigateUri="https://github.com/Duwaynef/MLM2PRO-BT-GSPRO" -->
+</Page>

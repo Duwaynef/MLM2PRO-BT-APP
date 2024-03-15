@@ -1,0 +1,140 @@
+﻿<Page x:Class="MLM2PRO_BT_APP.SettingsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Settings" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- OpenConnect Settings -->
+            <StackPanel Grid.Column="0" Grid.Row="0" Margin="10">
+                <TextBlock Text="OpenConnect Settings" Foreground="White" FontSize="24" Margin="0,0,0,10"/>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="GSPro IP" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.OpenConnect.GSProIp, Mode=TwoWay}" ToolTip="Enter GSPro IP" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="GSPro Port" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.OpenConnect.GSProPort, Mode=TwoWay}" ToolTip="Enter GSPro Port" FontSize="14"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- WebApi Settings -->
+            <StackPanel Grid.Column="0" Grid.Row="1" Margin="10">
+                <TextBlock Text="WebApi Settings" Foreground="White" FontSize="24" Margin="0,0,0,10"/>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="WebApi URL" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiURL, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="WebApi Secret" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiSecret, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="WebApi Token" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiToken, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="WebApi User ID" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiUserId, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="WebApi Expire Date" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiExpireDate, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="WebApi Device ID" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiDeviceId, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- LaunchMonitor Settings -->
+            <StackPanel Grid.Column="1" Grid.Row="0" Margin="10">
+                <TextBlock Text="LaunchMonitor Settings" Foreground="White" FontSize="24" Margin="0,15,0,10"/>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Bluetooth Device Name" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.LaunchMonitor.BluetoothDeviceName, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Reconnect Interval" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.LaunchMonitor.ReconnectInterval, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Auto Wake" Foreground="White" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding Settings.LaunchMonitor.AutoWake, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Debug Logging" Foreground="White" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding Settings.LaunchMonitor.DebugLogging, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Putting Settings -->
+            <StackPanel Grid.Column="1" Grid.Row="1" Margin="10">
+                <TextBlock Text="Putting Settings" Foreground="White" FontSize="24" Margin="0,15,0,10"/>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Putting Enabled" Foreground="White" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding Settings.Putting.PuttingEnabled, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Putting Port" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.Putting.PuttingPort, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Launch Ball Tracker" Foreground="White" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding Settings.Putting.LaunchBallTracker, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Only Launch When Putting" Foreground="White" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding Settings.Putting.OnlyLaunchWhenPutting, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Keep Putting Cam On Top" Foreground="White" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding Settings.Putting.KeepPuttingCamOnTop, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Webcam Index" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.Putting.WebcamIndex, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Ball Color" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.Putting.BallColor, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Cam Preview Width" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.Putting.CamPreviewWidth, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Exe Path" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.Putting.ExePath, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Additional Exe Args" Foreground="White" FontSize="16"/>
+                    <TextBox Text="{Binding Settings.Putting.AdditionalExeArgs, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
+                    <TextBlock Text="Hide Exe Logs" Foreground="White" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding Settings.Putting.HideExeLogs, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Reset Settings Button -->
+            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="10" Orientation="Horizontal">
+                <Button x:Name="SaveSettingsButton" Content="Save Settings" Click="Settings_SaveSettings_Button" Height="40" Width="300" FontSize="18" HorizontalAlignment="Right" Margin="0,0,50,0"/>
+                <Button x:Name="ResetSettingsButton" Content="Restore Default Settings" Click="Settings_ClearSettings_Button" Height="40" Width="300" FontSize="18" HorizontalAlignment="Left" Margin="50,0,0,0"/>                
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Page>
