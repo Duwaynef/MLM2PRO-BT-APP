@@ -17,7 +17,7 @@ public class BluetoothManager
     ByteConversionUtils byteConversionUtils = new ByteConversionUtils();
     Encryption btEncryption = new Encryption();
     bool settingUpConnection = false;
-    long lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds();
+    long lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
     int connectionAttempts = 0;
     DeviceWatcher deviceWatcher = DeviceInformation.CreateWatcher(BluetoothLEDevice.GetDeviceSelector());
     private Dictionary<string, DeviceInformation> foundDevices = new Dictionary<string, DeviceInformation>();
@@ -112,7 +112,16 @@ public class BluetoothManager
 
     public async void RestartDeviceWatcher()
     {
-        deviceWatcher.Stop();
+        if (deviceWatcher.Status == DeviceWatcherStatus.Started || deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted)
+        {
+            deviceWatcher.Stop();
+
+            while (deviceWatcher.Status != DeviceWatcherStatus.Created && deviceWatcher.Status != DeviceWatcherStatus.Stopped && deviceWatcher.Status != DeviceWatcherStatus.Aborted)
+            {
+                await Task.Delay(100);
+            }
+        }
+
         deviceWatcher.Start();
     }
 

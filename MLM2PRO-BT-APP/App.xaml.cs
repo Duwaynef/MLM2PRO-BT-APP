@@ -175,7 +175,7 @@ public partial class App : Application
     public async Task LMDisconnect()
     {
         byte[] data = new byte[] { 0, 0, 0, 0, 0, 0, 0 }; // Tell the Launch Monitor to disconnect
-        _ = manager.WriteCommand(data);
+        await manager.WriteCommand(data);
         _ = manager.DisconnectAndCleanup();
     }
     public class TextBoxStreamWriter : TextWriter
