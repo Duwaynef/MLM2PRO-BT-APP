@@ -17,6 +17,7 @@ public class BluetoothManager
     ByteConversionUtils byteConversionUtils = new ByteConversionUtils();
     Encryption btEncryption = new Encryption();
     bool settingUpConnection = false;
+    long lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds();
 
     public Guid SERVICE_UUID = new Guid("DAF9B2A4-E4DB-4BE4-816D-298A050F25CD");
     public Guid AUTH_REQUEST_CHARACTERISTIC_UUID = new Guid("B1E9CE5B-48C8-4A28-89DD-12FFD779F5E1"); // Write Only
@@ -82,6 +83,9 @@ public class BluetoothManager
         if (isConnected)
         {
             App.SharedVM.LMStatus = "SETTING UP CONNECTION";
+            // Introduce a delay to ensure the device is ready
+            await Task.Delay(TimeSpan.FromSeconds(8)); // Adjust the delay time as needed
+
             bool isDeviceSetup = await SetupDeviceAsync(bluetoothDevice);
             if (!isDeviceSetup)
             {
@@ -96,10 +100,11 @@ public class BluetoothManager
                 App.SharedVM.LMStatus = "CONNECTED";
                 DeviceManager.Instance.DeviceStatus = "CONNECTED";
                 Logger.Log("CONNECTED to device. sending auth");
+                await Task.Delay(TimeSpan.FromSeconds(3)); // Adjust the delay time as needed
                 await SendDeviceAuthRequest();
 
                 // After successful subscriptions
-                StartSubscriptionVerificationTimer();
+                // StartSubscriptionVerificationTimer(); // this might be doing more harm than good...
                 StartHeartbeat();
 
                 // this is a HACK i'm not sure why it's needed.... but it is... for some reason the first subscription doesn't work
@@ -142,14 +147,11 @@ public class BluetoothManager
     }
     public async Task<bool> SetupDeviceAsync(BluetoothLEDevice bluetoothDevice) // get and trigger subscribe to device characteristics
     {
-        // Introduce a delay to ensure the device is ready
-        await Task.Delay(2000); // Adjust the delay time as needed
-
         var servicesResult = await bluetoothDevice.GetGattServicesAsync();
         foreach (var service in servicesResult.Services)
         {
             // Introduce a delay to ensure the device is ready
-            await Task.Delay(500); // Adjust the delay time as needed
+            await Task.Delay(TimeSpan.FromSeconds(2)); // Adjust the delay time as needed
 
             var characteristicsResult = await service.GetCharacteristicsAsync();
             if (characteristicsResult.Status == GattCommunicationStatus.Success)
@@ -214,7 +216,12 @@ public class BluetoothManager
     {
         var value = args.CharacteristicValue.ToArray();
         var uuid = sender.Uuid;
-        if (sender.Uuid != HEARTBEAT_CHARACTERISTIC_UUID)
+        if (HEARTBEAT_CHARACTERISTIC_UUID == uuid)
+        {
+            lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds();
+            return;
+        }
+        else
         {
             Logger.Log($"Notification received for {sender.Uuid}: {byteConversionUtils.ByteArrayToHexString(value)}");
         }
@@ -315,15 +322,40 @@ public class BluetoothManager
                 else
                 {
                     Logger.Log($"### EVENT = {string.Join(", ", byteConversionUtils.ArrayByteToInt(decrypted))}");
-
                     int isBattlife = decrypted[2];
-                    if (decrypted[0] == 3 && isBattlife >= 0 && isBattlife <= 2)
+
+                    if (decrypted[0] == 0)
+                    {
+                        App.SharedVM.LMStatus = "CONNECTED, SHOT HAPPENED";
+                        Logger.Log("BluetoothManager: Shot happened!");
+                    }
+                    else if (decrypted[0] == 1)
+                    {
+                        App.SharedVM.LMStatus = "CONNECTED, PROCESSING SHOT";
+                        Logger.Log("BluetoothManager: Device is processing shot!");
+                    }
+                    else if (decrypted[0] == 2)
+                    {
+                        App.SharedVM.LMStatus = "CONNECTED, READY";
+                        Logger.Log("BluetoothManager: Device is ready for next shot!");
+                    }
+                    else if (decrypted[0] == 3 && isBattlife >= 0 && isBattlife <= 2)
                     {
                         int battLife = decrypted[1];
                         App.SharedVM.LMBattLife = battLife.ToString();
                         
                         DeviceManager.Instance.UpdateBatteryLevel(battLife);
                         Logger.Log("Battery Level: " + battLife);
+                    }
+                    else if (decrypted[0] == 5 && decrypted[1] == 0)
+                    {
+                        App.SharedVM.LMStatus = "CONNECTED, SHOT WAS A MISREAD ALL ZEROS";
+                        Logger.Log("BluetoothManager: last shot was misread, all zeros...");
+                    }
+                    else if (decrypted[0] == 5 && decrypted[1] == 1)
+                    {
+                        App.SharedVM.LMStatus = "CONNECTED, DISARMED";
+                        Logger.Log("BluetoothManager: device disarmed");
                     }
                 }
             }
@@ -530,12 +562,18 @@ public class BluetoothManager
         heartbeatTimer?.Dispose();
 
         // Start the timer to call the SendHeartbeatSignal method every 2 seconds (2000 milliseconds)
-        heartbeatTimer = new Timer(SendHeartbeatSignal, null, 0, 5000);
+        heartbeatTimer = new Timer(SendHeartbeatSignal, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(2));
     }
     private async void SendHeartbeatSignal(object state)
     {
         if (bluetoothDevice != null)
         {
+            if (lastHeartbeatReceived < DateTimeOffset.Now.ToUnixTimeSeconds() - 20)
+            {
+                Logger.Log("Heartbeat not received for 20 seconds, resubing...");
+                lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
+                await SetupDeviceAsync(bluetoothDevice);
+            }
             byte[] heartbeatData = new byte[] { 0x01 };
             // Send the heartbeat signal to the HEARTBEAT_CHARACTERISTIC_UUID
             await WriteCharacteristic(SERVICE_UUID, HEARTBEAT_CHARACTERISTIC_UUID, heartbeatData, WriteType.WITH_RESPONSE);
@@ -576,7 +614,7 @@ public class BluetoothManager
         subscriptionVerificationTimer?.Dispose();
 
         // Set the timer to check every 60 seconds
-        subscriptionVerificationTimer = new Timer(VerifyConnection, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+        subscriptionVerificationTimer = new Timer(VerifyConnection, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(30));
     }
     private async void VerifyConnection(object state)
     {
@@ -605,6 +643,8 @@ public class BluetoothManager
         {
             Logger.Log("Not connected to a device.");
             App.SharedVM.LMStatus = "DISCONNECTED";
+            subscriptionVerificationTimer?.Dispose();
+            heartbeatTimer?.Dispose();
             return;
         }
         // Unsubscribe from all notifications
@@ -625,6 +665,7 @@ public class BluetoothManager
     }
     public async Task UnSubAndReSub()
     {
+        App.SharedVM.LMStatus = "CONNECTED, NOT READY";
         await UnsubscribeFromAllNotifications();
         await SetupDeviceAsync(bluetoothDevice);
     }

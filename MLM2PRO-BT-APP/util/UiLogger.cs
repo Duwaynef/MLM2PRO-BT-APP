@@ -23,12 +23,35 @@ public static class Logger
     public static void Log(string message)
     {
         string formattedMessage = $"{DateTime.Now}: {message}\n";
+
         // Update the TextBox
-        Application.Current.Dispatcher.Invoke(() =>
+        Application.Current.Dispatcher.Invoke(() => logTextBox?.AppendText(formattedMessage));
+
+        // Attempt to log to file with retries
+        bool success = false;
+        int retryCount = 0;
+        int maxRetries = 5; // Maximum number of retries
+        int delayBetweenRetries = 500; // Delay in milliseconds
+
+        while (!success && retryCount < maxRetries)
         {
-            logTextBox?.AppendText(formattedMessage);
-        });
-        // Log to file
-        File.AppendAllText(logFilePath, formattedMessage);
+            try
+            {
+                File.AppendAllText(logFilePath, formattedMessage);
+                success = true; // If success, exit loop
+            }
+            catch (IOException) // Catch exceptions related to file access
+            {
+                retryCount++;
+                Thread.Sleep(delayBetweenRetries); // Wait before retrying
+            }
+        }
+
+        if (!success)
+        {
+            // Handle failure after retries, could log to an alternate location or raise a notification
+            Console.WriteLine("Failed to write to log file after retries.");
+        }
     }
+
 }

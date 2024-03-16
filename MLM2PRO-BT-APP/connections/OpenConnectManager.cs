@@ -120,33 +120,24 @@ namespace MLM2PRO_BT_APP
             };
         }
 
-        public static OpenConnectApiMessage CreateShotData(BallData ballData, ClubData clubData, int ShotCounter)
+        public OpenConnectApiMessage CreateShotData(OpenConnectApiMessage input)
         {
-            double speed = ballData.Speed;
-            double spinAxis = ballData.SpinAxis;
-            double totalSpin = ballData.TotalSpin;
-            // double sideSpin = ballData.SideSpin;
-            // double backSpin = ballData.BackSpin;
-            double hla = ballData.HLA;
-            double vla = ballData.VLA;
-            double clubspeed = clubData.Speed;
-
             return new OpenConnectApiMessage()
             {
                 ShotNumber = ShotCounter,
                 BallData = new BallData()
                 {
-                    Speed = speed,
-                    SpinAxis = spinAxis,
-                    TotalSpin = totalSpin,
+                    Speed = input.BallData.Speed,
+                    SpinAxis = input.BallData.SpinAxis,
+                    TotalSpin = input.BallData.TotalSpin,
                     // BackSpin = backSpin,
                     // SideSpin = sideSpin,
-                    HLA = hla,
-                    VLA = vla
+                    HLA = input.BallData.HLA,
+                    VLA = input.BallData.VLA
                 },
                 ClubData = new ClubData()
                 {
-                    Speed = clubspeed
+                    Speed = input.ClubData.Speed
                 },
                 ShotDataOptions = new ShotDataOptions()
                 {
@@ -158,8 +149,9 @@ namespace MLM2PRO_BT_APP
             };
         }
 
-        public static OpenConnectApiMessage TestShot(int ShotCounter)
+        public OpenConnectApiMessage TestShot()
         {
+            OpenConnectApiMessage.Instance.ShotCounter++;
             // Create a Random instance
             Random random = new Random();
 

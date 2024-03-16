@@ -79,8 +79,7 @@ public partial class App : Application
     {
         try
         {
-            OpenConnectApiMessage.Instance.ShotCounter++;
-            OpenConnectApiMessage messageSent = OpenConnectApiMessage.TestShot(OpenConnectApiMessage.Instance.ShotCounter);
+            OpenConnectApiMessage messageSent = OpenConnectApiMessage.Instance.TestShot();
             await SendShotData(messageSent);
         }
         catch (Exception ex)
@@ -92,14 +91,25 @@ public partial class App : Application
     {
         try
         {
-            HomeMenu.ShotData shotData;
+            String result = "Fail";
             Logger.Log(messageToSend?.ToString());
             string messageJson = JsonConvert.SerializeObject(messageToSend);
-            bool dataSent = await client.SendDataAsync(messageToSend);
+            if (messageToSend.ClubData.Speed == 0 || messageToSend.BallData.Speed == 0)
+            {
+                result = "Fail";
+                await insertRow(messageToSend, result);
+                App.SharedVM.GSProStatus = "CONNECTED, LM MISREAD";
+                return;
+            }
 
+            bool dataSent = await client.SendDataAsync(messageToSend);
             if (dataSent)
             {
-                shotData = new HomeMenu.ShotData { Result = "Success", BallSpeed = messageToSend.BallData.Speed, SpinAxis = messageToSend.BallData.SpinAxis, SpinRate = messageToSend.BallData.TotalSpin, LaunchDirection = messageToSend.BallData.VLA, LaunchAngle = messageToSend.BallData.HLA, ClubSpeed = messageToSend.ClubData.Speed, BackSpin = 0, SideSpin = 0, ClubPath = 0, ImpactAngle = 0 };
+                result = "Success";
+                Logger.Log("message sucessfully sent!");
+                await insertRow(messageToSend, result);
+                App.SharedVM.GSProStatus = "CONNECTED, SHOT SENT!";
+                return;
             }
             else
             {
@@ -108,18 +118,45 @@ public partial class App : Application
                 bool dataSent2 = await client.SendDataAsync(messageToSend);
                 if (dataSent2)
                 {
-                    shotData = new HomeMenu.ShotData { Result = "Success", BallSpeed = messageToSend.BallData.Speed, SpinAxis = messageToSend.BallData.SpinAxis, SpinRate = messageToSend.BallData.TotalSpin, LaunchDirection = messageToSend.BallData.VLA, LaunchAngle = messageToSend.BallData.HLA, ClubSpeed = messageToSend.ClubData.Speed, BackSpin = 0, SideSpin = 0, ClubPath = 0, ImpactAngle = 0 };
+                    result = "Success";
+                    Logger.Log("Second attempt worked!");
+                    await insertRow(messageToSend, result);
+                    App.SharedVM.GSProStatus = "CONNECTED, SHOT SENT!";
+                    return;
                 } else
                 {
-                    shotData = new HomeMenu.ShotData { Result = "Fail", BallSpeed = messageToSend.BallData.Speed, SpinAxis = messageToSend.BallData.SpinAxis, SpinRate = messageToSend.BallData.TotalSpin, LaunchDirection = messageToSend.BallData.VLA, LaunchAngle = messageToSend.BallData.HLA, ClubSpeed = messageToSend.ClubData.Speed, BackSpin = 0, SideSpin = 0, ClubPath = 0, ImpactAngle = 0 };
+                    result = "Fail";
+                    Logger.Log("Second attempt failed...");
+                    await insertRow(messageToSend, result);
+                    App.SharedVM.GSProStatus = "DISCONNECTED, FAILED TO SEND SHOT";
+                    return;
                 }                
             }
-            SharedViewModel.Instance.ShotDataCollection.Insert(0, shotData);
         }
         catch (Exception ex)
         {
             Logger.Log($"Error sending message: {ex.Message}");
         }
+    }
+    public async Task insertRow(OpenConnectApiMessage inputData,String result)
+    {
+        HomeMenu.ShotData shotData;
+        shotData = new HomeMenu.ShotData
+        {
+            ShotCounter = OpenConnectApiMessage.Instance.ShotCounter,
+            Result = result,
+            BallSpeed = inputData.BallData.Speed,
+            SpinAxis = inputData.BallData.SpinAxis,
+            SpinRate = inputData.BallData.TotalSpin,
+            VLA = inputData.BallData.VLA,
+            HLA = inputData.BallData.HLA,
+            ClubSpeed = inputData.ClubData.Speed,
+            BackSpin = 0,
+            SideSpin = 0,
+            ClubPath = 0,
+            ImpactAngle = 0
+        };
+        SharedViewModel.Instance.ShotDataCollection.Insert(0, shotData);
     }
     public async Task ConnectAndSetupBluetooth()
     {
@@ -127,7 +164,7 @@ public partial class App : Application
     }
     public async Task LMArmDevice()
     {
-        byte[] data = byteConversionUtils.HexStringToByteArray("01180001000000"); //01180001000000 == arm device???
+        byte[] data = byteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
         _ = manager.WriteCommand(data);
     }
     public async Task LMDisarmDevice()
@@ -137,6 +174,8 @@ public partial class App : Application
     }
     public async Task LMDisconnect()
     {
+        byte[] data = new byte[] { 0, 0, 0, 0, 0, 0, 0 }; // Tell the Launch Monitor to disconnect
+        _ = manager.WriteCommand(data);
         _ = manager.DisconnectAndCleanup();
     }
     public class TextBoxStreamWriter : TextWriter

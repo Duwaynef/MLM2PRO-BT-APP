@@ -80,13 +80,13 @@
             <TextBlock Text="Shot Data" FontSize="36" HorizontalAlignment="Center" Foreground="White"/>
             <DataGrid x:Name="ShotDataDataGrid" Margin="10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" AlternatingRowBackground="#FFC5C5C5" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="270" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="270">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Shot" Binding="{Binding ImpactAngle}" Width="SizeToHeader" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Shot" Binding="{Binding ShotCounter}" Width="SizeToHeader" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="80" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="SizeToHeader" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="SizeToHeader" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Launch Direction" Binding="{Binding LaunchDirection}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Launch Angle" Binding="{Binding LaunchAngle}" Width="SizeToHeader" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="SizeToHeader" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="SizeToHeader" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="SizeToHeader" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Side Spin" Binding="{Binding SideSpin}" Width="SizeToHeader" IsReadOnly="True"/>
