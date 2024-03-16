@@ -98,11 +98,6 @@ public sealed partial class HomeMenu : Page
         */
     }
 
-    private void LaunchMonitor_Connect_Click(object sender, RoutedEventArgs e)
-    {
-        (App.Current as App)?.ConnectAndSetupBluetooth();
-    }
-
     public class ShotData
     {
         public int ShotCounter { get; set; }
@@ -150,6 +145,11 @@ public sealed partial class HomeMenu : Page
             App.SharedVM.LMStatus = "IWEBAPI FAILED";
             Logger.Log("Failed to get a valid response.");
         }
+    }
+
+    private void LaunchMonitor_Connect_Click(object sender, RoutedEventArgs e)
+    {
+        (App.Current as App)?.ConnectAndSetupBluetooth();
     }
 
     private void LM_ARMButton_Click(object sender, RoutedEventArgs e)

@@ -160,7 +160,7 @@ public partial class App : Application
     }
     public async Task ConnectAndSetupBluetooth()
     {
-        _ = manager.SetupBluetoothDevice();
+        manager.RestartDeviceWatcher();
     }
     public async Task LMArmDevice()
     {

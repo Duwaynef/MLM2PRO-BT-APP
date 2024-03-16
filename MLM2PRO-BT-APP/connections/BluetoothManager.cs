@@ -44,7 +44,6 @@ public class BluetoothManager
         deviceWatcher.Removed += DeviceWatcher_Removed;
         deviceWatcher.Start();
         App.SharedVM.LMStatus = "Watching for bluetooth devices...";
-
     }
 
     // Event handler for when a device is found
@@ -107,10 +106,11 @@ public class BluetoothManager
         }
     }
 
-    private void RestartDeviceWatcher()
+    public async void RestartDeviceWatcher()
     {
         deviceWatcher.Start();
     }
+
     private bool IsNotifyCharacteristic(Guid uuid)
     {
         return uuid == EVENTS_CHARACTERISTIC_UUID ||
