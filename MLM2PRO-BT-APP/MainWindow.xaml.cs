@@ -95,15 +95,6 @@ namespace MLM2PRO_BT_APP
         {
             Application.Current.Shutdown();
         }
-        private void LaunchWebsite()
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "https://ko-fi.com/duwayne",
-                UseShellExecute = true
-            };
-            Process.Start(psi);
-        }
 
         private void HomeMenu_Click(object sender, RoutedEventArgs e)
         {

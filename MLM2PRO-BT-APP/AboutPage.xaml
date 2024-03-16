@@ -20,7 +20,7 @@
         <StackPanel Grid.Row="0" Grid.Column="0" VerticalAlignment="Top" Margin="20">
             <TextBlock Text="About" FontSize="48" Margin="0,0,0,20" HorizontalAlignment="Center" Foreground="White"/>
             <TextBlock Text="early days for this connector, placeholder page" FontSize="20" Margin="0,0,0,20" HorizontalAlignment="Center" Foreground="White"/>
-            <Button x:Name="GitHub_Link" Content="GitHub"  FontSize="18" HorizontalAlignment="Center" Background="White" Width="100" Height="50"/>
+            <Button x:Name="GitHub_Link" Content="GitHub"  FontSize="18" HorizontalAlignment="Center" Background="White" Width="100" Height="50" Click="GitHub_Link_Click"/>
         </StackPanel>
     </Grid>
     <!-- NavigateUri="https://github.com/Duwaynef/MLM2PRO-BT-GSPRO" -->
