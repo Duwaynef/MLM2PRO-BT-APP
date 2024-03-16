@@ -590,7 +590,7 @@ public class BluetoothManager
         Array.Copy(intToByteArray, 0, bArr, 0, intToByteArray.Length);
         Array.Copy(encryptionTypeBytes, 0, bArr, intToByteArray.Length, encryptionTypeBytes.Length);
         Array.Copy(keyBytes, 0, bArr, intToByteArray.Length + encryptionTypeBytes.Length, keyBytes.Length);
-        Logger.Log(string.Format("### DEVICE: AUTH Request = " + byteConversionUtils.ArrayByteToInt(bArr).ToString()));
+        Logger.Log(string.Format("### DEVICE: AUTH Request = " + byteConversionUtils.ByteArrayToHexString(bArr)));
         App.SharedVM.LMStatus = "SENDING AUTH REQUEST";
 
         await WriteValue(SERVICE_UUID, AUTH_REQUEST_CHARACTERISTIC_UUID, bArr);
