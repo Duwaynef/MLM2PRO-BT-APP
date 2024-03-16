@@ -51,7 +51,7 @@ public class BluetoothManager
     {
         foundDevices[deviceInfo.Id] = deviceInfo;
         bool isConnected;
-        if (deviceInfo.Name.Equals(SettingsManager.Instance.Settings.LaunchMonitor.BluetoothDeviceName, StringComparison.OrdinalIgnoreCase))
+        if (deviceInfo.Name.Contains(SettingsManager.Instance.Settings.LaunchMonitor.BluetoothDeviceName, StringComparison.OrdinalIgnoreCase) && SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret != "")
         {
             Logger.Log("Device Watcher found " + deviceInfo.Name);
             isConnected = await VerifyDeviceConnection(bluetoothDevice);
@@ -65,6 +65,10 @@ public class BluetoothManager
                     await SetupBluetoothDevice();
                 }
             }
+        } else if (SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret == "")
+        {
+            Logger.Log("Web api token is blank");
+            App.SharedVM.LMStatus = "WEB API TOKEN NOT CONFIGURED";
         }
     }
     private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
@@ -108,6 +112,7 @@ public class BluetoothManager
 
     public async void RestartDeviceWatcher()
     {
+        deviceWatcher.Stop();
         deviceWatcher.Start();
     }
 
