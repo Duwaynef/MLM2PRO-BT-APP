@@ -46,6 +46,12 @@ public partial class App : Application
                 PuttingEnable();
             }
         }
+
+        if (SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret == "")
+        {
+            Logger.Log("Web api token is blank");
+            App.SharedVM.LMStatus = "WEB API TOKEN NOT CONFIGURED";
+        }
     }
 
     private void App_Startup(object sender, StartupEventArgs e)
@@ -178,18 +184,14 @@ public partial class App : Application
     }
     public async Task LMArmDevice()
     {
-        byte[] data = byteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
-        _ = manager.WriteCommand(data);
+        await manager.ArmDevice();
     }
     public async Task LMDisarmDevice()
     {
-        byte[] data = byteConversionUtils.HexStringToByteArray("010D0000000000"); //01180000000000 == disarm device???
-        _ = manager.WriteCommand(data);
+        await manager.DisarmDevice();
     }
     public async Task LMDisconnect()
     {
-        byte[] data = new byte[] { 0, 0, 0, 0, 0, 0, 0 }; // Tell the Launch Monitor to disconnect
-        await manager.WriteCommand(data);
         _ = manager.DisconnectAndCleanup();
     }
     public class TextBoxStreamWriter : TextWriter

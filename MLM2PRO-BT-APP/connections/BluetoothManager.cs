@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Devices.Bluetooth.Advertisement;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Enumeration;
@@ -15,14 +16,14 @@ public class BluetoothManager
     private Timer heartbeatTimer;
     private Timer subscriptionVerificationTimer;
     public BluetoothLEDevice bluetoothDevice;
+    private DeviceWatcher deviceWatcher;
+    private Dictionary<string, DeviceInformation> foundDevices = new Dictionary<string, DeviceInformation>();
     private Dictionary<Guid, GattCharacteristic> characteristicMap = new Dictionary<Guid, GattCharacteristic>();
     ByteConversionUtils byteConversionUtils = new ByteConversionUtils();
     Encryption btEncryption = new Encryption();
     bool settingUpConnection = false;
     long lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
     int connectionAttempts = 0;
-    DeviceWatcher deviceWatcher = DeviceInformation.CreateWatcher(BluetoothLEDevice.GetDeviceSelector());
-    private Dictionary<string, DeviceInformation> foundDevices = new Dictionary<string, DeviceInformation>();
     byte[] StoreConfigureBytes;
 
     public Guid SERVICE_UUID = new Guid("DAF9B2A4-E4DB-4BE4-816D-298A050F25CD");
@@ -42,20 +43,28 @@ public class BluetoothManager
         notifyUUIDs.Add(HEARTBEAT_CHARACTERISTIC_UUID);
         notifyUUIDs.Add(MEASUREMENT_CHARACTERISTIC_UUID);
         notifyUUIDs.Add(WRITE_RESPONSE_CHARACTERISTIC_UUID);
+
+        InitializeDeviceWatcher();
+        App.SharedVM.LMStatus = "Watching for bluetooth devices...";
+    }
+
+    private void InitializeDeviceWatcher()
+    {
+        string serviceSelector = GattDeviceService.GetDeviceSelectorFromUuid(SERVICE_UUID);
+        deviceWatcher = DeviceInformation.CreateWatcher(serviceSelector);
+
         deviceWatcher.Added += DeviceWatcher_Added;
         deviceWatcher.Updated += DeviceWatcher_Updated;
         deviceWatcher.Removed += DeviceWatcher_Removed;
         deviceWatcher.Start();
-        App.SharedVM.LMStatus = "Watching for bluetooth devices...";
     }
 
-    // Event handler for when a device is found
     private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
     {
-        foundDevices[deviceInfo.Id] = deviceInfo;
-        bool isConnected;
-        if (deviceInfo.Name.Contains(SettingsManager.Instance.Settings.LaunchMonitor.BluetoothDeviceName, StringComparison.OrdinalIgnoreCase) && SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret != "")
+        if (!foundDevices.ContainsKey(deviceInfo.Id))
         {
+            foundDevices[deviceInfo.Id] = deviceInfo;
+            bool isConnected;
             Logger.Log("Device Watcher found " + deviceInfo.Name);
             isConnected = await VerifyDeviceConnection(bluetoothDevice);
             if (!isConnected)
@@ -69,11 +78,6 @@ public class BluetoothManager
                 }
             }
         }
-        else if (SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret == "")
-        {
-            Logger.Log("Web api token is blank");
-            App.SharedVM.LMStatus = "WEB API TOKEN NOT CONFIGURED";
-        }
     }
     private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
     {
@@ -82,19 +86,16 @@ public class BluetoothManager
         {
             deviceInfo.Update(deviceInfoUpdate);
             bool isConnected;
-            if (deviceInfo.Name.Equals(SettingsManager.Instance.Settings.LaunchMonitor.BluetoothDeviceName, StringComparison.OrdinalIgnoreCase))
+            Logger.Log("Device Watcher updated " + deviceInfo.Name);
+            isConnected = await VerifyDeviceConnection(bluetoothDevice);
+            if (!isConnected)
             {
-                Logger.Log("Device Watcher updated " + deviceInfo.Name);
-                isConnected = await VerifyDeviceConnection(bluetoothDevice);
-                if (!isConnected)
+                var device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
+                isConnected = await VerifyDeviceConnection(device);
+                if (isConnected)
                 {
-                    var device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
-                    isConnected = await VerifyDeviceConnection(device);
-                    if (isConnected)
-                    {
-                        bluetoothDevice = device;
-                        await SetupBluetoothDevice();
-                    }
+                    bluetoothDevice = device;
+                    await SetupBluetoothDevice();
                 }
             }
         }
@@ -106,19 +107,17 @@ public class BluetoothManager
         {
             deviceInfo.Update(deviceInfoUpdate);
             foundDevices.Remove(deviceInfoUpdate.Id);
-            if (deviceInfo.Name.Equals(SettingsManager.Instance.Settings.LaunchMonitor.BluetoothDeviceName, StringComparison.OrdinalIgnoreCase))
-            {
-                Logger.Log("Device Watcher removed " + deviceInfo.Name);
-                await DisconnectAndCleanup();
-            }
+            Logger.Log("Device Watcher removed " + deviceInfo.Name);
+            await DisconnectAndCleanup();
         }
     }
-
     public async void RestartDeviceWatcher()
     {
         if (deviceWatcher.Status == DeviceWatcherStatus.Started || deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted)
         {
+            Logger.Log("Restarting device watcher");
             deviceWatcher.Stop();
+            foundDevices.Clear();
 
             while (deviceWatcher.Status != DeviceWatcherStatus.Created && deviceWatcher.Status != DeviceWatcherStatus.Stopped && deviceWatcher.Status != DeviceWatcherStatus.Aborted)
             {
@@ -127,8 +126,8 @@ public class BluetoothManager
         }
 
         deviceWatcher.Start();
+        Logger.Log("Device watcher restarted");
     }
-
     private bool IsNotifyCharacteristic(Guid uuid)
     {
         return uuid == EVENTS_CHARACTERISTIC_UUID ||
@@ -264,7 +263,16 @@ public class BluetoothManager
             return false;
         }
     }
-
+    public async Task ArmDevice()
+    {
+        byte[] data = byteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
+        _ = WriteCommand(data);
+    }
+    public async Task DisarmDevice()
+    {
+        byte[] data = byteConversionUtils.HexStringToByteArray("010D0000000000"); //01180000000000 also found 010D0000000000 == disarm device???
+        _ = WriteCommand(data);
+    }
     private async Task<bool> SubscribeToCharacteristicsAsync()
     {
         var serviceResult = await bluetoothDevice.GetGattServicesForUuidAsync(SERVICE_UUID);
@@ -343,7 +351,7 @@ public class BluetoothManager
                             Logger.Log("Auth failed, returning");
                             if (byte3 == 1)
                             {
-                                App.SharedVM.LMStatus = "APP TOKEN EXPIRED";
+                                App.SharedVM.LMStatus = "APP TOKEN EXPIRED, REFRESH IN MLM SOFTWARE";
                                 Logger.Log("Bluetooth token expired, refresh 3rd party app token");
                             }
                             return;
@@ -373,6 +381,8 @@ public class BluetoothManager
                             // I'm really not sure why sending this TWICE makes any difference.
                             await Task.Delay(200);
                             await WriteConfig(bytes);
+                            await Task.Delay(500);
+                            await ArmDevice();
                         }
                         else
                         {
@@ -747,12 +757,16 @@ public class BluetoothManager
     public async Task DisconnectAndCleanup()
     {
         deviceWatcher.Stop();
+        foundDevices.Clear();
         subscriptionVerificationTimer?.Dispose();
         heartbeatTimer?.Dispose();
 
         await Task.Delay(1000);
-
         App.SharedVM.LMStatus = "DISCONNECTING...";
+
+        byte[] data = new byte[] { 0, 0, 0, 0, 0, 0, 0 }; // Tell the Launch Monitor to disconnect
+        await WriteCommand(data);
+
         await UnsubscribeFromAllNotifications();
         bluetoothDevice?.Dispose();
         bluetoothDevice = null;
@@ -773,27 +787,30 @@ public class BluetoothManager
     }
     public async Task UnsubscribeFromAllNotifications()
     {
-        try
+        if (bluetoothDevice != null)
         {
-            var services = await bluetoothDevice.GetGattServicesForUuidAsync(SERVICE_UUID);
-            foreach (var service in services.Services)
+            try
             {
-                var characteristics = await service.GetCharacteristicsAsync();
-                foreach (var characteristic in characteristics.Characteristics)
+                var services = await bluetoothDevice.GetGattServicesForUuidAsync(SERVICE_UUID);
+                foreach (var service in services.Services)
                 {
-                    if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                    var characteristics = await service.GetCharacteristicsAsync();
+                    foreach (var characteristic in characteristics.Characteristics)
                     {
-                        await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
-                            GattClientCharacteristicConfigurationDescriptorValue.None);
-                        characteristic.ValueChanged -= Characteristic_ValueChanged;
+                        if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
+                        {
+                            await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+                                GattClientCharacteristicConfigurationDescriptorValue.None);
+                            characteristic.ValueChanged -= Characteristic_ValueChanged;
+                        }
                     }
                 }
+                Logger.Log("Successfully unsubscribed from all notifications.");
             }
-            Logger.Log("Successfully unsubscribed from all notifications.");
-        }
-        catch (Exception ex)
-        {
-            Logger.Log($"Error during unsubscription: {ex.Message}");
+            catch (Exception ex)
+            {
+                Logger.Log($"Error during unsubscription: {ex.Message}");
+            }
         }
     }
     public byte[] getEncryptionKey()

@@ -45,19 +45,19 @@
                 </StackPanel>
                 <StackPanel Margin="10">
                     <TextBlock Text="WebApi Token" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiToken, Mode=TwoWay}" FontSize="14"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiToken, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Margin="10">
                     <TextBlock Text="WebApi User ID" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiUserId, Mode=TwoWay}" FontSize="14"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiUserId, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Margin="10">
                     <TextBlock Text="WebApi Expire Date" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiExpireDate, Mode=TwoWay}" FontSize="14"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiExpireDate, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Margin="10">
                     <TextBlock Text="WebApi Device ID" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiDeviceId, Mode=TwoWay}" FontSize="14"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiDeviceId, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
                 </StackPanel>
             </StackPanel>
 
@@ -66,7 +66,7 @@
                 <TextBlock Text="LaunchMonitor Settings" Foreground="White" FontSize="24" Margin="0,15,0,10"/>
                 <StackPanel Margin="10">
                     <TextBlock Text="Bluetooth Device Name" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.LaunchMonitor.BluetoothDeviceName, Mode=TwoWay}" FontSize="14"/>
+                    <TextBox Text="{Binding Settings.LaunchMonitor.BluetoothDeviceName, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
                 </StackPanel>
                 <StackPanel Margin="10">
                     <TextBlock Text="Reconnect Interval" Foreground="White" FontSize="16"/>
