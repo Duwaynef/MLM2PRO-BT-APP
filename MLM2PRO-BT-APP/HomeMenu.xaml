@@ -125,7 +125,7 @@
             <TextBlock Text="Shot Data" FontSize="36" HorizontalAlignment="Center" Foreground="White"/>
             <DataGrid x:Name="ShotDataDataGrid" Margin="10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" AlternatingRowBackground="#FFC5C5C5" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="270" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="270">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Shot" Binding="{Binding ShotCounter}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Club" Binding="{Binding Club}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="*" IsReadOnly="True"/>

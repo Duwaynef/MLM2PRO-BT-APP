@@ -28,8 +28,6 @@ public sealed partial class HomeMenu : Page
         this.DataContext = App.SharedVM;
         // ShotDataDataGrid.ItemsSource = App.SharedVM.ShotDataCollection;
         ShotDataDataGrid.ItemsSource = SharedViewModel.Instance.ShotDataCollection;
-        AddTestShotDataRows();
-        AddTestShotDataRows();
     }
 
     private void GSPro_Connect_Click(object sender, RoutedEventArgs e)
@@ -101,7 +99,7 @@ public sealed partial class HomeMenu : Page
 
     public class ShotData
     {
-        public int ShotCounter { get; set; }
+        public int ShotNumber { get; set; }
         public string Result { get; set; } = "";
         public string Club { get; set; } = "";
         public double ClubSpeed { get; set; }
@@ -119,7 +117,7 @@ public sealed partial class HomeMenu : Page
     {
         Application.Current.Dispatcher.Invoke(() =>
         {
-            SharedViewModel.Instance.ShotDataCollection.Insert(0, new ShotData { ShotCounter = OpenConnectApiMessage.Instance.ShotCounter, Result = "Test", Club = "Test", BallSpeed = 100, SpinAxis = 20, SpinRate = 5000, VLA = 40, HLA = 10, ClubSpeed = 50 });
+            SharedViewModel.Instance.ShotDataCollection.Insert(0, new ShotData { ShotNumber = OpenConnectApiMessage.Instance.ShotNumber, Result = "Test", Club = "Test", BallSpeed = 100, SpinAxis = 20, SpinRate = 5000, VLA = 40, HLA = 10, ClubSpeed = 50 });
         });
     }
 

@@ -45,10 +45,10 @@ namespace MLM2PRO_BT_APP.Measurement
             Unknown2 = BitConverter.ToUInt16(bytes, 14); // total distance? both seem lower than AG, but not crazy off...
             // Serialize MeasurementData instance to JSON string
 
-            OpenConnectApiMessage.Instance.ShotCounter++;
+            OpenConnectApiMessage.Instance.ShotNumber++;
             return new OpenConnectApiMessage()
             {
-                ShotNumber = OpenConnectApiMessage.Instance.ShotCounter,
+                ShotNumber = OpenConnectApiMessage.Instance.ShotNumber,
                 BallData = new BallData()
                 {
                     Speed = BallSpeed,

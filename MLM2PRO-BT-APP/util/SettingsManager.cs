@@ -11,6 +11,7 @@ namespace MLM2PRO_BT_APP
     {
         private static SettingsManager _instance;
         public static SettingsManager Instance => _instance ?? (_instance = new SettingsManager());
+        public event EventHandler SettingsUpdated;
         private string settingsFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Settings.json");
         public AppSettings Settings { get; private set; }
         private SettingsManager()
@@ -22,6 +23,7 @@ namespace MLM2PRO_BT_APP
         {
             string settingsJson = JsonConvert.SerializeObject(Settings, Formatting.Indented);
             File.WriteAllText(settingsFilePath, settingsJson);
+            SettingsUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void LoadSettings()

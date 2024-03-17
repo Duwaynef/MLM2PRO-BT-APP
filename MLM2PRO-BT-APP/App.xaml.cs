@@ -46,23 +46,32 @@ public partial class App : Application
                 PuttingEnable();
             }
         }
-
-        if (SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret == "")
-        {
-            Logger.Log("Web api token is blank");
-            App.SharedVM.LMStatus = "WEB API TOKEN NOT CONFIGURED";
-        }
+        CheckWebApiToken();
     }
 
     private void App_Startup(object sender, StartupEventArgs e)
     {
         // Load settings, connect to devices, or any startup logic here
         // Before navigating to your first page, ensure settings are loaded
-        SettingsManager.Instance.LoadSettings();
+        LoadSettings();
 
         // Initialize the OpenConnectTCPClient
         client = new OpenConnectTCPClient(SettingsManager.Instance.Settings.OpenConnect.GSProIp, SettingsManager.Instance.Settings.OpenConnect.GSProPort);
         ConnectGSPro();
+    }
+
+    private void CheckWebApiToken()
+    {
+        if (string.IsNullOrWhiteSpace(SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret))
+        {
+            Logger.Log("Web api token is blank");
+            App.SharedVM.LMStatus = "WEB API TOKEN NOT CONFIGURED";
+
+            WebApiWindow WebApiWindow = new WebApiWindow();
+            WebApiWindow.Topmost = true;
+            WebApiWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            WebApiWindow.ShowDialog();
+        }
     }
     public void ConnectGSPro()
     {
@@ -161,7 +170,7 @@ public partial class App : Application
     {
         HomeMenu.ShotData shotData = new HomeMenu.ShotData
         {
-            ShotCounter = OpenConnectApiMessage.Instance.ShotCounter,
+            ShotNumber = OpenConnectApiMessage.Instance.ShotNumber,
             Result = result,
             Club = DeviceManager.Instance.ClubSelection ?? "",
             BallSpeed = inputData.BallData?.Speed ?? 0,
@@ -175,11 +184,15 @@ public partial class App : Application
             //ClubPath = 0,
             //ImpactAngle = 0
         };
-        SharedViewModel.Instance.ShotDataCollection.Insert(0, shotData);
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            SharedViewModel.Instance.ShotDataCollection.Insert(0, shotData);
+        });
     }
 
     public async Task ConnectAndSetupBluetooth()
     {
+        App.SharedVM.LMStatus = "LOOKING FOR DEVICE";
         manager.RestartDeviceWatcher();
     }
     public async Task LMArmDevice()
@@ -272,6 +285,10 @@ public partial class App : Application
     public async Task StopPutting()
     {
         PuttingConnection?.StopPutting();
+    }
+    public void LoadSettings()
+    {
+        SettingsManager.Instance.LoadSettings();
     }
 }
 

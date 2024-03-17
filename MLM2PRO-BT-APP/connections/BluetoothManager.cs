@@ -25,6 +25,7 @@ public class BluetoothManager
     long lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
     int connectionAttempts = 0;
     byte[] StoreConfigureBytes;
+    bool isDeviceArmed = false;
 
     public Guid SERVICE_UUID = new Guid("DAF9B2A4-E4DB-4BE4-816D-298A050F25CD");
     public Guid AUTH_REQUEST_CHARACTERISTIC_UUID = new Guid("B1E9CE5B-48C8-4A28-89DD-12FFD779F5E1"); // Write Only
@@ -69,19 +70,12 @@ public class BluetoothManager
             isConnected = await VerifyDeviceConnection(bluetoothDevice);
             if (!isConnected)
             {
-                var device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
-                isConnected = await VerifyDeviceConnection(device);
-                if (isConnected)
-                {
-                    bluetoothDevice = device;
-                    await SetupBluetoothDevice();
-                }
+                DeviceWatcher_StartDeviceConnection(deviceInfo);
             }
         }
     }
     private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
     {
-        // Update device information in the internal dictionary.
         if (foundDevices.TryGetValue(deviceInfoUpdate.Id, out DeviceInformation deviceInfo))
         {
             deviceInfo.Update(deviceInfoUpdate);
@@ -90,13 +84,7 @@ public class BluetoothManager
             isConnected = await VerifyDeviceConnection(bluetoothDevice);
             if (!isConnected)
             {
-                var device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
-                isConnected = await VerifyDeviceConnection(device);
-                if (isConnected)
-                {
-                    bluetoothDevice = device;
-                    await SetupBluetoothDevice();
-                }
+                DeviceWatcher_StartDeviceConnection(deviceInfo);
             }
         }
     }
@@ -109,6 +97,25 @@ public class BluetoothManager
             foundDevices.Remove(deviceInfoUpdate.Id);
             Logger.Log("Device Watcher removed " + deviceInfo.Name);
             await DisconnectAndCleanup();
+        }
+    }
+    private async void DeviceWatcher_StartDeviceConnection(DeviceInformation deviceInfo)
+    {
+        Logger.Log("Device Watcher start device connection " + deviceInfo.Name);
+        if (SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret != "")
+        {
+            bool isConnected;
+            var device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
+            isConnected = await VerifyDeviceConnection(device);
+            if (isConnected)
+            {
+                bluetoothDevice = device;
+                await SetupBluetoothDevice();
+            }
+        } else
+        {
+            Logger.Log("Device Watcher stopped device connection " + deviceInfo.Name + " web api token is blank");
+            App.SharedVM.LMStatus = "WEB API TOKEN MISSING";
         }
     }
     public async void RestartDeviceWatcher()
@@ -267,11 +274,13 @@ public class BluetoothManager
     {
         byte[] data = byteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
         _ = WriteCommand(data);
+        isDeviceArmed = true;
     }
     public async Task DisarmDevice()
     {
         byte[] data = byteConversionUtils.HexStringToByteArray("010D0000000000"); //01180000000000 also found 010D0000000000 == disarm device???
         _ = WriteCommand(data);
+        isDeviceArmed = false;
     }
     private async Task<bool> SubscribeToCharacteristicsAsync()
     {
@@ -764,10 +773,18 @@ public class BluetoothManager
         await Task.Delay(1000);
         App.SharedVM.LMStatus = "DISCONNECTING...";
 
-        byte[] data = new byte[] { 0, 0, 0, 0, 0, 0, 0 }; // Tell the Launch Monitor to disconnect
-        await WriteCommand(data);
+        if (isDeviceArmed)
+        {
+            await DisarmDevice();
+        }
 
-        await UnsubscribeFromAllNotifications();
+        if (bluetoothDevice != null)
+        {
+            byte[] data = new byte[] { 0, 0, 0, 0, 0, 0, 0 }; // Tell the Launch Monitor to disconnect
+            await WriteCommand(data);
+            await UnsubscribeFromAllNotifications();
+        }
+
         bluetoothDevice?.Dispose();
         bluetoothDevice = null;
 

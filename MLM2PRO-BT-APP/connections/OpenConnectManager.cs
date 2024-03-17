@@ -151,7 +151,6 @@ namespace MLM2PRO_BT_APP
         public string DeviceID { get { return "GSPRO-MLM2PRO"; } }
         public string Units { get { return "Yards"; } }
         public int ShotNumber { get; set; }
-        public int ShotCounter { get; set; } = 0;
         public string APIVersion { get { return "1"; } }
         public BallData BallData { get; set; }
         public ClubData ClubData { get; set; }
@@ -176,7 +175,7 @@ namespace MLM2PRO_BT_APP
         {
             return new OpenConnectApiMessage()
             {
-                ShotNumber = ShotCounter,
+                ShotNumber = ShotNumber,
                 BallData = new BallData()
                 {
                     Speed = input.BallData.Speed,
@@ -203,7 +202,7 @@ namespace MLM2PRO_BT_APP
 
         public OpenConnectApiMessage TestShot()
         {
-            Instance.ShotCounter++;
+            Instance.ShotNumber++;
             // Create a Random instance
             Random random = new Random();
 
@@ -219,7 +218,7 @@ namespace MLM2PRO_BT_APP
 
             return new OpenConnectApiMessage()
             {
-                ShotNumber = ShotCounter,
+                ShotNumber = ShotNumber,
                 BallData = new BallData()
                 {
                     Speed = speed,

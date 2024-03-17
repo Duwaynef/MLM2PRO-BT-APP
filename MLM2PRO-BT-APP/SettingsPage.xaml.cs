@@ -28,11 +28,26 @@ namespace MLM2PRO_BT_APP
         {
             InitializeComponent();
             DataContext = SettingsManager.Instance;
+            SettingsManager.Instance.SettingsUpdated += (s, e) => RefreshDataContext();
         }
+
+        public void RefreshDataContext()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                DataContext = null; // Clear existing DataContext
+                DataContext = SettingsManager.Instance; // Re-assign DataContext to refresh bindings
+            });
+        }
+
 
         private void Settings_ClearSettings_Button(object sender, RoutedEventArgs e)
         {
             SettingsManager.ClearSettings();
+        }
+
+        private void SettingsManager_SettingsUpdated(object sender, EventArgs e)
+        {
         }
 
         private void Settings_SaveSettings_Button(object sender, RoutedEventArgs e)

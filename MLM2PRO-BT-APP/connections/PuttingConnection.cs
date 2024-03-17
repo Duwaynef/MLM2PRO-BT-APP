@@ -82,7 +82,7 @@ namespace MLM2PRO_BT_APP.Putting
         public static OpenConnectApiMessage? BallDataFromPuttingBallData(Putting.BallData? puttBallData)
         {
             if (puttBallData == null) return null;
-            OpenConnectApiMessage.Instance.ShotCounter++;
+            OpenConnectApiMessage.Instance.ShotNumber++;
             return new OpenConnectApiMessage()
             {
                 ShotNumber = OpenConnectApiMessage.Instance.ShotNumber,

@@ -8,6 +8,7 @@ using System.Windows.Media;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using MLM2PRO_BT_APP.util;
+using Windows.ApplicationModel.VoiceCommands;
 
 namespace MLM2PRO_BT_APP
 {
@@ -140,5 +141,6 @@ namespace MLM2PRO_BT_APP
                 DebugConsolePopup.IsOpen = false;
             }
         }
+
     }
 }
