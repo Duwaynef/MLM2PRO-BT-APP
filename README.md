@@ -43,3 +43,7 @@ Shot Data shows the list of shots and the "Result" shows if GSPro sucessfully ac
 
 ### KNOWN ISSUE
 getting a connection can sometimes be unstable, easiest method is to turn device on, wait for it to be solid red. then open the app.
+
+if you get it all connected and all seems well, and you have a green light, but you do not get shot data.
+press the **Resub** button. when the light is green avoid the other buttons as it may break the connection with the device.
+and if that happens you need to close the app, power cycle the device, and reopen the app when the device is solid red again.
