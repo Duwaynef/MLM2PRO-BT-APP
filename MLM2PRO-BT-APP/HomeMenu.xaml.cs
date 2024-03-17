@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MLM2PRO_BT_APP.WebApiClient;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -101,23 +102,24 @@ public sealed partial class HomeMenu : Page
     public class ShotData
     {
         public int ShotCounter { get; set; }
-        public string Result { get; set; }
+        public string Result { get; set; } = "";
+        public string Club { get; set; } = "";
+        public double ClubSpeed { get; set; }
         public double BallSpeed { get; set; }
         public double SpinAxis { get; set; }
         public double SpinRate { get; set; }
         public double HLA { get; set; }
         public double VLA { get; set; }
-        public double ClubSpeed { get; set; }
-        public double BackSpin { get; set; }
-        public double SideSpin { get; set; }
-        public double ClubPath { get; set; }
-        public double ImpactAngle { get; set; }
+        //public double BackSpin { get; set; }
+        //public double SideSpin { get; set; }
+        //public double ClubPath { get; set; }
+        //public double ImpactAngle { get; set; }
     }
     public void AddTestShotDataRows()
     {
         Application.Current.Dispatcher.Invoke(() =>
         {
-            SharedViewModel.Instance.ShotDataCollection.Insert(0, new ShotData { ShotCounter = OpenConnectApiMessage.Instance.ShotCounter, Result = "Test", BallSpeed = 100, SpinAxis = 20, SpinRate = 5000, VLA = 40, HLA = 10, ClubSpeed = 50, BackSpin = 0, SideSpin = 0, ClubPath = 0, ImpactAngle = 0 });
+            SharedViewModel.Instance.ShotDataCollection.Insert(0, new ShotData { ShotCounter = OpenConnectApiMessage.Instance.ShotCounter, Result = "Test", Club = "Test", BallSpeed = 100, SpinAxis = 20, SpinRate = 5000, VLA = 40, HLA = 10, ClubSpeed = 50 });
         });
     }
 
@@ -125,10 +127,10 @@ public sealed partial class HomeMenu : Page
     {
         App.SharedVM.LMStatus = "TESTING WEBAPI";
         
-        WebApiClient webApiClient = new WebApiClient();
+        WebApiClient.WebApiClient webApiClient = new WebApiClient.WebApiClient();
         Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance.Settings.WebApiSettings.WebApiToken);
         Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance.Settings.WebApiSettings.WebApiUserId);
-        WebApiClient.ApiResponse response = await webApiClient.SendRequestAsync(SettingsManager.Instance.Settings.WebApiSettings.WebApiUserId);
+        WebApiClient.WebApiClient.ApiResponse response = await webApiClient.SendRequestAsync(SettingsManager.Instance.Settings.WebApiSettings.WebApiUserId);
 
         if (response != null && response.Success)
         {
@@ -170,5 +172,15 @@ public sealed partial class HomeMenu : Page
     private void LM_Resub_Click(object sender, RoutedEventArgs e)
     {
         (App.Current as App)?.BTManagerResub();
+    }
+
+    private void Putting_Connect_Click(object sender, RoutedEventArgs e)
+    {
+        (App.Current as App)?.PuttingEnable();
+    }
+
+    private void Putting_Disconnect_Click(object sender, RoutedEventArgs e)
+    {
+        (App.Current as App)?.PuttingDisable();
     }
 }

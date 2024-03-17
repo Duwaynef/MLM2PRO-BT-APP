@@ -1,16 +1,24 @@
 using System.Text.Json.Serialization;
 
-namespace MLM2PRO_BT_APP;
+namespace MLM2PRO_BT_APP.Putting;
 
 public class PuttingDataMessage
 {
-public PuttingBallData? PuttingBallData { get; set; }
+    [JsonPropertyName("ballData")]
+    public BallData? BallData { get; set; }
 }
 
-[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-public class PuttingBallData
+public class BallData
 {
-public float BallSpeed {get; set; }
-public float TotalSpin { get; set; }
-public float LaunchDirection { get; set; }
+    [JsonPropertyName("BallSpeed")]
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)] // Ensure this attribute is here
+    public double BallSpeed { get; set; }
+
+    [JsonPropertyName("TotalSpin")]
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
+    public double TotalSpin { get; set; }
+
+    [JsonPropertyName("LaunchDirection")]
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
+    public double LaunchDirection { get; set; }
 }

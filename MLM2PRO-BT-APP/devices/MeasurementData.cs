@@ -2,7 +2,7 @@
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace MLM2PRO_BT_APP
+namespace MLM2PRO_BT_APP.Measurement
 {
     class MeasurementData
     {

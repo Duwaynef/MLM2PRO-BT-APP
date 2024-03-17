@@ -21,6 +21,13 @@ namespace MLM2PRO_BT_APP
             set => SetProperty(ref _gsProStatus, value, nameof(GSProStatus));
         }
 
+        private string _gsProClub;
+        public string GSProClub
+        {
+            get => _gsProClub;
+            set => SetProperty(ref _gsProClub, value, nameof(GSProClub));
+        }
+
         private string _lmStatus;
         public string LMStatus
         {
@@ -28,11 +35,25 @@ namespace MLM2PRO_BT_APP
             set => SetProperty(ref _lmStatus, value, nameof(LMStatus));
         }
 
+        private string _puttingStatus;
+        public string PuttingStatus
+        {
+            get => _puttingStatus;
+            set => SetProperty(ref _puttingStatus, value, nameof(PuttingStatus));
+        }
+
         private string _lmBattLife;
         public string LMBattLife
         {
             get => _lmBattLife;
             set => SetProperty(ref _lmBattLife, value, nameof(LMBattLife));
+        }
+
+        private SolidColorBrush _PuttingStatusBackground;
+        public SolidColorBrush PuttingStatusBackground
+        {
+            get => _PuttingStatusBackground;
+            set => SetProperty(ref _PuttingStatusBackground, value, nameof(PuttingStatusBackground));
         }
 
         private SolidColorBrush _lmStatusBackground;
@@ -108,6 +129,10 @@ namespace MLM2PRO_BT_APP
                 else if (propertyName == nameof(LMBattLife) && value is string lmBattLifeValue)
                 {
                     LMBattLifeBackground = GetStatusColor(lmBattLifeValue);
+                }
+                else if (propertyName == nameof(PuttingStatus) && value is string puttingStatusValue)
+                {
+                    PuttingStatusBackground = GetStatusColor(puttingStatusValue);
                 }
             });
             return true;

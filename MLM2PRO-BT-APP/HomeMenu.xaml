@@ -12,6 +12,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="320" />
@@ -20,39 +21,51 @@
         </Grid.RowDefinitions>
 
         <!-- GSPro Section -->
-        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0" Width="630" Height="310">
-            <Grid Margin="10" Width="610" Height="130">
+        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0">
+            <Grid Margin="10">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="300" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="80" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <TextBlock Text="GSPro" FontSize="48" Margin="0,0,0,20" HorizontalAlignment="Center" Foreground="White" Grid.ColumnSpan="2"/>
+                <TextBlock Text="GSPro" FontSize="40" Foreground="White" Height="64" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding GSProClub, Mode=OneWay}" Background="{Binding LMBattLifeBackground, Mode=OneWay}" FontSize="40" Foreground="White" Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 <TextBox x:Name="textBox" Width="auto" Height="40" TextWrapping="Wrap" 
                      Text="{Binding GSProStatus, Mode=OneWay}" Background="{Binding GSProStatusBackground, Mode=OneWay}" Margin="0,0,0,10" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2" Grid.Row="1"/>
             </Grid>
-            <Button x:Name="GSPro_Connect" Content="Connect" Height="40" Width="280" Click="GSPro_Connect_Click" Margin="0,0,0,10" HorizontalAlignment="Center"/>
-            <Button x:Name="button1" Content="Disconnect" Height="40" Width="280" Click="GSPro_Disconnect_Click" Margin="0,0,0,10" HorizontalAlignment="Center"/>
-            <Button x:Name="GSPro_TextShot" Content="Send TestShot" Height="40" Width="280" Click="GSPro_Send_TestShot_Click" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Button Grid.Row="0" Grid.Column="0" x:Name="GSPro_Connect" Content="Connect" Height="40" Width="280" Click="GSPro_Connect_Click" Margin="5" HorizontalAlignment="Center"/>
+                <Button Grid.Row="0" Grid.Column="1" x:Name="GSPro_Disconnect" Content="Disconnect" Height="40" Width="280" Click="GSPro_Disconnect_Click" Margin="5" HorizontalAlignment="Center"/>
+                <Button Grid.Row="1" Grid.Column="0" x:Name="GSPro_TextShot" Content="Send TestShot" Height="40" Width="280" Click="GSPro_Send_TestShot_Click" Margin="5" HorizontalAlignment="Center"/>
+            </Grid>
         </StackPanel>
 
         <!-- Launch Monitor Section -->
-        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0" Width="630" Height="310">
+        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0">
             <Grid Margin="10">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="400" />
+                    <ColumnDefinition Width="300" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="80" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <TextBlock Text="Launch Monitor" FontSize="48" Foreground="White" Height="64" HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding LMBattLife, Mode=OneWay}" Background="{Binding LMBattLifeBackground, Mode=OneWay}" FontSize="48" Foreground="White" Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                <TextBox x:Name="GSProStatus" Width="auto" Height="40" TextWrapping="Wrap" 
+                <TextBlock Text="Launch Monitor" FontSize="40" Foreground="White" Height="64" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding LMBattLife, Mode=OneWay}" Background="{Binding LMBattLifeBackground, Mode=OneWay}" FontSize="40" Foreground="White" Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                <TextBox x:Name="LMStatus" Width="auto" Height="40" TextWrapping="Wrap" 
          Text="{Binding LMStatus, Mode=OneWay}" Background="{Binding LMStatusBackground, Mode=OneWay}" Margin="0,0,0,10" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2" Grid.Row="1"/>
             </Grid>
             <Grid>
@@ -75,23 +88,56 @@
 
         </StackPanel>
 
+        <!-- Putting Section -->
+        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0">
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="80" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="Putting" FontSize="40" Foreground="White" Height="64" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding PuttingEnabled, Mode=OneWay}" FontSize="40" Foreground="White" Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                <TextBox x:Name="Putting_Status_TextBox" Width="auto" Height="40" TextWrapping="Wrap" 
+                    Text="{Binding PuttingStatus, Mode=OneWay}" Background="{Binding PuttingStatusBackground, Mode=OneWay}" Margin="0,0,0,10" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2" Grid.Row="1"/>
+            </Grid>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Button Grid.Row="0" Grid.Column="0" x:Name="Putting_Connect" Content="Connect" Height="40" Width="280" Click="Putting_Connect_Click" Margin="5" HorizontalAlignment="Center"/>
+                <Button Grid.Row="0" Grid.Column="1" x:Name="Putting_Disconnect" Content="Disconnect" Height="40" Width="280" Click="Putting_Disconnect_Click" Margin="5" HorizontalAlignment="Center"/>
+            </Grid>
+        </StackPanel>
+
+
         <!-- Shot Data Section -->
-        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Center" Height="390">
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="3" HorizontalAlignment="Center" Height="390">
             <TextBlock Text="Shot Data" FontSize="36" HorizontalAlignment="Center" Foreground="White"/>
             <DataGrid x:Name="ShotDataDataGrid" Margin="10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" AlternatingRowBackground="#FFC5C5C5" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="270" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="270">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Shot" Binding="{Binding ShotCounter}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="80" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Side Spin" Binding="{Binding SideSpin}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Impact Angle" Binding="{Binding ImpactAngle}" Width="SizeToHeader" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Shot" Binding="{Binding ShotCounter}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Club" Binding="{Binding Club}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="*" IsReadOnly="True"/>
+                    <!--<DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Side Spin" Binding="{Binding SideSpin}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Impact Angle" Binding="{Binding ImpactAngle}" Width="*" IsReadOnly="True"/> -->
                 </DataGrid.Columns>
             </DataGrid>
         </StackPanel>

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Windows.Web.Http;
 using Newtonsoft.Json;
 
-namespace MLM2PRO_BT_APP
+namespace MLM2PRO_BT_APP.WebApiClient
 {
     public class WebApiClient
     {
@@ -14,8 +14,8 @@ namespace MLM2PRO_BT_APP
         public WebApiClient()
         {
             // Initialize BaseUrl and SecretValue using appSettings
-            this.BaseUrl = SettingsManager.Instance.Settings.WebApiSettings.WebApiURL;
-            this.SecretValue = SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret;
+            BaseUrl = SettingsManager.Instance.Settings.WebApiSettings.WebApiURL;
+            SecretValue = SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret;
         }
         public class User
         {
@@ -35,8 +35,8 @@ namespace MLM2PRO_BT_APP
             Logger.Log("Sending request to Web API...");
             using (HttpClient httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Add(this.SecretKey, this.SecretValue);
-                Logger.Log("UserId: " + userId + ", Secret Key: " + this.SecretKey + ", Secret Value: " + this.SecretValue);
+                httpClient.DefaultRequestHeaders.Add(SecretKey, SecretValue);
+                Logger.Log("UserId: " + userId + ", Secret Key: " + SecretKey + ", Secret Value: " + SecretValue);
                 Uri requestUri = new Uri(BaseUrl + userId);
                 try
                 {

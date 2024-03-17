@@ -1,128 +1,127 @@
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Windows.Networking.Sockets;
-using Windows.Storage.Streams;
-using Windows.Web.Http;
-using Windows.Web.Http.Headers;
-using System.Configuration;
-using Windows.Media.Protection;
-using System.Net.WebSockets;
-using Newtonsoft.Json;
-using System.Runtime.InteropServices.WindowsRuntime;
-/*
-namespace MLM2PRO_BT_APP
+using System.Text.Json.Serialization;
+using NetCoreServer;
+
+
+namespace MLM2PRO_BT_APP.Putting
 {
-    class HttpPuttingSession
+
+    class HttpPuttingSession : HttpSession
     {
-        public ConnectionManager ConnectionManager;
         public HttpPuttingServer PuttingServer { get; private set; }
-        private StreamWebSocket webSocket;
 
-        public HttpPuttingSession(HttpPuttingServer server, ConnectionManager connectionManager)
+        public HttpPuttingSession(HttpPuttingServer server) : base(server)
         {
-            ConnectionManager = connectionManager;
             PuttingServer = server;
-            webSocket = new StreamWebSocket();
+            var options = new JsonSerializerOptions
+            {
+                NumberHandling = JsonNumberHandling.AllowReadingFromString
+            };
         }
 
-        public async void ConnectAsync()
-        {
-            Uri serverUri = new Uri("");
-            await webSocket.ConnectAsync(serverUri);
-            Listen();
-        }
-
-        private async void Listen()
+        protected override void OnReceivedRequest(HttpRequest request)
         {
             try
-            {
-                while (webSocket.Information.State == WebSocketState.Open)
+            {  
+                if (request.Method == "POST" || request.Method == "PUT")
                 {
-                    DataReader reader = new DataReader(webSocket.InputStream);
-                    await reader.LoadAsync(1024);
-                    string message = reader.ReadString(reader.UnconsumedBufferLength);
-                    if (!string.IsNullOrEmpty(message))
-                    {
-                        HttpRequestMessage request = new HttpRequestMessage();
-                        request.Content = new HttpStringContent(message);
-                        OnReceivedRequest(request);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                PuttingLogger.LogPuttError($"Error processing request: {ex.Message}");
-            }
-        }
+                    string key = request.Url;
+                    string value = request.Body;
+                    PuttingDataMessage? message = JsonSerializer.Deserialize<PuttingDataMessage>(value);
+                    Logger.Log(request.Body);
 
-        private async void OnReceivedRequest(HttpRequestMessage request)
-        {
-            try
-            {
-                string message = await request.Content.ReadAsStringAsync();
-                if (!string.IsNullOrEmpty(message))
-                {
-                    if ((request.Method.Method == "POST") || (request.Method.Method == "PUT"))
+                    if (message != null)
                     {
-                        string key = request.RequestUri.ToString();
-                        string value = message;
-                        PuttingDataMessage dataMessage = JsonSerializer.Deserialize<PuttingDataMessage>(value);
-                        PuttingLogger.LogPuttIncoming(value);
-
-                        if (dataMessage != null)
+                        App.SharedVM.PuttingStatus = "INCOMING MESSAGE";
+                        if (PuttingServer.PuttingEnabled && DeviceManager.Instance.ClubSelection == "PT")
                         {
-                            if (PuttingServer.PuttingEnabled)
-                                ConnectionManager.SendShot(BallDataFromPuttingBallData(dataMessage.ballData), null);
+                            OpenConnectApiMessage? messageToSend = BallDataFromPuttingBallData(message?.BallData);
+                            if (messageToSend != null)
+                            {
+                                (App.Current as App)?.SendShotData(messageToSend);
+                                App.SharedVM.PuttingStatus = "SHOT SENT";
+                            }
                             else
-                                PuttingLogger.LogPuttInfo("Not sending Putt because selected club is not putter");
+                            {
+                                
+                            }
+                        }
+                        else
+                        {
+                            App.SharedVM.PuttingStatus = "CONNECTED";
+                            Logger.Log("Not sending Putt because selected club is not putter");
                         }
                     }
-                }
 
+                }
                 SendResponseAsync(Response.MakeOkResponse());
+
             }
-            catch (Exception ex)
+            catch
             {
-                PuttingLogger.LogPuttError($"Error processing request: {ex.Message}");
                 SendResponseAsync(Response.MakeErrorResponse());
             }
+
         }
 
-        private void SendResponseAsync(object response)
+        protected override void OnReceivedRequestError(HttpRequest request, string error)
         {
-            // Implement sending response asynchronously
+            Logger.Log($"Request error: {error}");
         }
 
-        private BallData? BallDataFromPuttingBallData(PuttingBallData? puttBallData)
+        protected override void OnError(SocketError error)
+        {
+            Logger.Log($"HTTP session caught an error: {error}");
+        }
+
+        public static OpenConnectApiMessage? BallDataFromPuttingBallData(Putting.BallData? puttBallData)
         {
             if (puttBallData == null) return null;
-            return new PuttingBallData()
+            OpenConnectApiMessage.Instance.ShotCounter++;
+            return new OpenConnectApiMessage()
             {
-                Speed = puttBallData.BallSpeed,
-                //SpinAxis = -1 * (puttBallData.SpinAxis < 90 ? r10BallData.SpinAxis : r10BallData.SpinAxis - 360),
-                TotalSpin = puttBallData.TotalSpin,
-                HLA = puttBallData.LaunchDirection,
-                VLA = 0,
+                ShotNumber = OpenConnectApiMessage.Instance.ShotNumber,
+                BallData = new MLM2PRO_BT_APP.BallData()
+                {
+                    Speed = puttBallData.BallSpeed,
+                    SpinAxis = 0,
+                    TotalSpin = puttBallData.TotalSpin,
+                    HLA = puttBallData.LaunchDirection,
+                    VLA = 0,
+                },
+                ShotDataOptions = new ShotDataOptions()
+                {
+                    ContainsBallData = true,
+                    ContainsClubData = false,
+                    LaunchMonitorIsReady = true,
+                    IsHeartBeat = false
+                }
             };
         }
     }
 
-    class HttpPuttingServer
+    class HttpPuttingServer : HttpServer
     {
-        private readonly StreamSocketListener _listener;
-        private readonly ConnectionManager _connectionManager;
+        [DllImport("User32.dll")]
+        private static extern bool SetForegroundWindow(nint hWnd);
+        [DllImport("User32.dll")]
+        private static extern bool BringWindowToTop(nint handle);
+        [DllImport("User32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        private static readonly nint HWND_TOPMOST = new nint(-1);
+        private const uint SWP_NOSIZE = 0x0001;
+        private const uint SWP_NOMOVE = 0x0002;
+        private const uint TOPMOST_FLAGS = SWP_NOMOVE | SWP_NOSIZE;
+        public bool PuttingEnabled = false;
+        private bool mDisposing;
 
-        public bool PuttingEnabled { get; private set; }
-        private bool _disposing;
-        private bool _disposed = false;
-
-        public Process PuttingProcess { get; private set; }
+        public Process? PuttingProcess { get; private set; }
         public bool OnlyLaunchWhenPutting { get; }
         public bool KeepPuttingCamOnTop { get; }
         public bool LaunchBallTracker { get; }
@@ -133,29 +132,24 @@ namespace MLM2PRO_BT_APP
         public string ExecutableName { get; }
         public string AdditionalExeArgs { get; }
         public bool HideExeLogs { get; }
+        protected override TcpSession CreateSession() => new HttpPuttingSession(this);
+        protected override void OnError(SocketError error) => Logger.Log($"HTTP session caught an error: {error}");
 
-        public HttpPuttingServer(ConnectionManager connectionManager)
+        public HttpPuttingServer()
+          : base(IPAddress.Any, SettingsManager.Instance.Settings.Putting.PuttingPort)
         {
-            _listener = new StreamSocketListener();
-            _connectionManager = connectionManager;
+            Logger.Log($"Starting putting receiver on port {Port}");
 
-            _listener.ConnectionReceived += OnConnectionReceived;
-            _listener.Control.KeepAlive = true;
-
-            PuttingEnabled = false;
-
-            OnlyLaunchWhenPutting = SettingsManager.Instance.AppSettings.Putting.OnlyLaunchWhenPutting;
-            KeepPuttingCamOnTop = SettingsManager.Instance.AppSettings.Putting.KeepPuttingCamOnTop;
-            LaunchBallTracker = SettingsManager.Instance.AppSettings.Putting.LaunchBallTracker;
-            WebcamIndex = SettingsManager.Instance.AppSettings.Putting.WebcamIndex;
-            BallColor = SettingsManager.Instance.AppSettings.Putting.BallColor;
-            CamPreviewWidth = SettingsManager.Instance.AppSettings.Putting.CamPreviewWidth;
-            ExecutablePath = SettingsManager.Instance.AppSettings.Putting.ExePath;
+            OnlyLaunchWhenPutting = SettingsManager.Instance.Settings.Putting.OnlyLaunchWhenPutting;
+            KeepPuttingCamOnTop = SettingsManager.Instance.Settings.Putting.KeepPuttingCamOnTop;
+            LaunchBallTracker = SettingsManager.Instance.Settings.Putting.LaunchBallTracker;
+            WebcamIndex = SettingsManager.Instance.Settings.Putting.WebcamIndex;
+            BallColor = SettingsManager.Instance.Settings.Putting.BallColor;
+            CamPreviewWidth = SettingsManager.Instance.Settings.Putting.CamPreviewWidth;
+            ExecutablePath = SettingsManager.Instance.Settings.Putting.ExePath;
             ExecutableName = Path.GetFileName(ExecutablePath);
-            AdditionalExeArgs = SettingsManager.Instance.AppSettings.Putting.AdditionalExeArgs;
-            HideExeLogs = SettingsManager.Instance.AppSettings.Putting.HideExeLogs;
-
-            StartListening();
+            AdditionalExeArgs = SettingsManager.Instance.Settings.Putting.AdditionalExeArgs;
+            HideExeLogs = SettingsManager.Instance.Settings.Putting.HideExeLogs;
 
             if (LaunchBallTracker && CheckBallTrackingExists() && !OnlyLaunchWhenPutting)
             {
@@ -163,101 +157,40 @@ namespace MLM2PRO_BT_APP
                 if (KeepPuttingCamOnTop)
                     FocusProcess();
             }
-
-            _connectionManager.ClubChanged += (o, e) =>
-            {
-                if (e.Club == OpenConnectClub.PT)
-                {
-                    if (!PuttingEnabled)
-                        StartPutting();
-                }
-                else
-                {
-                    if (PuttingEnabled)
-                        StopPutting();
-                }
-            };
         }
 
-        private void StartListening()
+        public void StartPutting()
         {
-            // Start listening for incoming connections
-            _listener.BindServiceNameAsync(SettingsManager.Instance.AppSettings.Putting.PuttingPort.ToString());
+            PuttingEnabled = true;
+            if (LaunchBallTracker && PuttingProcess == null)
+            {
+                LaunchProcess();
+                App.SharedVM.PuttingStatus = "CONNECTED";
+            }
+            if (KeepPuttingCamOnTop)
+                FocusProcess();
         }
-
-        private async void OnConnectionReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
+        public void StopPutting(bool force = false)
         {
-            try
-            {
-                // Read request data
-                using (var stream = args.Socket.InputStream.AsStreamForRead())
-                using (var reader = new StreamReader(stream))
-                {
-                    string request = await reader.ReadToEndAsync();
-                    HttpRequest httpRequest = JsonConvert.DeserializeObject<HttpRequest>(request);
-
-                    // Process request
-                    if (httpRequest != null)
-                        await ProcessRequest(httpRequest);
-                }
-            }
-            catch (Exception ex)
-            {
-                PuttingLogger.LogPuttError($"Error processing request: {ex.Message}");
-            }
+            PuttingEnabled = false;
+            if (LaunchBallTracker && OnlyLaunchWhenPutting || force)
+                KillProcess();
+                App.SharedVM.PuttingStatus = "DISCONNECTED";
         }
 
-        private async Task ProcessRequest(HttpRequest request)
-        {
-            try
-            {
-                if (request.Method == "POST" || request.Method == "PUT")
-                {
-                    string key = request.Url;
-                    string value = request.Body;
-                    PuttingDataMessage message = JsonConvert.DeserializeObject<PuttingDataMessage>(value);
-                    PuttingLogger.LogPuttIncoming(request.Body);
-
-                    if (message != null)
-                    {
-                        if (PuttingEnabled)
-                            _connectionManager.SendShot(BallDataFromPuttingBallData(message?.PuttingBallData), null);
-                        else
-                            PuttingLogger.LogPuttInfo("Not sending Putt because selected club is not putter");
-                    }
-                }
-
-                // Send response
-                await SendResponseAsync(Response.MakeOkResponse());
-            }
-            catch (Exception ex)
-            {
-                PuttingLogger.LogPuttError($"Error processing request: {ex.Message}");
-                await SendResponseAsync(Response.MakeErrorResponse());
-            }
-        }
-
-        private async Task SendResponseAsync(string response)
-        {
-            using (var stream = new MemoryStream())
-            {
-                using (var writer = new StreamWriter(stream))
-                {
-                    await writer.WriteAsync(response);
-                    await writer.FlushAsync();
-
-                    // Send response data
-                    await _listener.OutputStream.WriteAsync(stream.GetWindowsRuntimeBuffer());
-                }
-            }
-        }
 
         private bool CheckBallTrackingExists()
         {
-            return File.Exists(ExecutablePath);
+            if (!File.Exists(ExecutablePath))
+            {
+                Logger.Log($"{ExecutablePath} file not found.");
+                Logger.Log("Download latest release of ball_tracking program from https://github.com/alleexx/cam-putting-py/releases and unzip to same folder as this program");
+                return false;
+            }
+            return true;
         }
 
-        private void LaunchProcess()
+        public void LaunchProcess()
         {
             if (CheckBallTrackingExists())
             {
@@ -278,15 +211,15 @@ namespace MLM2PRO_BT_APP
                     startInfo.Arguments = $"{startInfo.Arguments} {AdditionalExeArgs}";
                 }
 
-                PuttingLogger.LogPuttInfo($"Starting putting camera: '{startInfo.FileName} {startInfo.Arguments}' ");
+                Logger.Log($"Starting putting camera: '{startInfo.FileName} {startInfo.Arguments}' ");
                 PuttingProcess = Process.Start(startInfo);
 
                 if (PuttingProcess == null)
                 {
-                    PuttingLogger.LogPuttError("Error opening putting process");
+                    Logger.Log("Error opening putting process");
                     return;
                 }
-                Logger.Log(PuttingProcess.BasePriority);
+                Console.WriteLine(PuttingProcess.BasePriority);
 
                 PuttingProcess.EnableRaisingEvents = true;
                 PuttingProcess.OutputDataReceived += OnBallTrackerLogs;
@@ -297,41 +230,41 @@ namespace MLM2PRO_BT_APP
                 PuttingProcess.Exited += OnPuttingProcessClosed;
 
                 int attempts = 0;
-                while (((int)PuttingProcess.MainWindowHandle) == 0)
+                while ((int)PuttingProcess.MainWindowHandle == 0)
                 {
                     if (attempts % 5 == 0)
                     {
-                        PuttingLogger.LogPuttInfo("Waiting for main window to launch...");
+                        Logger.Log("Waiting for main window to launch...");
                     }
-                    Task.Delay(1000).Wait();
+                    Thread.Sleep(1000);
                     attempts += 1;
                 }
-                PuttingLogger.LogPuttInfo("Main Window launched");
+                Logger.Log("Main Window launched");
             }
         }
 
         private void OnBallTrackerLogs(object _, DataReceivedEventArgs args)
         {
             if (!string.IsNullOrWhiteSpace(args.Data) && !HideExeLogs)
-                PuttingLogger.LogPuttInfo($"[{ExecutableName}] {args.Data}");
+                Logger.Log($"[{ExecutableName}] {args.Data}");
         }
 
         private void OnBallTrackerErrors(object _, DataReceivedEventArgs args)
         {
             if (!string.IsNullOrWhiteSpace(args.Data) && !HideExeLogs)
-                PuttingLogger.LogPuttError($"[{ExecutableName}] {args.Data}");
+                Logger.Log($"[{ExecutableName}] {args.Data}");
         }
         private void OnPuttingProcessClosed(object? _, EventArgs? args)
         {
             PuttingProcess = null;
-            if ((PuttingEnabled || (!OnlyLaunchWhenPutting)) && !mDisposing)
+            if ((PuttingEnabled || !OnlyLaunchWhenPutting) && !mDisposing)
             {
-                PuttingLogger.LogPuttError($"{ExecutableName} closed unexpectedly. Reopening...");
+                Logger.Log($"{ExecutableName} closed unexpectedly. Reopening...");
                 StartPutting();
             }
             else
             {
-                PuttingLogger.LogPuttInfo($"{ExecutableName} closed");
+                Logger.Log($"{ExecutableName} closed");
             }
         }
 
@@ -339,8 +272,8 @@ namespace MLM2PRO_BT_APP
         {
             if (PuttingProcess != null)
             {
-                IntPtr handle = PuttingProcess.MainWindowHandle;
-                if (handle != IntPtr.Zero)
+                nint handle = PuttingProcess.MainWindowHandle;
+                if (handle != nint.Zero)
                 {
                     SetWindowPos(handle, HWND_TOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
                     BringWindowToTop(handle);
@@ -349,16 +282,18 @@ namespace MLM2PRO_BT_APP
             }
         }
 
-        private void KillProcess()
+        public void KillProcess()
         {
-            PuttingLogger.LogPuttInfo("Shutting down putting camera");
+            Logger.Log("Shutting down putting camera");
+
             PuttingProcess?.Kill();
             PuttingProcess = null;
         }
 
+
         protected override void Dispose(bool disposing)
         {
-            if (!mDisposed)
+            if (!IsDisposed)
             {
                 if (disposing)
                 {
@@ -366,17 +301,7 @@ namespace MLM2PRO_BT_APP
                     StopPutting(force: true);
                     base.Dispose(disposing);
                 }
-                bool mDisposed = true; // Set the flag to indicate disposal
             }
         }
     }
-
-    public static class PuttingLogger
-    {
-        public static void LogPuttInfo(string message) => Logger.Log("INFO: " + message);
-        public static void LogPuttError(string message) => Logger.Log("ERROR: " + message);
-        public static void LogPuttOutgoing(string message) => Logger.Log("PUTT_OUT: " + message);
-        public static void LogPuttIncoming(string message) => Logger.Log("PUTT_IN: " + message);
-    }
 }
-*/

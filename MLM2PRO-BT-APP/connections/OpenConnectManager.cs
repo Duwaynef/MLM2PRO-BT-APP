@@ -1,7 +1,9 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Windows.Services.Maps;
 using TcpClient = NetCoreServer.TcpClient;
 
 namespace MLM2PRO_BT_APP
@@ -29,7 +31,7 @@ namespace MLM2PRO_BT_APP
             {
                 App.SharedVM.GSProStatus = "DISCONNECTED";
             });
-            
+
         }
 
         public async Task<bool> SendDataAsync(OpenConnectApiMessage message)
@@ -45,16 +47,43 @@ namespace MLM2PRO_BT_APP
             return SendAsync(data);
         }
 
+
+
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
             string message = Encoding.UTF8.GetString(buffer, (int)offset, (int)size);
-            var response = JsonConvert.DeserializeObject<OpenConnectApiResponse>(message);
-            if (response.Code == 201)
+            Logger.Log($"OpenConnectTCPClient: Received: {message}");
+
+            // Regular expression to match JSON objects.
+            // This pattern assumes that each JSON object starts with `{"Code":` and is well-formed.
+            Regex regex = new Regex(@"(?<=\})\{""Code"":", RegexOptions.Compiled);
+
+            // Split the message into JSON objects using the regex.
+            // Adding a dummy prefix `{"Code":` because the regex split removes it.
+            var jsonObjects = regex.Split(message, (int)StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < jsonObjects.Length; i++)
             {
-                playerInfo = response.Player;
-                ProcessResponse(response);
+                if (i > 0) // Add the removed prefix back except for the first JSON object.
+                {
+                    jsonObjects[i] = @"{""Code"":" + jsonObjects[i];
+                }
+
+                try
+                {
+                    var response = JsonConvert.DeserializeObject<OpenConnectApiResponse>(jsonObjects[i]);
+                    if (response != null && response.Code == 201)
+                    {
+                        playerInfo = response.Player;
+                        ProcessResponse(response);
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Logger.Log($"Error deserializing JSON: {ex.Message}");
+                }
             }
         }
+
 
         protected override void OnError(System.Net.Sockets.SocketError error)
         {
@@ -68,17 +97,40 @@ namespace MLM2PRO_BT_APP
         // Implement your logic for processing the response
         private void ProcessResponse(OpenConnectApiResponse response)
         {
-            String clubSeclection = JsonConvert.SerializeObject(playerInfo.Club);
-            Logger.Log($"OpenConnectTCPClient: Response: {clubSeclection}");
-            if (clubSeclection == "26")
+            if (response?.Player != null)
             {
-                Logger.Log("OpenConnectTCPClient: Club selection is a putter");
+                var playerClub = response.Player.Club;
+                if (playerClub.HasValue)
+                {
+                    Logger.Log($"OpenConnectTCPClient: Response: {playerClub.Value}");
+                    if (playerClub == Club.PT)
+                    {
+                        Logger.Log("OpenConnectTCPClient: Club selection is a putter");
+                        DeviceManager.Instance.ClubSelection = "PT";
+                        App.SharedVM.GSProClub = "PT";
+                        (App.Current as App)?.StartPutting();
+                    }
+                    else
+                    {
+                        Logger.Log($"OpenConnectTCPClient: Club selection is NOT a putter, it is {playerClub.Value}");
+                        DeviceManager.Instance.ClubSelection = playerClub.Value.ToString();
+                        App.SharedVM.GSProClub = playerClub.Value.ToString();
+                        (App.Current as App)?.StopPutting();
+                    }
+                }
+                else
+                {
+                    Logger.Log("OpenConnectTCPClient: No club information available");
+                    DeviceManager.Instance.ClubSelection = "";
+                }
             }
             else
             {
-                Logger.Log("OpenConnectTCPClient: Club selection is NOT a putter");
+                Logger.Log("OpenConnectTCPClient: Invalid response or no player information");
+                DeviceManager.Instance.ClubSelection = "";
             }
         }
+
     }
 
     public class OpenConnectApiMessage
@@ -151,7 +203,7 @@ namespace MLM2PRO_BT_APP
 
         public OpenConnectApiMessage TestShot()
         {
-            OpenConnectApiMessage.Instance.ShotCounter++;
+            Instance.ShotCounter++;
             // Create a Random instance
             Random random = new Random();
 

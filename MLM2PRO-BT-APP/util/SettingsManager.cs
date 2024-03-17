@@ -77,6 +77,7 @@ namespace MLM2PRO_BT_APP
     }
     public class OpenConnectSettings
     {
+        public bool AutoStartOpenConnect { get; set; } = true;
         public string GSProIp { get; set; } = "127.0.0.1";
         public int GSProPort { get; set; } = 921;
     }
@@ -91,6 +92,7 @@ namespace MLM2PRO_BT_APP
     }
     public class LaunchMonitorSettings
     {
+        public bool AutoStartLaunchMonitor { get; set; } = true;
         public string BluetoothDeviceName { get; set; } = "MLM2-";
         public int ReconnectInterval { get; set; } = 10;
         public bool AutoWake { get; set; } = true;
@@ -117,6 +119,7 @@ namespace MLM2PRO_BT_APP
     public class PuttingSettings
     {
         public bool PuttingEnabled { get; set; } = false;
+        public bool AutoStartPutting { get; set; } = true;
         public int PuttingPort { get; set; } = 8888;
         public bool LaunchBallTracker { get; set; } = true;
         public bool OnlyLaunchWhenPutting { get; set; } = true;

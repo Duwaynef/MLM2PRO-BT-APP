@@ -22,6 +22,7 @@ namespace MLM2PRO_BT_APP
 
         ByteConversionUtils byteConversionUtils = new ByteConversionUtils();
         public string DeviceStatus { get; set; } = "NOTCONNECTED";
+        public string ClubSelection { get; set; } = "NONE";
         public byte? Handedness { get; set; } = 1; // Default value of right?
         public byte? BallType { get; set; } = 2; // Default value of rct?
         public byte? Environment { get; set; } = 0; // Default value of outdoor?
@@ -115,7 +116,7 @@ namespace MLM2PRO_BT_APP
 
         public byte[] GetInitialParameters(string tokenInput)
         {
-            this.UserToken = tokenInput;
+            UserToken = tokenInput;
             Logger.Log("GetInitialParameters: UserToken: " + UserToken);
 
 

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MLM2PRO_BT_APP.Putting;
+using Newtonsoft.Json;
 using System.Configuration;
 using System.Data;
 using System.IO;
@@ -20,8 +21,10 @@ public partial class App : Application
     public static SharedViewModel SharedVM { get; set; }
     // private SettingsManager settingsManager;
     private BluetoothManager manager;
+    internal HttpPuttingServer? PuttingConnection { get; }
     private OpenConnectTCPClient client;
     ByteConversionUtils byteConversionUtils = new ByteConversionUtils();
+    
     public string jsonContent = "";
     public App()
     {
@@ -33,6 +36,13 @@ public partial class App : Application
 
         // Initialize the BluetoothManager
         manager = new BluetoothManager();
+
+        // Initialize the PuttingServer
+        PuttingConnection = new HttpPuttingServer();
+        if (SettingsManager.Instance.Settings.Putting.AutoStartPutting)
+        {
+            PuttingEnable();
+        }
     }
 
     private void App_Startup(object sender, StartupEventArgs e)
@@ -94,7 +104,7 @@ public partial class App : Application
             String result = "Fail";
             Logger.Log(messageToSend?.ToString());
             string messageJson = JsonConvert.SerializeObject(messageToSend);
-            if (messageToSend.ClubData.Speed == 0 || messageToSend.BallData.Speed == 0)
+            if (messageToSend.BallData.Speed == 0)
             {
                 result = "Fail";
                 await insertRow(messageToSend, result);
@@ -138,26 +148,27 @@ public partial class App : Application
             Logger.Log($"Error sending message: {ex.Message}");
         }
     }
-    public async Task insertRow(OpenConnectApiMessage inputData,String result)
+    public async Task insertRow(OpenConnectApiMessage inputData, string result)
     {
-        HomeMenu.ShotData shotData;
-        shotData = new HomeMenu.ShotData
+        HomeMenu.ShotData shotData = new HomeMenu.ShotData
         {
             ShotCounter = OpenConnectApiMessage.Instance.ShotCounter,
             Result = result,
-            BallSpeed = inputData.BallData.Speed,
-            SpinAxis = inputData.BallData.SpinAxis,
-            SpinRate = inputData.BallData.TotalSpin,
-            VLA = inputData.BallData.VLA,
-            HLA = inputData.BallData.HLA,
-            ClubSpeed = inputData.ClubData.Speed,
-            BackSpin = 0,
-            SideSpin = 0,
-            ClubPath = 0,
-            ImpactAngle = 0
+            Club = DeviceManager.Instance.ClubSelection ?? "",
+            BallSpeed = inputData.BallData?.Speed ?? 0,
+            SpinAxis = inputData.BallData?.SpinAxis ?? 0,
+            SpinRate = inputData.BallData?.TotalSpin ?? 0,
+            VLA = inputData.BallData?.VLA ?? 0,
+            HLA = inputData.BallData?.HLA ?? 0,
+            ClubSpeed = inputData.ClubData?.Speed ?? 0,
+            //BackSpin = 0,
+            //SideSpin = 0,
+            //ClubPath = 0,
+            //ImpactAngle = 0
         };
         SharedViewModel.Instance.ShotDataCollection.Insert(0, shotData);
     }
+
     public async Task ConnectAndSetupBluetooth()
     {
         manager.RestartDeviceWatcher();
@@ -169,7 +180,7 @@ public partial class App : Application
     }
     public async Task LMDisarmDevice()
     {
-        byte[] data = byteConversionUtils.HexStringToByteArray("01180000000000"); //01180000000000 == disarm device???
+        byte[] data = byteConversionUtils.HexStringToByteArray("010D0000000000"); //01180000000000 == disarm device???
         _ = manager.WriteCommand(data);
     }
     public async Task LMDisconnect()
@@ -213,6 +224,49 @@ public partial class App : Application
     public async Task BTManagerResub()
     {
         _ = manager.UnSubAndReSub();
+    }
+
+    public async Task PuttingEnable()
+    {
+        string fullPath = Path.GetFullPath(SettingsManager.Instance.Settings.Putting.ExePath);
+        if (File.Exists(fullPath))
+        {
+            Console.WriteLine("Putting executable exists.");
+            bool puttingStarted = PuttingConnection.IsStarted;
+            if (puttingStarted == false)
+            {
+                bool? isStarted = PuttingConnection?.Start();
+                if (isStarted == true)
+                {
+                    App.SharedVM.PuttingStatus = "CONNECTED";
+                    PuttingConnection.PuttingEnabled = true;
+                }
+            } else
+            {
+                App.SharedVM.PuttingStatus = "CONNECTED";
+                PuttingConnection.PuttingEnabled = true;
+            }           
+        }
+        else
+        {
+            Console.WriteLine("Putting executable missing.");
+            App.SharedVM.PuttingStatus = "ball_tracking.exe missing";
+        }
+        
+    }
+
+    public async Task PuttingDisable()
+    {
+        PuttingConnection.PuttingEnabled = false;
+    }
+
+    public async Task StartPutting()
+    {
+        PuttingConnection?.StartPutting();
+    }
+    public async Task StopPutting()
+    {
+        PuttingConnection?.StopPutting();
     }
 }
 
