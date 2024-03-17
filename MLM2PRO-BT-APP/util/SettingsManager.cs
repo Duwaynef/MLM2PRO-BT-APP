@@ -120,16 +120,17 @@ namespace MLM2PRO_BT_APP
     {
         public bool PuttingEnabled { get; set; } = false;
         public bool AutoStartPutting { get; set; } = true;
+        public bool HideConsoleWindow { get; set; } = false;
         public int PuttingPort { get; set; } = 8888;
         public bool LaunchBallTracker { get; set; } = true;
         public bool OnlyLaunchWhenPutting { get; set; } = true;
         public bool KeepPuttingCamOnTop { get; set; } = true;
         public int WebcamIndex { get; set; } = 0;
         public string BallColor { get; set; } = "white";
-        public int CamPreviewWidth { get; set; } = 300;
+        public int CamPreviewWidth { get; set; } = 450;
         public string ExePath { get; set; } = "./ball_tracking/ball_tracking.exe";
         public string AdditionalExeArgs { get; set; } = "";
-        public bool HideExeLogs { get; set; } = false;
+        public bool HideExeLogs { get; set; } = true;
     }
     public class AppSettings
     {

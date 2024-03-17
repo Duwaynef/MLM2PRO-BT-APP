@@ -97,6 +97,10 @@
                     <CheckBox IsChecked="{Binding Settings.Putting.LaunchBallTracker, Mode=TwoWay}" FontSize="14"/>
                 </StackPanel>
                 <StackPanel Margin="0,5">
+                    <TextBlock Text="Hide Console Window (May not be stable...)" Foreground="White" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding Settings.Putting.HideConsoleWindow, Mode=TwoWay}" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Margin="0,5">
                     <TextBlock Text="Only Launch When Putting" Foreground="White" FontSize="16"/>
                     <CheckBox IsChecked="{Binding Settings.Putting.OnlyLaunchWhenPutting, Mode=TwoWay}" FontSize="14"/>
                 </StackPanel>
