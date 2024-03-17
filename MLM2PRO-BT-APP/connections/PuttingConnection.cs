@@ -198,7 +198,7 @@ namespace MLM2PRO_BT_APP.Putting
                 startInfo.Arguments = $"-w {WebcamIndex} -c {BallColor} -r {CamPreviewWidth}";
                 startInfo.WorkingDirectory = Path.GetDirectoryName(ExecutablePath);
                 startInfo.WindowStyle = ProcessWindowStyle.Normal;
-                startInfo.CreateNoWindow = true;
+                startInfo.CreateNoWindow = SettingsManager.Instance?.Settings?.Putting?.HideConsoleWindow ?? false;
                 startInfo.UseShellExecute = false;
                 startInfo.RedirectStandardOutput = true;
                 startInfo.RedirectStandardError = true;

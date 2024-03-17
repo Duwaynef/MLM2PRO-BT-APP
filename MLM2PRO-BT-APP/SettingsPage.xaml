@@ -85,7 +85,7 @@
             <StackPanel Grid.Column="1" Grid.Row="1" Margin="10">
                 <TextBlock Text="Putting Settings" Foreground="White" FontSize="24" Margin="0,15,0,10"/>
                 <StackPanel Margin="0,5">
-                    <TextBlock Text="Putting Enabled" Foreground="White" FontSize="16"/>
+                    <TextBlock Text="Putting Enabled ( Requires App Restart )" Foreground="White" FontSize="16"/>
                     <CheckBox IsChecked="{Binding Settings.Putting.PuttingEnabled, Mode=TwoWay}" FontSize="14"/>
                 </StackPanel>
                 <StackPanel Margin="0,5">

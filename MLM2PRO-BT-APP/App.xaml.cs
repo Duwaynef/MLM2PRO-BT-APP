@@ -37,11 +37,14 @@ public partial class App : Application
         // Initialize the BluetoothManager
         manager = new BluetoothManager();
 
-        // Initialize the PuttingServer
-        PuttingConnection = new HttpPuttingServer();
-        if (SettingsManager.Instance.Settings.Putting.AutoStartPutting)
+        if (SettingsManager.Instance.Settings.Putting.PuttingEnabled)
         {
-            PuttingEnable();
+            // Initialize the PuttingServer
+            PuttingConnection = new HttpPuttingServer();
+            if (SettingsManager.Instance.Settings.Putting.AutoStartPutting)
+            {
+                PuttingEnable();
+            }
         }
     }
 
