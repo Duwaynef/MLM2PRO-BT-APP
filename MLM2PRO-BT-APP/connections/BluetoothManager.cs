@@ -58,7 +58,10 @@ public class BluetoothManager : IDisposable
         deviceWatcher.Added += DeviceWatcher_Added;
         deviceWatcher.Updated += DeviceWatcher_Updated;
         deviceWatcher.Removed += DeviceWatcher_Removed;
-        deviceWatcher.Start();
+        if (SettingsManager.Instance.Settings.LaunchMonitor.AutoStartLaunchMonitor)
+        {
+            deviceWatcher.Start();
+        }
     }
 
     private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)

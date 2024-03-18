@@ -13,6 +13,7 @@ using Windows.UI.Core;
 using static MLM2PRO_BT_APP.HomeMenu;
 using System.Xml.Linq;
 using System.Windows.Automation;
+using System.Net;
 
 namespace MLM2PRO_BT_APP;
 
@@ -27,7 +28,8 @@ public partial class App : Application
     internal HttpPuttingServer? PuttingConnection { get; }
     private OpenConnectTCPClient client;
     ByteConversionUtils byteConversionUtils = new ByteConversionUtils();
-    
+    OpenConnectServer OpenConnectServerInstance = new OpenConnectServer(IPAddress.Any, 951);
+    public string lastMessage = "";    
     public string jsonContent = "";
     public App()
     {
@@ -348,6 +350,43 @@ public partial class App : Application
     {
         SettingsManager.Instance.LoadSettings();
     }
+    public async Task StartOpenConnectServer()
+    {
+        OpenConnectServerInstance.Start();
+    }
+    public async Task StopOpenConnectServer()
+    {
+        OpenConnectServerInstance.Stop();
+    }
+    public async Task SendOpenConnectServerNewClientMessage()
+    {
+        if (!string.IsNullOrEmpty(lastMessage))
+        {
+            await Task.Delay(1000);
+            Logger.Log("Sending message to OpenConnectServerClients:");
+            Logger.Log(lastMessage);
+            Logger.Log("");
+            OpenConnectServerInstance.Multicast(lastMessage);
+        }
+    }
+    public async Task SendOpenConnectServerMessage(String incomingMessage)
+    {
+        if (OpenConnectServerInstance.IsStarted)
+        {
+            Logger.Log("Sending message to OpenConnectServerClients");
+            Logger.Log(incomingMessage);
+            Logger.Log("");
+            OpenConnectServerInstance.Multicast(incomingMessage);
+        }
+    }
+    public async Task RelayOpenConnectServerMessage(String outgoingMessage)
+    {
+        lastMessage = outgoingMessage;
+        Logger.Log("Relaying message to GSPro:");
+        Logger.Log(outgoingMessage);
+        Logger.Log("");
+        await client.SendDirectJsonAsync(outgoingMessage);
+    }
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -370,6 +409,16 @@ public partial class App : Application
         {
             StartGSPro();
         }
+
+        if (SettingsManager.Instance.Settings.OpenConnect.EnableAPIRelay)
+        {
+            StartOpenConnectServer();
+        }
+
         ConnectGSPro();
+    }
+    private void App_Exit(object sender, ExitEventArgs e)
+    {
+        OpenConnectServerInstance.Stop();
     }
 }

@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="Settings" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20">
+        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,20,10,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -13,94 +13,99 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- OpenConnect Settings -->
-            <StackPanel Grid.Column="0" Grid.Row="0" Margin="10">
-                <TextBlock Text="GSPro Settings" Foreground="White" FontSize="24" Margin="0,0,0,10"/>
-                <StackPanel Margin="10">
-                    <TextBlock Text="Auto Launch GSPro" Foreground="White" FontSize="16"/>
-                    <CheckBox IsChecked="{Binding Settings.OpenConnect.AutoStartGSPro, Mode=TwoWay}" FontSize="14"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="Skip GSPro Launcher" Foreground="White" FontSize="16"/>
-                    <CheckBox IsChecked="{Binding Settings.OpenConnect.SkipGSProLauncher, Mode=TwoWay}" FontSize="14"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="GSPro API IP" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.OpenConnect.GSProIp, Mode=TwoWay}" ToolTip="Enter GSPro IP" FontSize="14"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="GSPro API Port" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.OpenConnect.GSProPort, Mode=TwoWay}" ToolTip="Enter GSPro Port" FontSize="14"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="GSPro Executable" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.OpenConnect.GSProEXE, Mode=TwoWay}" ToolTip="Enter GSPro exe path" FontSize="14"/>
-                </StackPanel>
+            <!-- GSPro Settings -->
+            <StackPanel Grid.Column="0" Grid.Row="0" Margin="10,0,10,0" VerticalAlignment="Top">
+                <TextBlock Text="GSPro Settings" Foreground="White" FontSize="24" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Auto Launch GSPro" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <CheckBox IsChecked="{Binding Settings.OpenConnect.AutoStartGSPro, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Skip Launcher" Foreground="White" FontSize="16"/>
+                    <CheckBox IsChecked="{Binding Settings.OpenConnect.SkipGSProLauncher, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="GSPro IP" Foreground="White" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBox Text="{Binding Settings.OpenConnect.GSProIp, Mode=TwoWay}" ToolTip="Enter GSPro IP" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="GSPro Port" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Settings.OpenConnect.GSProPort, Mode=TwoWay}" ToolTip="Enter GSPro Port" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Executable" Foreground="White" FontSize="16" HorizontalAlignment="Left"/>
+                    <TextBox Text="{Binding Settings.OpenConnect.GSProEXE, Mode=TwoWay}" ToolTip="Enter GSPro exe path" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Enable API Relay" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <CheckBox IsChecked="{Binding Settings.OpenConnect.EnableAPIRelay, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="API Relay Port" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Settings.OpenConnect.APIRelayPort, Mode=TwoWay}" ToolTip="Enter GSPro exe path" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="240"/>
+                </DockPanel>
             </StackPanel>
 
             <!-- WebApi Settings -->
-            <StackPanel Grid.Column="2" Grid.Row="0" Margin="10">
-                <TextBlock Text="WebApi Settings" Foreground="White" FontSize="24" Margin="0,0,0,10"/>
-                <StackPanel Margin="10">
-                    <TextBlock Text="WebApi URL" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiURL, Mode=TwoWay}" FontSize="14"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="WebApi Secret" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiSecret, Mode=TwoWay}" FontSize="14"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="WebApi Token" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiToken, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="WebApi User ID" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiUserId, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="WebApi Expire Date" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiExpireDate, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="WebApi Device ID" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiDeviceId, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
-                </StackPanel>
+            <StackPanel Grid.Column="2" Grid.Row="0" Margin="10,0,10,0" VerticalAlignment="Top">
+                <TextBlock Text="WebApi Settings" Foreground="White" FontSize="24" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="URL" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiURL, Mode=OneWay}" FontSize="14" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Secret" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiSecret, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Token" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiToken, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="User ID" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiUserId, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Expire Date" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiExpireDate, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Device ID" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Settings.WebApiSettings.WebApiDeviceId, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
             </StackPanel>
 
             <!-- LaunchMonitor Settings -->
-            <StackPanel Grid.Column="1" Grid.Row="0" Margin="10">
-                <TextBlock Text="LaunchMonitor Settings" Foreground="White" FontSize="24" Margin="0,15,0,10"/>
-                <StackPanel Margin="10">
-                    <TextBlock Text="Auto Connect LaunchMonitor" Foreground="White" FontSize="16"/>
-                    <CheckBox IsChecked="{Binding Settings.LaunchMonitor.AutoStartLaunchMonitor, Mode=TwoWay}" FontSize="14"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="Bluetooth Device Name" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.LaunchMonitor.BluetoothDeviceName, Mode=OneWay}" FontSize="14" IsEnabled="False"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="Reconnect Interval" Foreground="White" FontSize="16"/>
-                    <TextBox Text="{Binding Settings.LaunchMonitor.ReconnectInterval, Mode=TwoWay}" FontSize="14"/>
-                </StackPanel>
-                <StackPanel Margin="10">
-                    <TextBlock Text="Auto Wake" Foreground="White" FontSize="16"/>
-                    <CheckBox IsChecked="{Binding Settings.LaunchMonitor.AutoWake, Mode=TwoWay}" FontSize="14"/>
-                </StackPanel>
+            <StackPanel Grid.Column="1" Grid.Row="0" Margin="10,0,10,0" VerticalAlignment="Top">
+                <TextBlock Text="LaunchMonitor Settings" Foreground="White" FontSize="24" HorizontalAlignment="Center"/>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Auto Connect LaunchMonitor" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <CheckBox IsChecked="{Binding Settings.LaunchMonitor.AutoStartLaunchMonitor, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Auto Wake" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <CheckBox IsChecked="{Binding Settings.LaunchMonitor.AutoWake, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Device Name" Foreground="White" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBox Text="{Binding Settings.LaunchMonitor.BluetoothDeviceName, Mode=OneWay}" FontSize="14" IsEnabled="False" VerticalAlignment="Center" HorizontalAlignment="Right" Width="240"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Reconnect Interval" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Settings.LaunchMonitor.ReconnectInterval, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Width="240"/>
+                </DockPanel>
+
             </StackPanel>
 
             <!-- Putting Settings -->
-            <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Margin="10">
-                <TextBlock Text="Putting Settings" Foreground="White" FontSize="24" Margin="0,15,0,10" HorizontalAlignment="Center"/>
-                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20">
+            <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,40,0,0">
+                <TextBlock Text="Putting Settings" Foreground="White" FontSize="24" HorizontalAlignment="Center"/>
+                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,20" ShowGridLines="True">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
@@ -108,60 +113,56 @@
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Margin="10" Grid.Column="0" Grid.Row="0">
-                        <TextBlock Text="Putting Enabled ( Requires App Restart )" Foreground="White" FontSize="16"/>
-                        <CheckBox IsChecked="{Binding Settings.Putting.PuttingEnabled, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="3" Grid.Row="0">
-                        <TextBlock Text="Putting Port" Foreground="White" FontSize="16"/>
-                        <TextBox Text="{Binding Settings.Putting.PuttingPort, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="1" Grid.Row="0">
-                        <TextBlock Text="Launch Ball Tracker" Foreground="White" FontSize="16"/>
-                        <CheckBox IsChecked="{Binding Settings.Putting.LaunchBallTracker, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="0" Grid.Row="1">
-                        <TextBlock Text="Hide Console Window (May not be stable...)" Foreground="White" FontSize="16"/>
-                        <CheckBox IsChecked="{Binding Settings.Putting.HideConsoleWindow, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="1" Grid.Row="1">
-                        <TextBlock Text="Only Launch When Putting" Foreground="White" FontSize="16"/>
-                        <CheckBox IsChecked="{Binding Settings.Putting.OnlyLaunchWhenPutting, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="0" Grid.Row="2">
-                        <TextBlock Text="Keep Putting Cam On Top" Foreground="White" FontSize="16"/>
-                        <CheckBox IsChecked="{Binding Settings.Putting.KeepPuttingCamOnTop, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="2" Grid.Row="0">
-                        <TextBlock Text="Webcam Index" Foreground="White" FontSize="16"/>
-                        <TextBox Text="{Binding Settings.Putting.WebcamIndex, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="2" Grid.Row="1">
-                        <TextBlock Text="Ball Color" Foreground="White" FontSize="16"/>
-                        <TextBox Text="{Binding Settings.Putting.BallColor, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="3" Grid.Row="1">
-                        <TextBlock Text="Cam Preview Width" Foreground="White" FontSize="16"/>
-                        <TextBox Text="{Binding Settings.Putting.CamPreviewWidth, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="2" Grid.Row="2">
-                        <TextBlock Text="Exe Path" Foreground="White" FontSize="16"/>
-                        <TextBox Text="{Binding Settings.Putting.ExePath, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="3" Grid.Row="2">
-                        <TextBlock Text="Additional Exe Args" Foreground="White" FontSize="16"/>
-                        <TextBox Text="{Binding Settings.Putting.AdditionalExeArgs, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
-                    <StackPanel Margin="10" Grid.Column="1" Grid.Row="2">
-                        <TextBlock Text="Hide Exe Logs" Foreground="White" FontSize="16"/>
-                        <CheckBox IsChecked="{Binding Settings.Putting.HideExeLogs, Mode=TwoWay}" FontSize="14"/>
-                    </StackPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="0" Grid.Row="0">
+                        <TextBlock Text="Putting Enabled" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding Settings.Putting.PuttingEnabled, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="3" Grid.Row="0">
+                        <TextBlock Text="Putting Port" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Settings.Putting.PuttingPort, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="1" Grid.Row="0">
+                        <TextBlock Text="Launch Ball Tracker" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding Settings.Putting.LaunchBallTracker, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="0" Grid.Row="1">
+                        <TextBlock Text="Hide Console Window  " Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding Settings.Putting.HideConsoleWindow, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="1" Grid.Row="1">
+                        <TextBlock Text="Launch When Putting  " Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding Settings.Putting.OnlyLaunchWhenPutting, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="0" Grid.Row="2">
+                        <TextBlock Text="Cam On Top" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding Settings.Putting.KeepPuttingCamOnTop, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="2" Grid.Row="0">
+                        <TextBlock Text="Webcam Index" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Settings.Putting.WebcamIndex, Mode=TwoWay}" FontSize="14" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="2" Grid.Row="1">
+                        <TextBlock Text="Ball Color" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Settings.Putting.BallColor, Mode=TwoWay}" FontSize="14" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="3" Grid.Row="1">
+                        <TextBlock Text="Cam Preview Width" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Settings.Putting.CamPreviewWidth, Mode=TwoWay}" FontSize="14" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="2" Grid.Row="2">
+                        <TextBlock Text="Exe Path" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Settings.Putting.ExePath, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Width="240"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="3" Grid.Row="2">
+                        <TextBlock Text="Additional Exe Args" Foreground="White" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Settings.Putting.AdditionalExeArgs, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="240"/>
+                    </DockPanel>
+                    <DockPanel Margin="10,5,10,5" Grid.Column="1" Grid.Row="2">
+                        <TextBlock Text="Hide Exe Logs" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding Settings.Putting.HideExeLogs, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    </DockPanel>
                 </Grid>
             </StackPanel>
 

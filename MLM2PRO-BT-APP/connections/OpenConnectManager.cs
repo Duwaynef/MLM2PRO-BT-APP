@@ -19,7 +19,7 @@ namespace MLM2PRO_BT_APP
         private readonly int _quietPeriod = 300;
         private readonly object _lock = new object();
         private DateTime _lastReceivedTime = DateTime.MinValue;
-        public OpenConnectTCPClient(string serverHost, int serverPort) : base("127.0.0.1", 921) 
+        public OpenConnectTCPClient(string serverHost, int serverPort) : base(SettingsManager.Instance.Settings.OpenConnect.GSProIp, SettingsManager.Instance.Settings.OpenConnect.GSProPort) 
         {
             _processTimer = new Timer(ProcessLastMessage, null, Timeout.Infinite, Timeout.Infinite);
         }
@@ -93,11 +93,13 @@ namespace MLM2PRO_BT_APP
                                 {
                                     howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
                                     (App.Current as App)?.LMArmDevice();
+                                    (App.Current as App)?.SendOpenConnectServerMessage(lastMessage);
                                 }
                                 else
                                 {
                                     howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
                                     (App.Current as App)?.LMArmDeviceWithDelay();
+                                    (App.Current as App)?.SendOpenConnectServerMessage(lastMessage);
                                 }
                             }
                             else if (response != null && response.Code == 203)
