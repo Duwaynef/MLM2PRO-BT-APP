@@ -21,7 +21,11 @@ Pair your device with windows, you may need to turn on advanced bluetooth discov
 
 Open the app and set the Web API Token if it has not been saved from before. **You will have to ask around for this key as it uses the awesome golf api secret to get the device authorization, use this app at your own risk**
 
-The app should handle everything, it should connect, you should get a green light on the device, and the main window should show "CONNECTED, READY" as the launch monitor status
+The app should handle everything, it should connect,and the main window should show "CONNECTED" as the launch monitor status
+
+Once you load into a round, the device should turn green automatically and be ready to read hits.
+
+When you leave a round it will turn blue again until you start a new round.
 
 Selected club in GSPro does nothing for the app outside of labeling the club in the Shot Data section, and discovering when you are putting to enable the putting cam ( if enabled ).
 
@@ -30,7 +34,8 @@ On first load of the application a settings.json file is created in the same dir
 
 The only setting that is required to communicate with the device is the web api secret.
 
-There are many settings in the config.json that are not used. the main ones that actually do something are in the settings page on the app. the reset may come in to play in the future
+Config file was overhauled after a few updates. if you have been keeping a config file. i suggest you open the app and let it build a new
+config file. then compare your old settings ( or go to settings in the app and set your desired settings ).
 
 ## MAIN WINDOW INFO
 It should be self explanitory however each text box below their respective labels are for status updates of that item.
