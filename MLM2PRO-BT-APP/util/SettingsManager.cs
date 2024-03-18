@@ -84,7 +84,7 @@ namespace MLM2PRO_BT_APP
         public string GSProIp { get; set; } = "127.0.0.1";
         public int GSProPort { get; set; } = 921;
         public string GSProEXE { get; set; } = "C:\\GSProV1\\Core\\GSP\\GSPro.exe";
-        public bool EnableAPIRelay { get; set; } = true;
+        public bool EnableAPIRelay { get; set; } = false;
         public int APIRelayPort { get; set; } = 951;
     }
     public class WebApiSettings
