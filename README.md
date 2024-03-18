@@ -19,7 +19,7 @@ Pair your device with windows, you may need to turn on advanced bluetooth discov
 
 **Pairing is only required the first time. and should not be required if you have used the Awesome Golf pc app recently**
 
-Open the app and set the Web API Token if it has not been saved from before. **You will have to ask around for this key as it uses the awesome golf api secret to get the device authorization, use this app at your own risk**
+Open the app and set the Web API Token if it has not been saved from before. **You will have to ask around for this key as it uses an api secret to get the device authorization, use this app at your own risk**
 
 The app should handle everything, it should connect,and the main window should show "CONNECTED" as the launch monitor status
 
