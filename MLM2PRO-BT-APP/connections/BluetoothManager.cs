@@ -39,7 +39,6 @@ public class BluetoothManager : IDisposable
     public List<Guid> notifyUUIDs = new List<Guid>();
 
     public BluetoothManager()
-
     {
         notifyUUIDs.Add(EVENTS_CHARACTERISTIC_UUID);
         notifyUUIDs.Add(HEARTBEAT_CHARACTERISTIC_UUID);
@@ -49,7 +48,6 @@ public class BluetoothManager : IDisposable
         InitializeDeviceWatcher();
         App.SharedVM.LMStatus = "Watching for bluetooth devices...";
     }
-
     private void InitializeDeviceWatcher()
     {
         string serviceSelector = GattDeviceService.GetDeviceSelectorFromUuid(SERVICE_UUID);
@@ -63,14 +61,27 @@ public class BluetoothManager : IDisposable
             deviceWatcher.Start();
         }
     }
-
     private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
     {
         if (!foundDevices.ContainsKey(deviceInfo.Id))
         {
             foundDevices[deviceInfo.Id] = deviceInfo;
             bool isConnected;
-            Logger.Log("Device Watcher found " + deviceInfo.Name);
+            Logger.Log("Device Watcher found:");
+            Logger.Log($"Name: {deviceInfo.Name}");
+            Logger.Log($"ID: {deviceInfo.Id}");
+            Logger.Log($"Kind: {deviceInfo.Kind}");
+            Logger.Log($"EnclosureLocation: {deviceInfo.EnclosureLocation}");
+            Logger.Log($"IsDefault: {deviceInfo.IsDefault}");
+            Logger.Log($"IsEnabled: {deviceInfo.IsEnabled}");
+            Logger.Log($"Pairing: {deviceInfo.Pairing}");
+
+            // To log the properties, you'll need to iterate over them
+            foreach (var property in deviceInfo.Properties)
+            {
+                Logger.Log($"Property Key: {property.Key}, Value: {property.Value}");
+            }
+
             isConnected = await VerifyDeviceConnection(bluetoothDevice);
             if (!isConnected)
             {
@@ -78,6 +89,7 @@ public class BluetoothManager : IDisposable
             }
         }
     }
+
     private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
     {
         if (foundDevices.TryGetValue(deviceInfoUpdate.Id, out DeviceInformation deviceInfo))
@@ -109,12 +121,18 @@ public class BluetoothManager : IDisposable
         if (SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret != "")
         {
             bool isConnected;
+            Logger.Log("Device Watcher connecting to device " + deviceInfo.Name);
             var device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
+            Logger.Log("Device Watcher verifying the device connection " + deviceInfo.Name);
             isConnected = await VerifyDeviceConnection(device);
             if (isConnected)
             {
+                Logger.Log("Device Watcher verified device connection " + deviceInfo.Name);
                 bluetoothDevice = device;
                 await SetupBluetoothDevice();
+            } else
+            {
+                Logger.Log("Device Watcher connection to device failed " + deviceInfo.Name);
             }
         } else
         {
@@ -267,10 +285,12 @@ public class BluetoothManager : IDisposable
 
         if (servicesResult.Status == GattCommunicationStatus.Success && servicesResult.Services.Count > 0)
         {
+            Logger.Log("verify device connection: got GATT services");
             return true;
         }
         else
         {
+            Logger.Log("verify device connection: failed to get GATT services");
             return false;
         }
     }
