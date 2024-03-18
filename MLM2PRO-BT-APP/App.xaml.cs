@@ -4,12 +4,15 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Text;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Core;
 using static MLM2PRO_BT_APP.HomeMenu;
+using System.Xml.Linq;
+using System.Windows.Automation;
 
 namespace MLM2PRO_BT_APP;
 
@@ -28,38 +31,12 @@ public partial class App : Application
     public string jsonContent = "";
     public App()
     {
-        InitializeComponent();
-        // Initialize the shared ViewModel
         SharedVM = new SharedViewModel();
-
-        Startup += App_Startup;
-
-        // Initialize the BluetoothManager
-        manager = new BluetoothManager();
-
-        if (SettingsManager.Instance.Settings.Putting.PuttingEnabled)
-        {
-            // Initialize the PuttingServer
-            PuttingConnection = new HttpPuttingServer();
-            if (SettingsManager.Instance.Settings.Putting.AutoStartPutting)
-            {
-                PuttingEnable();
-            }
-        }
-        CheckWebApiToken();
-    }
-
-    private void App_Startup(object sender, StartupEventArgs e)
-    {
-        // Load settings, connect to devices, or any startup logic here
-        // Before navigating to your first page, ensure settings are loaded
         LoadSettings();
-
-        // Initialize the OpenConnectTCPClient
+        manager = new BluetoothManager();
+        PuttingConnection = new HttpPuttingServer();
         client = new OpenConnectTCPClient(SettingsManager.Instance.Settings.OpenConnect.GSProIp, SettingsManager.Instance.Settings.OpenConnect.GSProPort);
-        ConnectGSPro();
     }
-
     private void CheckWebApiToken()
     {
         if (string.IsNullOrWhiteSpace(SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret))
@@ -73,19 +50,94 @@ public partial class App : Application
             WebApiWindow.ShowDialog();
         }
     }
-    public void ConnectGSPro()
+    public async Task StartGSPro()
+    {
+        String ExecutablePath = Path.GetFullPath(SettingsManager.Instance.Settings.OpenConnect.GSProEXE ?? "C:\\GSProV1\\Core\\GSP\\GSPro.exe");
+        var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(ExecutablePath));
+        if (processes.Length > 0)
+        {
+            Logger.Log("The GSPro application is already running.");
+            return;
+        } else if (!File.Exists(ExecutablePath))
+        {
+            Logger.Log("The GSPro application does not exist.");
+            return;
+        }
+
+        var startInfo = new ProcessStartInfo(ExecutablePath)
+        {
+            WorkingDirectory = Path.GetDirectoryName(ExecutablePath),
+            UseShellExecute = true
+        };
+
+        try
+        {
+            Process.Start(startInfo);
+            Logger.Log("GSPro Started");
+
+            if(SettingsManager.Instance.Settings.OpenConnect.SkipGSProLauncher)
+            {
+                await ClickButtonWhenWindowLoads("GSPro Configuration", "Play!");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log($"Error starting the GSPro process with arguments: {ex.Message}");
+        }
+    }
+    public async Task<bool> WaitForWindow(string windowTitle, TimeSpan timeout)
+    {
+        var sw = Stopwatch.StartNew();
+        AutomationElement window = null;
+        while (sw.Elapsed < timeout)
+        {
+            window = AutomationElement.RootElement.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, windowTitle));
+            if (window != null)
+            {
+                return true;
+            }
+            await Task.Delay(500);
+        }
+        return false;
+    }
+    public async Task ClickButtonWhenWindowLoads(string windowTitle, string buttonName)
+    {
+        Logger.Log("Application started, waiting for window...");
+        bool windowLoaded = await WaitForWindow(windowTitle, TimeSpan.FromSeconds(120));
+        if (windowLoaded)
+        {
+            var window = AutomationElement.RootElement.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, windowTitle));
+            var button = window?.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, buttonName));
+            var invokePattern = button?.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
+            invokePattern?.Invoke();
+            Logger.Log($"{buttonName} button clicked in {windowTitle}");
+        }
+        else
+        {
+            Logger.Log("Window did not appear in time.");
+        }
+    }
+    public async Task ConnectGSPro()
     {
         try
         {
-            client.ConnectAsync();
+            bool GSProOpenAPILoaded = await WaitForWindow("APIv1 Connect", TimeSpan.FromSeconds(120));
+            if (GSProOpenAPILoaded)
+            {
+                Logger.Log("GSPro OpenAPI window loaded.");
+                client.ConnectAsync();
+            }
+            else
+            {
+                Logger.Log("GSPro OpenAPI window did not load in time.");
+                App.SharedVM.GSProStatus = "NOT CONNECTED";
+            }
         }
         catch (Exception ex)
         {
             Logger.Log("Exception in connecting: " + ex.Message);
         }
     }
-
-
     public async Task DisconnectGSPro()
     {
         try
@@ -189,7 +241,6 @@ public partial class App : Application
             SharedViewModel.Instance.ShotDataCollection.Insert(0, shotData);
         });
     }
-
     public async Task ConnectAndSetupBluetooth()
     {
         App.SharedVM.LMStatus = "LOOKING FOR DEVICE";
@@ -199,9 +250,19 @@ public partial class App : Application
     {
         await manager.ArmDevice();
     }
+    public async Task LMArmDeviceWithDelay()
+    {
+        await Task.Delay(1000);
+        await LMArmDevice();
+    }
     public async Task LMDisarmDevice()
     {
         await manager.DisarmDevice();
+    }
+    public async Task LMDisarmDeviceWithDelay()
+    {
+        await Task.Delay(1000);
+        await LMDisarmDevice();
     }
     public async Task LMDisconnect()
     {
@@ -243,13 +304,12 @@ public partial class App : Application
     {
         _ = manager.UnSubAndReSub();
     }
-
     public async Task PuttingEnable()
     {
         string fullPath = Path.GetFullPath(SettingsManager.Instance.Settings.Putting.ExePath);
         if (File.Exists(fullPath))
         {
-            Console.WriteLine("Putting executable exists.");
+            Logger.Log("Putting executable exists.");
             bool puttingStarted = PuttingConnection.IsStarted;
             if (puttingStarted == false)
             {
@@ -267,17 +327,15 @@ public partial class App : Application
         }
         else
         {
-            Console.WriteLine("Putting executable missing.");
+            Logger.Log("Putting executable missing.");
             App.SharedVM.PuttingStatus = "ball_tracking.exe missing";
         }
         
     }
-
     public async Task PuttingDisable()
     {
         PuttingConnection.PuttingEnabled = false;
     }
-
     public async Task StartPutting()
     {
         PuttingConnection?.StartPutting();
@@ -290,5 +348,28 @@ public partial class App : Application
     {
         SettingsManager.Instance.LoadSettings();
     }
-}
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        MainWindow mainWindow = new MainWindow();
+        mainWindow.Loaded += MainWindow_Loaded;
+        mainWindow.Show();
+    }
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        CheckWebApiToken();
+        if (SettingsManager.Instance.Settings.Putting.PuttingEnabled)
+        {
+            if (SettingsManager.Instance.Settings.Putting.AutoStartPutting)
+            {
+                PuttingEnable();
+            }
+        }
 
+        if (SettingsManager.Instance.Settings.OpenConnect.AutoStartGSPro)
+        {
+            StartGSPro();
+        }
+        ConnectGSPro();
+    }
+}

@@ -50,7 +50,7 @@ public static class Logger
         if (!success)
         {
             // Handle failure after retries, could log to an alternate location or raise a notification
-            Console.WriteLine("Failed to write to log file after retries.");
+            Logger.Log("Failed to write to log file after retries.");
         }
     }
 

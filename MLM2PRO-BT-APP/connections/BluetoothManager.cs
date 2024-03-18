@@ -11,8 +11,9 @@ using MLM2PRO_BT_APP.WebApiClient;
 
 namespace MLM2PRO_BT_APP;
 
-public class BluetoothManager
+public class BluetoothManager : IDisposable
 {
+    private bool _disposed = false;
     private Timer heartbeatTimer;
     private Timer subscriptionVerificationTimer;
     public BluetoothLEDevice bluetoothDevice;
@@ -255,7 +256,7 @@ public class BluetoothManager
     {
         if (device == null)
         {
-            Console.WriteLine("VerifyDeviceConnection: BluetoothLEDevice instance is null.");
+            Logger.Log("VerifyDeviceConnection: BluetoothLEDevice instance is null.");
             return false;
         }
 
@@ -391,7 +392,6 @@ public class BluetoothManager
                             await Task.Delay(200);
                             await WriteConfig(bytes);
                             await Task.Delay(500);
-                            await ArmDevice();
                         }
                         else
                         {
@@ -833,5 +833,21 @@ public class BluetoothManager
     public byte[] getEncryptionKey()
     {
         return btEncryption.GetKeyBytes();
+    }
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                DisconnectAndCleanup();
+            }
+            _disposed = true;
+        }
     }
 }

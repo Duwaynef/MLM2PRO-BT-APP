@@ -219,7 +219,7 @@ namespace MLM2PRO_BT_APP.Putting
                     Logger.Log("Error opening putting process");
                     return;
                 }
-                Console.WriteLine(PuttingProcess.BasePriority);
+                Logger.Log(PuttingProcess.BasePriority.ToString());
 
                 PuttingProcess.EnableRaisingEvents = true;
                 PuttingProcess.OutputDataReceived += OnBallTrackerLogs;

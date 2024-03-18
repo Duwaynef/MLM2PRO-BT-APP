@@ -79,9 +79,11 @@ namespace MLM2PRO_BT_APP
     }
     public class OpenConnectSettings
     {
-        public bool AutoStartOpenConnect { get; set; } = true;
+        public bool AutoStartGSPro { get; set; } = false;
+        public bool SkipGSProLauncher { get; set; } = true;
         public string GSProIp { get; set; } = "127.0.0.1";
         public int GSProPort { get; set; } = 921;
+        public string GSProEXE { get; set; } = "C:\\GSProV1\\Core\\GSP\\GSPro.exe";
     }
     public class WebApiSettings
     {
@@ -98,31 +100,31 @@ namespace MLM2PRO_BT_APP
         public string BluetoothDeviceName { get; set; } = "MLM2-";
         public int ReconnectInterval { get; set; } = 10;
         public bool AutoWake { get; set; } = true;
-        public bool DebugLogging { get; set; } = false;
-        public int Altitude { get; set; } = 0;
-        public double Humidity { get; set; } = 0.5;
-        public int Temperature { get; set; } = 60;
-        public double AirDensity { get; set; } = 1.225;
-        public byte? Handedness { get; set; } = 1; // Default value of right?
-        public byte? BallType { get; set; } = 2; // Default value of rct?
-        public byte? Environment { get; set; } = 0; // Default value of outdoor?
-        public double? AltitudeMetres { get; set; } = 0.0; // Default value of 0.0
-        public double? TemperatureCelcius { get; set; } = 20.0; // Default value of 0.0
-        public byte? QuitEvent { get; set; } = 0; // Default value of 0
-        public byte? PowerMode { get; set; } = 0; // Default value of 0
-        public string SerialNumber { get; set; } = "";
-        public string Model { get; set; } = "";
-        public int[] Battery { get; set; } = null;
-        public int[] ResponseMessage { get; set; } = null;
-        public int[] Events { get; set; } = null;
-        public int[] Measurement { get; set; } = null;
+        //public bool DebugLogging { get; set; } = false;
+        //public int Altitude { get; set; } = 0;
+        //public double Humidity { get; set; } = 0.5;
+        //public int Temperature { get; set; } = 60;
+        //public double AirDensity { get; set; } = 1.225;
+        //public byte? Handedness { get; set; } = 1; // Default value of right?
+        //public byte? BallType { get; set; } = 2; // Default value of rct?
+        //public byte? Environment { get; set; } = 0; // Default value of outdoor?
+        //public double? AltitudeMetres { get; set; } = 0.0; // Default value of 0.0
+        //public double? TemperatureCelcius { get; set; } = 20.0; // Default value of 0.0
+        //public byte? QuitEvent { get; set; } = 0; // Default value of 0
+        //public byte? PowerMode { get; set; } = 0; // Default value of 0
+        //public string SerialNumber { get; set; } = "";
+        //public string Model { get; set; } = "";
+        //public int[] Battery { get; set; } = null;
+        //public int[] ResponseMessage { get; set; } = null;
+        //public int[] Events { get; set; } = null;
+        //public int[] Measurement { get; set; } = null;
         private bool infoComplete = false;
     }
     public class PuttingSettings
     {
         public bool PuttingEnabled { get; set; } = false;
         public bool AutoStartPutting { get; set; } = true;
-        public bool HideConsoleWindow { get; set; } = false;
+        public bool HideConsoleWindow { get; set; } = true;
         public int PuttingPort { get; set; } = 8888;
         public bool LaunchBallTracker { get; set; } = true;
         public bool OnlyLaunchWhenPutting { get; set; } = true;
