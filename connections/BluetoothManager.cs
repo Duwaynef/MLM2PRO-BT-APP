@@ -66,7 +66,15 @@ public class BluetoothManager
             Logger.Log("Device Already in found devices list: " + deviceInfo.Name);
             return;
         }
-        Logger.Log("Device Watcher found: " + deviceInfo.Name);
+        Logger.Log("Device Watcher found:");
+        Logger.Log($"Name: {deviceInfo.Name}");
+        Logger.Log($"ID: {deviceInfo.Id}");
+        Logger.Log($"Kind: {deviceInfo.Kind}");
+        Logger.Log($"IsEnabled: {deviceInfo.IsEnabled}");
+        foreach (var property in deviceInfo.Properties)
+        {
+            Logger.Log($"Property Key: {property.Key}, Value: {property.Value}");
+        }
         DeviceWatcher_StartDeviceConnection(deviceInfo);
     }
     private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
@@ -115,13 +123,16 @@ public class BluetoothManager
     }
     public async void RestartDeviceWatcher()
     {
-        if (_deviceWatcher != null && (_deviceWatcher.Status == DeviceWatcherStatus.Started || _deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted))
+        if (_deviceWatcher != null && (_deviceWatcher.Status == DeviceWatcherStatus.Started || 
+                                       _deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted))
         {
             Logger.Log("Restarting device watcher");
             _deviceWatcher.Stop();
             _foundDevices.Clear();
 
-            while (_deviceWatcher.Status != DeviceWatcherStatus.Created && _deviceWatcher.Status != DeviceWatcherStatus.Stopped && _deviceWatcher.Status != DeviceWatcherStatus.Aborted)
+            while (_deviceWatcher.Status != DeviceWatcherStatus.Created && 
+                   _deviceWatcher.Status != DeviceWatcherStatus.Stopped && 
+                   _deviceWatcher.Status != DeviceWatcherStatus.Aborted)
             {
                 await Task.Delay(100);
             }
@@ -506,8 +517,8 @@ public class BluetoothManager
             {
                 Logger.Log("Characteristic not found." + characteristicUuid.ToString());
             }
-
-            var characteristic = characteristicResult.Characteristics[0]; // Assuming the characteristic exists and is the first one found
+            // Assuming the characteristic exists and is the first one found
+            var characteristic = characteristicResult.Characteristics[0]; 
 
             // Read the characteristic value
             var readResult = await characteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
@@ -726,6 +737,7 @@ public class BluetoothManager
     }
     public async Task DisconnectAndCleanup()
     {
+        Logger.Log("Starting disconnect and cleanup...");
         _deviceWatcher?.Stop();
         _foundDevices.Clear();
         if (_subscriptionVerificationTimer != null) await _subscriptionVerificationTimer.DisposeAsync();
@@ -733,7 +745,6 @@ public class BluetoothManager
 
         await Task.Delay(1000);
         if (App.SharedVm != null) App.SharedVm.LMStatus = "DISCONNECTING...";
-
         if (_isDeviceArmed)
         {
             await DisarmDevice();

@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MLM2PRO-BT-APP", "MLM2PRO-BT-APP\MLM2PRO-BT-APP.csproj", "{F3D224A9-FA0D-4D6A-B149-B635B224C9B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MLM2PRO-BT-APP", "MLM2PRO-BT-APP.csproj", "{F3D224A9-FA0D-4D6A-B149-B635B224C9B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
