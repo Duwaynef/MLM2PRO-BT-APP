@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using static MLM2PRO_BT_APP.HomeMenu;
 
-namespace MLM2PRO_BT_APP
+namespace MLM2PRO_BT_APP.util
 {
     public class SharedViewModel : INotifyPropertyChanged
     {
@@ -42,11 +42,11 @@ namespace MLM2PRO_BT_APP
             set => SetProperty(ref _puttingStatus, value, nameof(PuttingStatus));
         }
 
-        private string _lmBattLife;
-        public string LMBattLife
+        private string _LmBatteryLife;
+        public string LmBatteryLife
         {
-            get => _lmBattLife;
-            set => SetProperty(ref _lmBattLife, value, nameof(LMBattLife));
+            get => _LmBatteryLife;
+            set => SetProperty(ref _LmBatteryLife, value, nameof(LmBatteryLife));
         }
 
         private SolidColorBrush _PuttingStatusBackground;
@@ -77,37 +77,48 @@ namespace MLM2PRO_BT_APP
             set => SetProperty(ref _gsProStatusBackground, value, nameof(GSProStatusBackground));
         }
 
-        private SolidColorBrush GetStatusColor(string status)
+        private static SolidColorBrush GetStatusColor(string status)
         {
             // Normalize the status string to lower case for case-insensitive comparison
-            string lowerCaseStatus = status.ToLower();
-            int batteryLevel;
-            if (int.TryParse(status, out batteryLevel))
+            var lowerCaseStatus = status.ToLower();
+            if (int.TryParse(status, out var batteryLevel))
             {
+                if (batteryLevel < 15)
+                {
+                    return new SolidColorBrush(Colors.DarkRed);
+                }
+                else if (batteryLevel <50)
+                {
+                    return new SolidColorBrush(Colors.DarkCyan);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.Green);
+                }
             }
-
-            if (lowerCaseStatus.Contains("disconnected") || batteryLevel < 50)
-            {
-                return new SolidColorBrush(Colors.DarkCyan);
-            }
-            else if (lowerCaseStatus.Contains("failed") || batteryLevel < 15)
+            
+            if (lowerCaseStatus.Contains("failed"))
             {
                 return new SolidColorBrush(Colors.DarkRed);
             }
-            else if (lowerCaseStatus.Contains("connected") || lowerCaseStatus.Contains("success") || batteryLevel > 50)
+            else if (lowerCaseStatus.Contains("disconnected"))
+            {
+                return new SolidColorBrush(Colors.DarkCyan);
+            }
+            else if (lowerCaseStatus.Contains("connected") || lowerCaseStatus.Contains("success"))
             {
                 return new SolidColorBrush(Colors.Green);
             }
             else
             {
-                return new SolidColorBrush(Colors.Transparent);
+                return new SolidColorBrush(Colors.DarkCyan);
             }
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        protected bool SetProperty<T>(ref T storage, T value, string propertyName)
+        private bool SetProperty<T>(ref T storage, T value, string? propertyName)
         {
             if (Equals(storage, value)) return false;
 
@@ -126,7 +137,7 @@ namespace MLM2PRO_BT_APP
                 {
                     LMStatusBackground = GetStatusColor(lmStatusValue);
                 }
-                else if (propertyName == nameof(LMBattLife) && value is string lmBattLifeValue)
+                else if (propertyName == nameof(LmBatteryLife) && value is string lmBattLifeValue)
                 {
                     LMBattLifeBackground = GetStatusColor(lmBattLifeValue);
                 }
@@ -139,6 +150,6 @@ namespace MLM2PRO_BT_APP
         }
 
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using MLM2PRO_BT_APP.util;
 
 namespace MLM2PRO_BT_APP
 {
@@ -33,7 +34,7 @@ namespace MLM2PRO_BT_APP
                 SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret = WebAPITextBox.Text;
                 SettingsManager.Instance.SaveSettings();
                 Logger.Log("API Token saved");
-                (App.Current as App)?.ConnectAndSetupBluetooth();
+                (Application.Current as App)?.ConnectAndSetupBluetooth();
                 Close();
             }
         }

@@ -1,25 +1,25 @@
 ﻿using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows;
+using MLM2PRO_BT_APP.devices;
+using MLM2PRO_BT_APP.util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Windows.Services.Maps;
-using System.Collections.Generic;
 using TcpClient = NetCoreServer.TcpClient;
 
-namespace MLM2PRO_BT_APP
+namespace MLM2PRO_BT_APP.connections
 {
-    class OpenConnectTCPClient : TcpClient
+    internal class OpenConnectTcpClient : TcpClient
     {
-        PlayerInfo playerInfo;
-        long howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
-        bool isPutting = false;
-        private List<string> _messages = new List<string>();
-        private Timer _processTimer;
-        private readonly int _quietPeriod = 300;
+        private long _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
+        private long _howRecentlyTakenShot = DateTimeOffset.Now.ToUnixTimeSeconds();
+        private bool _isPutting;
+        private readonly List<string?> _messages = [];
+        private readonly Timer _processTimer;
+        private const int QuietPeriod = 10;
         private readonly object _lock = new object();
         private DateTime _lastReceivedTime = DateTime.MinValue;
-        public OpenConnectTCPClient(string serverHost, int serverPort) : base(SettingsManager.Instance.Settings.OpenConnect.GSProIp, SettingsManager.Instance.Settings.OpenConnect.GSProPort) 
+        private bool _isDeviceArmed = false;
+        public OpenConnectTcpClient() : base(SettingsManager.Instance.Settings.OpenConnect.GSProIp, SettingsManager.Instance.Settings.OpenConnect.GSProPort) 
         {
             _processTimer = new Timer(ProcessLastMessage, null, Timeout.Infinite, Timeout.Infinite);
         }
@@ -29,7 +29,7 @@ namespace MLM2PRO_BT_APP
             // Update shared view model status
             Application.Current.Dispatcher.Invoke(() =>
             {
-                App.SharedVM.GSProStatus = "CONNECTED";
+                if (App.SharedVm != null) App.SharedVm.GSProStatus = "CONNECTED";
             });
         }
         protected override void OnDisconnected()
@@ -38,20 +38,21 @@ namespace MLM2PRO_BT_APP
             // Update shared view model status
             Application.Current.Dispatcher.Invoke(() =>
             {
-                App.SharedVM.GSProStatus = "DISCONNECTED";
+                if (App.SharedVm != null) App.SharedVm.GSProStatus = "DISCONNECTED";
             });
 
         }
-        public async Task<bool> SendDataAsync(OpenConnectApiMessage message)
+        public Task<bool> SendDataAsync(OpenConnectApiMessage message)
         {
-            string jsonMessage = JsonConvert.SerializeObject(message);
-            byte[] data = Encoding.UTF8.GetBytes(jsonMessage);
-            return SendAsync(data);
+            var jsonMessage = JsonConvert.SerializeObject(message);
+            var data = Encoding.UTF8.GetBytes(jsonMessage);
+            return Task.FromResult(SendAsync(data));
         }
-        public async Task<bool> SendDirectJsonAsync(string json)
+        public Task<bool>? SendDirectJsonAsync(string? json)
         {
-            byte[] data = Encoding.UTF8.GetBytes(json);
-            return SendAsync(data);
+            if (json == null) return null;
+            var data = Encoding.UTF8.GetBytes(json);
+            return Task.FromResult(SendAsync(data));
         }
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
@@ -61,71 +62,84 @@ namespace MLM2PRO_BT_APP
                 _messages.Add(message);
                 _lastReceivedTime = DateTime.UtcNow;
             }
-            _processTimer.Change(_quietPeriod, Timeout.Infinite);
+            _processTimer.Change(QuietPeriod, Timeout.Infinite);
         }
-        private void ProcessLastMessage(object state)
+        private void ProcessLastMessage(object? state)
         {
             lock (_lock)
             {
-                if ((DateTime.UtcNow - _lastReceivedTime).TotalMilliseconds < _quietPeriod)
+                if ((DateTime.UtcNow - _lastReceivedTime).TotalMilliseconds < QuietPeriod)
                 {
                     return;
                 }
-
+        
                 if (_messages.Count > 0)
                 {
                     // Process the last message
                     var lastMessage = _messages[^1];
-                    Console.WriteLine($"Processing last message of burst: {lastMessage}");
+                    Logger.Log($"Processing last message of burst: {lastMessage}");
                     try
                     {
                         var response = JsonConvert.DeserializeObject<OpenConnectApiResponse>(lastMessage);
                         if (response != null)
                         {
                             Logger.Log($"OpenConnectTCPClient: Processing last received message: {lastMessage}");
-                            long FiveSecondsAgo = DateTimeOffset.Now.ToUnixTimeSeconds() - 5;
-                            if (response != null && response.Code == 201 && response.Player.DistanceToTarget != 0)
+                            var fiveSecondsAgo = DateTimeOffset.Now.ToUnixTimeSeconds() - 5;
+                            var delayAfterShotForDisarm = DateTimeOffset.Now.ToUnixTimeSeconds() - 15;
+                            switch (response.Code)
                             {
-                                Logger.Log($"OpenConnectTCPClient: Received: {response}");
-                                playerInfo = response.Player;
-                                ProcessResponse(response);
-                                if (howRecentlyArmedOrDisarmed < FiveSecondsAgo)
+                                case 200:
                                 {
-                                    howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
-                                    (App.Current as App)?.LMArmDevice();
-                                    (App.Current as App)?.SendOpenConnectServerMessage(lastMessage);
+                                    Logger.Log($"OpenConnectTCPClient: Received 200: " + response);
+                                    _howRecentlyTakenShot = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                    break;
                                 }
-                                else
+                                case 201 when response.Player?.DistanceToTarget != 0:
                                 {
-                                    howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
-                                    (App.Current as App)?.LMArmDeviceWithDelay();
-                                    (App.Current as App)?.SendOpenConnectServerMessage(lastMessage);
+                                    Logger.Log($"OpenConnectTCPClient: Received 201: " + response);
+                                    ProcessResponse(response);
+                                    if (_howRecentlyArmedOrDisarmed < fiveSecondsAgo && !_isDeviceArmed)
+                                    {
+                                        _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                        _isDeviceArmed = true;
+                                        (Application.Current as App)?.LmArmDevice();
+                                        (Application.Current as App)?.SendOpenConnectServerMessage(lastMessage);
+                                    }
+                                    else if (!_isDeviceArmed)
+                                    {
+                                        _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                        _isDeviceArmed = true;
+                                        (Application.Current as App)?.LmArmDeviceWithDelay();
+                                        (Application.Current as App)?.SendOpenConnectServerMessage(lastMessage);
+                                    }
+                                    break;
+                                }
+                                case 203 when _howRecentlyTakenShot <= delayAfterShotForDisarm:
+                                {
+                                    Logger.Log($"OpenConnectTCPClient: Received 203: " + response);
+                                    Logger.Log("OpenConnectTCPClient: Sending disarm message");
+                                    if (_howRecentlyArmedOrDisarmed < fiveSecondsAgo && _isDeviceArmed)
+                                    {
+                                        _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                        _isDeviceArmed = false;
+                                        (Application.Current as App)?.LmDisarmDevice();
+                                    }
+                                    else if (_isDeviceArmed)
+                                    {
+                                        _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                        _isDeviceArmed = false;
+                                        (Application.Current as App)?.LmDisarmDeviceWithDelay();
+                                    }
+                                    break;
                                 }
                             }
-                            else if (response != null && response.Code == 203)
-                            {
-                                Logger.Log($"OpenConnectTCPClient: Received: {response}");
-                                Logger.Log("OpenConnectTCPClient: Sending disarm message");
-                                if (howRecentlyArmedOrDisarmed < FiveSecondsAgo)
-                                {
-                                    howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
-                                    (App.Current as App)?.LMDisarmDevice();
-                                }
-                                else
-                                {
-                                    howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
-                                    (App.Current as App)?.LMDisarmDeviceWithDelay();
-                                }
-                            }
-
                         }
                     }
                     catch (JsonException ex)
                     {
                         Logger.Log($"Error deserializing JSON: {ex.Message}");
                     }
-
-                _messages.Clear(); // Clear the list after processing
+                    _messages.Clear(); // Clear the list after processing
                 }
             }
         }
@@ -134,7 +148,7 @@ namespace MLM2PRO_BT_APP
             Logger.Log($"OpenConnectTCPClient: Socket error: {error}");
             Application.Current.Dispatcher.Invoke(() =>
             {
-                App.SharedVM.GSProStatus = "SERVER ERROR";
+                App.SharedVm.GSProStatus = "SERVER ERROR";
             });
         }
         // Implement your logic for processing the response
@@ -146,26 +160,26 @@ namespace MLM2PRO_BT_APP
                 if (playerClub.HasValue)
                 {
                     Logger.Log($"OpenConnectTCPClient: Response: {playerClub.Value}");
-                    if (playerClub == Club.PT)
+                    if (playerClub == Club.Pt)
                     {
                         Logger.Log("OpenConnectTCPClient: Club selection is a putter");
                         DeviceManager.Instance.ClubSelection = "PT";
-                        App.SharedVM.GSProClub = "PT";
-                        if (isPutting == false)
+                        App.SharedVm.GSProClub = "PT";
+                        if (_isPutting == false)
                         {
-                            isPutting = true;
-                            (App.Current as App)?.StartPutting();
+                            _isPutting = true;
+                            (Application.Current as App)?.StartPutting();
                         }
                     }
                     else
                     {
                         Logger.Log($"OpenConnectTCPClient: Club selection is NOT a putter, it is {playerClub.Value}");
                         DeviceManager.Instance.ClubSelection = playerClub.Value.ToString();
-                        App.SharedVM.GSProClub = playerClub.Value.ToString();
-                        if (isPutting == true)
+                        App.SharedVm.GSProClub = playerClub.Value.ToString();
+                        if (_isPutting == true)
                         {
-                            isPutting = false;
-                            (App.Current as App)?.StopPutting();
+                            _isPutting = false;
+                            (Application.Current as App)?.StopPutting();
                         }
                     }
                 }
@@ -186,23 +200,23 @@ namespace MLM2PRO_BT_APP
 
     public class OpenConnectApiMessage
     {
-        private static OpenConnectApiMessage instance;
+        private static OpenConnectApiMessage _instance;
         public static OpenConnectApiMessage Instance
         {
             get
             {
-                if (instance == null)
+                if (_instance == null)
                 {
-                    instance = new OpenConnectApiMessage();
+                    _instance = new OpenConnectApiMessage();
                 }
-                return instance;
+                return _instance;
             }
         }
 
-        public string DeviceID { get { return "GSPRO-MLM2PRO"; } }
+        public string DeviceId { get { return "GSPRO-MLM2PRO"; } }
         public string Units { get { return "Yards"; } }
         public int ShotNumber { get; set; }
-        public string APIVersion { get { return "1"; } }
+        public string ApiVersion { get { return "1"; } }
         public BallData BallData { get; set; }
         public ClubData ClubData { get; set; }
         public ShotDataOptions ShotDataOptions { get; set; }
@@ -335,9 +349,13 @@ namespace MLM2PRO_BT_APP
     }
     public class OpenConnectApiResponse
     {
-        public int Code { get; set; }
-        public string Message { get; set; }
-        public PlayerInfo Player { get; set; }
+        public OpenConnectApiResponse(string message, int code)
+        {
+            Code = code;
+        }
+
+        public int Code { get; }
+        public PlayerInfo? Player { get; set; }
     }
     public class PlayerInfo
     {
@@ -349,13 +367,13 @@ namespace MLM2PRO_BT_APP
     }
     public enum Handed
     {
-        RH,
-        LH
+        Rh,
+        Lh
     }
     public enum Club
     {
-        unknown,
-        DR,
+        Unknown,
+        Dr,
         W2,
         W3,
         W4,
@@ -377,10 +395,10 @@ namespace MLM2PRO_BT_APP
         H5,
         H6,
         H7,
-        PW,
-        GW,
-        SW,
-        LW,
-        PT
+        Pw,
+        Gw,
+        Sw,
+        Lw,
+        Pt
     }
 }

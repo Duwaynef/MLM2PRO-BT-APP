@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using MLM2PRO_BT_APP.connections;
 
-namespace MLM2PRO_BT_APP.Measurement
+namespace MLM2PRO_BT_APP.devices
 {
     class MeasurementData
     {
@@ -27,7 +25,7 @@ namespace MLM2PRO_BT_APP.Measurement
         public int Unknown1 { get; set; }
         public int Unknown2 { get; set; }
 
-        public OpenConnectApiMessage ConvertHexToMeasurementData(string hexData)
+        public OpenConnectApiMessage ConvertHexToMeasurementData(string? hexData)
         {
             double multiplier = 2.2375;
             byte[] bytes = Enumerable.Range(0, hexData.Length)

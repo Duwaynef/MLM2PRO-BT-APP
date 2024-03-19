@@ -5,10 +5,12 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using MLM2PRO_BT_APP.api;
+using MLM2PRO_BT_APP.devices;
+using MLM2PRO_BT_APP.util;
 using NetCoreServer;
 
-
-namespace MLM2PRO_BT_APP.Putting
+namespace MLM2PRO_BT_APP.connections
 {
 
     class HttpPuttingSession : HttpSession
@@ -37,14 +39,14 @@ namespace MLM2PRO_BT_APP.Putting
 
                     if (message != null)
                     {
-                        App.SharedVM.PuttingStatus = "INCOMING MESSAGE";
+                        App.SharedVm.PuttingStatus = "INCOMING MESSAGE";
                         if (PuttingServer.PuttingEnabled && DeviceManager.Instance.ClubSelection == "PT")
                         {
                             OpenConnectApiMessage? messageToSend = BallDataFromPuttingBallData(message?.BallData);
                             if (messageToSend != null)
                             {
                                 (App.Current as App)?.SendShotData(messageToSend);
-                                App.SharedVM.PuttingStatus = "SHOT SENT";
+                                App.SharedVm.PuttingStatus = "SHOT SENT";
                             }
                             else
                             {
@@ -53,7 +55,7 @@ namespace MLM2PRO_BT_APP.Putting
                         }
                         else
                         {
-                            App.SharedVM.PuttingStatus = "CONNECTED";
+                            App.SharedVm.PuttingStatus = "CONNECTED";
                             Logger.Log("Not sending Putt because selected club is not putter");
                         }
                     }
@@ -79,14 +81,14 @@ namespace MLM2PRO_BT_APP.Putting
             Logger.Log($"HTTP session caught an error: {error}");
         }
 
-        public static OpenConnectApiMessage? BallDataFromPuttingBallData(Putting.BallData? puttBallData)
+        public static OpenConnectApiMessage? BallDataFromPuttingBallData(api.BallData? puttBallData)
         {
             if (puttBallData == null) return null;
             OpenConnectApiMessage.Instance.ShotNumber++;
             return new OpenConnectApiMessage()
             {
                 ShotNumber = OpenConnectApiMessage.Instance.ShotNumber,
-                BallData = new MLM2PRO_BT_APP.BallData()
+                BallData = new BallData()
                 {
                     Speed = puttBallData.BallSpeed,
                     SpinAxis = 0,
@@ -165,7 +167,7 @@ namespace MLM2PRO_BT_APP.Putting
             if (LaunchBallTracker && PuttingProcess == null)
             {
                 LaunchProcess();
-                App.SharedVM.PuttingStatus = "CONNECTED";
+                App.SharedVm.PuttingStatus = "CONNECTED";
             }
             if (KeepPuttingCamOnTop)
                 FocusProcess();
@@ -175,7 +177,7 @@ namespace MLM2PRO_BT_APP.Putting
             PuttingEnabled = false;
             if (LaunchBallTracker && OnlyLaunchWhenPutting || force)
                 KillProcess();
-                App.SharedVM.PuttingStatus = "DISCONNECTED";
+                App.SharedVm.PuttingStatus = "DISCONNECTED";
         }
 
 

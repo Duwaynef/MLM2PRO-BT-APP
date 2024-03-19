@@ -1,8 +1,7 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using Windows.Storage.Streams;
 
-namespace MLM2PRO_BT_APP
+namespace MLM2PRO_BT_APP.util
 {
     public enum WriteType
     {
@@ -22,7 +21,7 @@ namespace MLM2PRO_BT_APP
             Property = property;
         }
 
-        public static WriteTypeProperties GetWriteTypeProperties(WriteType writeType)
+        public static WriteTypeProperties? GetWriteTypeProperties(WriteType writeType)
         {
             int writeTypeValue = (int)writeType; // Convert enum to int
             switch (writeTypeValue)
@@ -43,15 +42,11 @@ namespace MLM2PRO_BT_APP
 
     public class ByteConversionUtils
     {
-        public byte[] ShortToByteArray(short s, bool littleEndian)
+        private static byte[] ShortToByteArray(short s, bool littleEndian)
         {
-            if (littleEndian)
-            {
-                return new byte[] { (byte)s, (byte)(s >> 8) };
-            }
-            return new byte[] { (byte)(s >> 8), (byte)s };
+            return littleEndian ? new byte[] { (byte)s, (byte)(s >> 8) } : new byte[] { (byte)(s >> 8), (byte)s };
         }
-        public int[] ArrayByteToInt(byte[] byteArray)
+        public static int[]? ArrayByteToInt(byte[]? byteArray)
         {
             if (byteArray == null)
             {
@@ -61,7 +56,7 @@ namespace MLM2PRO_BT_APP
             }
 
             int length = byteArray.Length;
-            int[] intArray = new int[length];
+            int[]? intArray = new int[length];
             for (int i = 0; i < length; i++)
             {
                 intArray[i] = byteArray[i] & 0xFF;
@@ -94,13 +89,13 @@ namespace MLM2PRO_BT_APP
             }
             return new byte[] { (byte)(i >> 24), (byte)(i >> 16), (byte)(i >> 8), (byte)i };
         }
-        public byte[] ConvertIBufferToBytes(IBuffer buffer)
+        public byte[]? ConvertIBufferToBytes(IBuffer buffer)
         {
             // Create a DataReader from the IBuffer
             DataReader reader = DataReader.FromBuffer(buffer);
 
             // Create a byte array with the same length as the buffer
-            byte[] bytes = new byte[buffer.Length];
+            byte[]? bytes = new byte[buffer.Length];
 
             // Read the bytes from the buffer into the byte array
             reader.ReadBytes(bytes);
@@ -146,7 +141,7 @@ namespace MLM2PRO_BT_APP
                 return Array.Empty<byte>();
             }
         }
-        public string ByteArrayToHexString(byte[] bytes)
+        public string? ByteArrayToHexString(byte[]? bytes)
         {
             if (bytes == null)
             {
@@ -160,14 +155,14 @@ namespace MLM2PRO_BT_APP
             }
             return hex.ToString();
         }
-        public byte[] HexStringToByteArray(string hex)
+        public byte[]? HexStringToByteArray(string hex)
         {
             if (hex.Length % 2 != 0)
             {
                 Logger.Log("The hexadecimal string must have an even number of characters." + nameof(hex));
             }
 
-            byte[] bytes = new byte[hex.Length / 2];
+            byte[]? bytes = new byte[hex.Length / 2];
             for (int i = 0; i < hex.Length; i += 2)
             {
                 bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);

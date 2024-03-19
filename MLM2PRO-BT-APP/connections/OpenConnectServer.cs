@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
+using System.Text;
+using System.Windows;
+using MLM2PRO_BT_APP.util;
 using NetCoreServer;
 
-namespace MLM2PRO_BT_APP
+namespace MLM2PRO_BT_APP.connections
 {
     internal class OpenConnectServerSession : TcpSession
     {
@@ -16,7 +14,7 @@ namespace MLM2PRO_BT_APP
         protected override void OnConnected()
         {
             Logger.Log($"OpenConnectServer TCP session with Id {Id} connected!");
-            (App.Current as App).Dispatcher.Invoke(() => (App.Current as App).SendOpenConnectServerNewClientMessage());
+            (Application.Current as App)?.Dispatcher.Invoke(() => (Application.Current as App)?.SendOpenConnectServerNewClientMessage());
             Logger.Log($"OpenConnectServer Sent opening messages");
         }
 
@@ -28,8 +26,8 @@ namespace MLM2PRO_BT_APP
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
             Logger.Log($"OpenConnect server received {size} bytes");
-            string message = Encoding.UTF8.GetString(buffer, (int)offset, (int)size);
-            (App.Current as App).Dispatcher.Invoke(() => (App.Current as App).RelayOpenConnectServerMessage(message));
+            string? message = Encoding.UTF8.GetString(buffer, (int)offset, (int)size);
+            (Application.Current as App)?.Dispatcher.Invoke(() => (Application.Current as App)?.RelayOpenConnectServerMessage(message));
         }
 
         protected override void OnError(SocketError error)

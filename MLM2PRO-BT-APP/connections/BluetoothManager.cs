@@ -1,134 +1,107 @@
-﻿using System.Windows;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Devices.Bluetooth.Advertisement;
-using Windows.Devices.Bluetooth.GenericAttributeProfile;
+﻿using System.Runtime.InteropServices.WindowsRuntime;
+using System.Windows;
 using Windows.Devices.Bluetooth;
+using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
 using Windows.Storage.Streams;
+using MLM2PRO_BT_APP.devices;
+using MLM2PRO_BT_APP.util;
 using Newtonsoft.Json;
-using MLM2PRO_BT_APP.Measurement;
-using MLM2PRO_BT_APP.WebApiClient;
 
-namespace MLM2PRO_BT_APP;
+namespace MLM2PRO_BT_APP.connections;
 
-public class BluetoothManager : IDisposable
+public class BluetoothManager
 {
-    private bool _disposed = false;
-    private Timer heartbeatTimer;
-    private Timer subscriptionVerificationTimer;
-    public BluetoothLEDevice bluetoothDevice;
-    private DeviceWatcher deviceWatcher;
-    private Dictionary<string, DeviceInformation> foundDevices = new Dictionary<string, DeviceInformation>();
-    private Dictionary<Guid, GattCharacteristic> characteristicMap = new Dictionary<Guid, GattCharacteristic>();
-    ByteConversionUtils byteConversionUtils = new ByteConversionUtils();
-    Encryption btEncryption = new Encryption();
-    bool settingUpConnection = false;
-    long lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
-    int connectionAttempts = 0;
-    byte[] StoreConfigureBytes;
-    bool isDeviceArmed = false;
+    private Timer? _heartbeatTimer;
+    private Timer? _subscriptionVerificationTimer;
+    private BluetoothLEDevice? _bluetoothDevice;
+    private DeviceWatcher? _deviceWatcher;
+    private readonly Dictionary<string, DeviceInformation?> _foundDevices = new Dictionary<string, DeviceInformation?>();
+    private readonly ByteConversionUtils _byteConversionUtils = new ByteConversionUtils();
+    private readonly Encryption _btEncryption = new Encryption();
+    private bool _settingUpConnection;
+    private long _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
+    private int _connectionAttempts;
+    // ReSharper disable once NotAccessedField.Local
+    private byte[]? _storeConfigureBytes;
+    private bool _isDeviceArmed;
 
-    public Guid SERVICE_UUID = new Guid("DAF9B2A4-E4DB-4BE4-816D-298A050F25CD");
-    public Guid AUTH_REQUEST_CHARACTERISTIC_UUID = new Guid("B1E9CE5B-48C8-4A28-89DD-12FFD779F5E1"); // Write Only
-    public Guid COMMAND_CHARACTERISTIC_UUID = new Guid("1EA0FA51-1649-4603-9C5F-59C940323471"); // Write Only
-    public Guid CONFIGURE_CHARACTERISTIC_UUID = new Guid("DF5990CF-47FB-4115-8FDD-40061D40AF84"); // Write Only
-    public Guid EVENTS_CHARACTERISTIC_UUID = new Guid("02E525FD-7960-4EF0-BFB7-DE0F514518FF");
-    public Guid HEARTBEAT_CHARACTERISTIC_UUID = new Guid("EF6A028E-F78B-47A4-B56C-DDA6DAE85CBF");
-    public Guid MEASUREMENT_CHARACTERISTIC_UUID = new Guid("76830BCE-B9A7-4F69-AEAA-FD5B9F6B0965");
-    public Guid WRITE_RESPONSE_CHARACTERISTIC_UUID = new Guid("CFBBCB0D-7121-4BC2-BF54-8284166D61F0");
-    public List<Guid> notifyUUIDs = new List<Guid>();
+    private readonly Guid _serviceUuid = new Guid("DAF9B2A4-E4DB-4BE4-816D-298A050F25CD");
+    private readonly Guid _authRequestCharacteristicUuid = new Guid("B1E9CE5B-48C8-4A28-89DD-12FFD779F5E1"); // Write Only
+    private readonly Guid _commandCharacteristicUuid = new Guid("1EA0FA51-1649-4603-9C5F-59C940323471"); // Write Only
+    private readonly Guid _configureCharacteristicUuid = new Guid("DF5990CF-47FB-4115-8FDD-40061D40AF84"); // Write Only
+    private readonly Guid _eventsCharacteristicUuid = new Guid("02E525FD-7960-4EF0-BFB7-DE0F514518FF");
+    private readonly Guid _heartbeatCharacteristicUuid = new Guid("EF6A028E-F78B-47A4-B56C-DDA6DAE85CBF");
+    private readonly Guid _measurementCharacteristicUuid = new Guid("76830BCE-B9A7-4F69-AEAA-FD5B9F6B0965");
+    private readonly Guid _writeResponseCharacteristicUuid = new Guid("CFBBCB0D-7121-4BC2-BF54-8284166D61F0");
+    private readonly List<Guid> _notifyUuiDs = [];
 
     public BluetoothManager()
     {
-        notifyUUIDs.Add(EVENTS_CHARACTERISTIC_UUID);
-        notifyUUIDs.Add(HEARTBEAT_CHARACTERISTIC_UUID);
-        notifyUUIDs.Add(MEASUREMENT_CHARACTERISTIC_UUID);
-        notifyUUIDs.Add(WRITE_RESPONSE_CHARACTERISTIC_UUID);
+        _notifyUuiDs.Add(_eventsCharacteristicUuid);
+        _notifyUuiDs.Add(_heartbeatCharacteristicUuid);
+        _notifyUuiDs.Add(_measurementCharacteristicUuid);
+        _notifyUuiDs.Add(_writeResponseCharacteristicUuid);
 
         InitializeDeviceWatcher();
-        App.SharedVM.LMStatus = "Watching for bluetooth devices...";
+        if (App.SharedVm != null) App.SharedVm.LMStatus = "Watching for bluetooth devices...";
     }
     private void InitializeDeviceWatcher()
     {
-        string serviceSelector = GattDeviceService.GetDeviceSelectorFromUuid(SERVICE_UUID);
-        deviceWatcher = DeviceInformation.CreateWatcher(serviceSelector);
+        var serviceSelector = GattDeviceService.GetDeviceSelectorFromUuid(_serviceUuid);
+        _deviceWatcher = DeviceInformation.CreateWatcher(serviceSelector);
 
-        deviceWatcher.Added += DeviceWatcher_Added;
-        deviceWatcher.Updated += DeviceWatcher_Updated;
-        deviceWatcher.Removed += DeviceWatcher_Removed;
+        _deviceWatcher.Added += DeviceWatcher_Added;
+        _deviceWatcher.Updated += DeviceWatcher_Updated;
+        _deviceWatcher.Removed += DeviceWatcher_Removed;
         if (SettingsManager.Instance.Settings.LaunchMonitor.AutoStartLaunchMonitor)
         {
-            deviceWatcher.Start();
+            _deviceWatcher.Start();
         }
     }
     private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
     {
-        if (!foundDevices.ContainsKey(deviceInfo.Id))
+        if (!_foundDevices.TryAdd(deviceInfo.Id, deviceInfo))
         {
-            foundDevices[deviceInfo.Id] = deviceInfo;
-            bool isConnected;
-            Logger.Log("Device Watcher found:");
-            Logger.Log($"Name: {deviceInfo.Name}");
-            Logger.Log($"ID: {deviceInfo.Id}");
-            Logger.Log($"Kind: {deviceInfo.Kind}");
-            Logger.Log($"EnclosureLocation: {deviceInfo.EnclosureLocation}");
-            Logger.Log($"IsDefault: {deviceInfo.IsDefault}");
-            Logger.Log($"IsEnabled: {deviceInfo.IsEnabled}");
-            Logger.Log($"Pairing: {deviceInfo.Pairing}");
-
-            // To log the properties, you'll need to iterate over them
-            foreach (var property in deviceInfo.Properties)
-            {
-                Logger.Log($"Property Key: {property.Key}, Value: {property.Value}");
-            }
-
-            isConnected = await VerifyDeviceConnection(bluetoothDevice);
-            if (!isConnected)
-            {
-                DeviceWatcher_StartDeviceConnection(deviceInfo);
-            }
+            Logger.Log("Device Already in found devices list: " + deviceInfo.Name);
+            return;
         }
+        Logger.Log("Device Watcher found: " + deviceInfo.Name);
+        DeviceWatcher_StartDeviceConnection(deviceInfo);
     }
-
     private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
     {
-        if (foundDevices.TryGetValue(deviceInfoUpdate.Id, out DeviceInformation deviceInfo))
+        if (!_foundDevices.TryGetValue(deviceInfoUpdate.Id, out var deviceInfo)) return;
+        deviceInfo?.Update(deviceInfoUpdate);
+        Logger.Log("Device Watcher updated " + deviceInfo?.Name);
+        var isConnected = _bluetoothDevice != null && await VerifyDeviceConnection(_bluetoothDevice);
+        if (!isConnected)
         {
-            deviceInfo.Update(deviceInfoUpdate);
-            bool isConnected;
-            Logger.Log("Device Watcher updated " + deviceInfo.Name);
-            isConnected = await VerifyDeviceConnection(bluetoothDevice);
-            if (!isConnected)
-            {
-                DeviceWatcher_StartDeviceConnection(deviceInfo);
-            }
+            if (deviceInfo != null) DeviceWatcher_StartDeviceConnection(deviceInfo);
         }
     }
     private async void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
     {
         // Remove the device from the internal dictionary.
-        if (foundDevices.TryGetValue(deviceInfoUpdate.Id, out DeviceInformation deviceInfo))
-        {
-            deviceInfo.Update(deviceInfoUpdate);
-            foundDevices.Remove(deviceInfoUpdate.Id);
-            Logger.Log("Device Watcher removed " + deviceInfo.Name);
-            await DisconnectAndCleanup();
-        }
+        if (!_foundDevices.TryGetValue(deviceInfoUpdate.Id, out var deviceInfo)) return;
+        deviceInfo?.Update(deviceInfoUpdate);
+        _foundDevices.Remove(deviceInfoUpdate.Id);
+        Logger.Log("Device Watcher removed " + deviceInfo?.Name);
+        await DisconnectAndCleanup();
     }
     private async void DeviceWatcher_StartDeviceConnection(DeviceInformation deviceInfo)
     {
         Logger.Log("Device Watcher start device connection " + deviceInfo.Name);
         if (SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret != "")
         {
-            bool isConnected;
             Logger.Log("Device Watcher connecting to device " + deviceInfo.Name);
             var device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
             Logger.Log("Device Watcher verifying the device connection " + deviceInfo.Name);
-            isConnected = await VerifyDeviceConnection(device);
+            var isConnected = await VerifyDeviceConnection(device);
             if (isConnected)
             {
                 Logger.Log("Device Watcher verified device connection " + deviceInfo.Name);
-                bluetoothDevice = device;
+                _bluetoothDevice = device;
                 await SetupBluetoothDevice();
             } else
             {
@@ -137,151 +110,112 @@ public class BluetoothManager : IDisposable
         } else
         {
             Logger.Log("Device Watcher stopped device connection " + deviceInfo.Name + " web api token is blank");
-            App.SharedVM.LMStatus = "WEB API TOKEN MISSING";
+            if (App.SharedVm != null) App.SharedVm.LMStatus = "WEB API TOKEN MISSING";
         }
     }
     public async void RestartDeviceWatcher()
     {
-        if (deviceWatcher.Status == DeviceWatcherStatus.Started || deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted)
+        if (_deviceWatcher != null && (_deviceWatcher.Status == DeviceWatcherStatus.Started || _deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted))
         {
             Logger.Log("Restarting device watcher");
-            deviceWatcher.Stop();
-            foundDevices.Clear();
+            _deviceWatcher.Stop();
+            _foundDevices.Clear();
 
-            while (deviceWatcher.Status != DeviceWatcherStatus.Created && deviceWatcher.Status != DeviceWatcherStatus.Stopped && deviceWatcher.Status != DeviceWatcherStatus.Aborted)
+            while (_deviceWatcher.Status != DeviceWatcherStatus.Created && _deviceWatcher.Status != DeviceWatcherStatus.Stopped && _deviceWatcher.Status != DeviceWatcherStatus.Aborted)
             {
                 await Task.Delay(100);
             }
         }
 
-        deviceWatcher.Start();
+        _deviceWatcher?.Start();
         Logger.Log("Device watcher restarted");
     }
-    private bool IsNotifyCharacteristic(Guid uuid)
-    {
-        return uuid == EVENTS_CHARACTERISTIC_UUID ||
-               uuid == HEARTBEAT_CHARACTERISTIC_UUID ||
-               uuid == MEASUREMENT_CHARACTERISTIC_UUID ||
-               uuid == WRITE_RESPONSE_CHARACTERISTIC_UUID;
-    }
-    public async Task SetupBluetoothDevice()
-    {
-        connectionAttempts++;
 
-        if (connectionAttempts > 5)
+    private async Task SetupBluetoothDevice()
+    {
+        _connectionAttempts++;
+
+        if (_connectionAttempts > 5)
         {
             Logger.Log("Bluetooth Manager: Failed to connect after 5 attempts.");
-            App.SharedVM.LMStatus = "NOTCONNECTED";
+            if (App.SharedVm != null) App.SharedVm.LMStatus = "NOT CONNECTED";
             await DisconnectAndCleanup();
-            connectionAttempts = 0;
+            _connectionAttempts = 0;
             return;
         }
-        settingUpConnection = true;
+        _settingUpConnection = true;
         Logger.Log("Bluetooth Manager: Starting");
 
         //Check last used token?
-        long tokenExpiryDate = SettingsManager.Instance.Settings.WebApiSettings.WebApiExpireDate;
+        var tokenExpiryDate = SettingsManager.Instance.Settings.WebApiSettings.WebApiExpireDate;
         if (tokenExpiryDate > 0 && tokenExpiryDate < DateTimeOffset.Now.ToUnixTimeSeconds())
         {
-            App.SharedVM.LMStatus = "SEARCHING, 3RD PARTY TOKEN EXPIRED?";
+            if (App.SharedVm != null) App.SharedVm.LMStatus = "SEARCHING, 3RD PARTY TOKEN EXPIRED?";
             Logger.Log("Bluetooth token expired, refresh 3rd party app token, or saved token might be old");
         }
         else
         {
-            App.SharedVM.LMStatus = "SEARCHING";
+            if (App.SharedVm != null) App.SharedVm.LMStatus = "SEARCHING";
         }
 
-        bool isConnected = false;
-        if (bluetoothDevice == null)
-        {
-            DeviceManager.Instance.DeviceStatus = "null";
-            App.SharedVM.LMStatus = "NOTCONNECTED, SEARCHING FOR ";
-            Logger.Log("Bluetooth device not found or failed to connect.");
-            var Device = await ConnectToBluetoothDeviceByName(SettingsManager.Instance.Settings.LaunchMonitor.BluetoothDeviceName);
-            isConnected = await VerifyDeviceConnection(Device);
-        }
-        else
-        {
-            isConnected = await VerifyDeviceConnection(bluetoothDevice);
-        }
+        var isConnected = false;
+        if (_bluetoothDevice != null) isConnected = await VerifyDeviceConnection(_bluetoothDevice);
 
         // Only proceed with setup if the connection is successful
-        App.SharedVM.LMStatus = "CONNECTING";
-        if (isConnected)
+        if (App.SharedVm != null)
         {
-            App.SharedVM.LMStatus = "SETTING UP CONNECTION";
-
-            if (bluetoothDevice != null)
+            App.SharedVm.LMStatus = "CONNECTING";
+            if (isConnected)
             {
-                bool isDeviceSetup = await SubscribeToCharacteristicsAsync();
-                if (!isDeviceSetup)
-                {
-                    DeviceManager.Instance.DeviceStatus = "NOTCONNECTED";
-                    App.SharedVM.LMStatus = "NOTCONNECTED";
-                    Logger.Log("Failed to setup device.");
-                    await RetryBTConnection();
-                }
-                else
-                {
-                    // After successful setup, start the heartbeat
-                    App.SharedVM.LMStatus = "CONNECTED";
-                    DeviceManager.Instance.DeviceStatus = "CONNECTED";
-                    Logger.Log("CONNECTED to device. sending auth");
-                    bool authStatus = await SendDeviceAuthRequest();
+                App.SharedVm.LMStatus = "SETTING UP CONNECTION";
 
-                    if (!authStatus)
+                {
+                    var isDeviceSetup = await SubscribeToCharacteristicsAsync();
+                    if (!isDeviceSetup)
                     {
-                        Logger.Log("Failed to send auth request.");
-                        await RetryBTConnection();
+                        DeviceManager.Instance.DeviceStatus = "NOT CONNECTED";
+                        App.SharedVm.LMStatus = "NOT CONNECTED";
+                        Logger.Log("Failed to setup device.");
+                        await RetryBtConnection();
                     }
                     else
                     {
-                        Logger.Log("Auth request sent.");
-                        // After successful subscriptions
-                        // StartSubscriptionVerificationTimer(); // this might be doing more harm than good...
-                        StartHeartbeat();
+                        // After successful setup, start the heartbeat
+                        App.SharedVm.LMStatus = "CONNECTED";
+                        DeviceManager.Instance.DeviceStatus = "CONNECTED";
+                        Logger.Log("CONNECTED to device. sending auth");
+                        var authStatus = await SendDeviceAuthRequest();
+
+                        if ((bool)(!authStatus)!)
+                        {
+                            Logger.Log("Failed to send auth request.");
+                            await RetryBtConnection();
+                        }
+                        else
+                        {
+                            Logger.Log("Auth request sent.");
+                            // After successful subscriptions
+                            // StartSubscriptionVerificationTimer(); // this might be doing more harm than good...
+                            StartHeartbeat();
+                        }
                     }
                 }
             }
-        }
-        else
-        {
-            DeviceManager.Instance.DeviceStatus = "NOTCONNECTED";
-            App.SharedVM.LMStatus = "NOTCONNECTED";
-            Logger.Log("Failed to connect to device or retrieve services.");
-            await RetryBTConnection();
-        }
-        settingUpConnection = false;
-    }
-    private async Task<BluetoothLEDevice?> ConnectToBluetoothDeviceByName(string deviceNameInput)
-    {
-        string deviceSelector = BluetoothLEDevice.GetDeviceSelector();
-
-        Logger.Log("Bluetooth Manager: Got Device List");
-        App.SharedVM.LMStatus = "GOT DEVICE LIST, FINDING " + deviceNameInput;
-
-        var devices = await DeviceInformation.FindAllAsync(deviceSelector);
-
-        foreach (var device in devices)
-        {
-            if (device.Name.Equals(deviceNameInput, StringComparison.OrdinalIgnoreCase))
+            else
             {
-                App.SharedVM.LMStatus = "FOUND " + deviceNameInput + " ATTEMPTING TO CONNECT";
-                var bluetoothDevice = await BluetoothLEDevice.FromIdAsync(device.Id);
-                return bluetoothDevice;
+                DeviceManager.Instance.DeviceStatus = "NOT CONNECTED";
+                App.SharedVm.LMStatus = "NOT CONNECTED";
+                Logger.Log("Failed to connect to device or retrieve services.");
+                await RetryBtConnection();
             }
         }
-        return null;
+
+        _settingUpConnection = false;
     }
+    
     private async Task<bool> VerifyDeviceConnection(BluetoothLEDevice device)
     {
-        if (device == null)
-        {
-            Logger.Log("VerifyDeviceConnection: BluetoothLEDevice instance is null.");
-            return false;
-        }
-
-        var servicesResult = await device.GetGattServicesForUuidAsync(SERVICE_UUID, BluetoothCacheMode.Uncached);
+        var servicesResult = await device.GetGattServicesForUuidAsync(_serviceUuid, BluetoothCacheMode.Uncached);
 
         if (servicesResult.Status == GattCommunicationStatus.Success && servicesResult.Services.Count > 0)
         {
@@ -294,21 +228,23 @@ public class BluetoothManager : IDisposable
             return false;
         }
     }
-    public async Task ArmDevice()
+    public Task ArmDevice()
     {
-        byte[] data = byteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
+        var data = _byteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
         _ = WriteCommand(data);
-        isDeviceArmed = true;
+        _isDeviceArmed = true;
+        return Task.CompletedTask;
     }
-    public async Task DisarmDevice()
+    public Task DisarmDevice()
     {
-        byte[] data = byteConversionUtils.HexStringToByteArray("010D0000000000"); //01180000000000 also found 010D0000000000 == disarm device???
+        var data = _byteConversionUtils.HexStringToByteArray("010D0000000000"); //01180000000000 also found 010D0000000000 == disarm device???
         _ = WriteCommand(data);
-        isDeviceArmed = false;
+        _isDeviceArmed = false;
+        return Task.CompletedTask;
     }
     private async Task<bool> SubscribeToCharacteristicsAsync()
     {
-        var serviceResult = await bluetoothDevice.GetGattServicesForUuidAsync(SERVICE_UUID);
+        var serviceResult = await _bluetoothDevice?.GetGattServicesForUuidAsync(_serviceUuid);
         if (serviceResult.Status != GattCommunicationStatus.Success)
         {
             return false;
@@ -316,7 +252,7 @@ public class BluetoothManager : IDisposable
 
         foreach (var service in serviceResult.Services)
         {
-            foreach (var charUuid in notifyUUIDs)
+            foreach (var charUuid in _notifyUuiDs)
             {
                 var charResult = await service.GetCharacteristicsForUuidAsync(charUuid);
                 if (charResult.Status == GattCommunicationStatus.Success)
@@ -336,9 +272,9 @@ public class BluetoothManager : IDisposable
                         }
                         catch
                         {
-                            DeviceManager.Instance.DeviceStatus = "NOTCONNECTED";
+                            DeviceManager.Instance.DeviceStatus = "NOT CONNECTED";
                             Logger.Log("Characteristic Error: in SetupDeviceAsync");
-                            await RetryBTConnection();
+                            await RetryBtConnection();
                             return false;
                         }
                     }
@@ -351,23 +287,23 @@ public class BluetoothManager : IDisposable
     {
         var value = args.CharacteristicValue.ToArray();
         var uuid = sender.Uuid;
-        if (HEARTBEAT_CHARACTERISTIC_UUID == uuid)
+        if (_heartbeatCharacteristicUuid == uuid)
         {
-            lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds();
+            _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds();
             return;
         }
         else
         {
-            Logger.Log($"Notification received for {sender.Uuid}: {byteConversionUtils.ByteArrayToHexString(value)}");
+            Logger.Log($"Notification received for {sender.Uuid}: {_byteConversionUtils.ByteArrayToHexString(value)}");
         }
 
-        if (uuid == WRITE_RESPONSE_CHARACTERISTIC_UUID)
+        if (uuid == _writeResponseCharacteristicUuid)
         {
-            Logger.Log($"### WRITE RESPONSE = {string.Join(", ", byteConversionUtils.ArrayByteToInt(value))}");
+            Logger.Log($"### WRITE RESPONSE = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(value))}");
 
             if (value.Length >= 2)
             {
-                byte byte2 = value[0]; // 02 Means Send initial paremeters
+                byte byte2 = value[0]; // 02 Means Send initial parameters
                 byte byte3 = value[1]; // 00
 
                 if (value.Length > 2)
@@ -379,12 +315,12 @@ public class BluetoothManager : IDisposable
                     {
                         Logger.Log("Auth requested: Running InitialParameters");
 
-                        if (byte3 != 0 || value == null || value.Length < 4)
+                        if (byte3 != 0 || value.Length < 4)
                         {
                             Logger.Log("Auth failed, returning");
                             if (byte3 == 1)
                             {
-                                App.SharedVM.LMStatus = "APP TOKEN EXPIRED, REFRESH IN MLM SOFTWARE";
+                                if (App.SharedVm != null) App.SharedVm.LMStatus = "APP TOKEN EXPIRED, REFRESH IN MLM SOFTWARE";
                                 Logger.Log("Bluetooth token expired, refresh 3rd party app token");
                             }
                             return;
@@ -392,24 +328,24 @@ public class BluetoothManager : IDisposable
 
                         byte[] byteArr3 = new byte[4];
                         Array.Copy(byteArray, 0, byteArr3, 0, 4);
-                        int byteArrayToInt = byteConversionUtils.ByteArrayToInt(byteArr3, true);
+                        int byteArrayToInt = _byteConversionUtils.ByteArrayToInt(byteArr3, true);
                         SettingsManager.Instance.Settings.WebApiSettings.WebApiUserId = byteArrayToInt;
                         Logger.Log("UserId Generated from device: " + byteArrayToInt.ToString());
                         SettingsManager.Instance.SaveSettings();
 
-                        WebApiClient.WebApiClient client = new WebApiClient.WebApiClient();
-                        WebApiClient.WebApiClient.ApiResponse response = await client.SendRequestAsync(byteArrayToInt);
+                        WebApiClient client = new WebApiClient();
+                        WebApiClient.ApiResponse response = await client.SendRequestAsync(byteArrayToInt);
 
-                        if (response != null && response.Success && response?.User?.Token != null)
+                        if (response is { Success: true, User.Token: not null })
                         {
                             SettingsManager.Instance.Settings.WebApiSettings.WebApiDeviceId = response.User.Id;
                             SettingsManager.Instance.Settings.WebApiSettings.WebApiToken = response.User.Token;
                             SettingsManager.Instance.Settings.WebApiSettings.WebApiExpireDate = response.User.ExpireDate;
                             SettingsManager.Instance.SaveSettings();
-                            Logger.Log($"User ID: {response?.User?.Id}, Token: {response?.User?.Token}, Expire Date: {response?.User?.ExpireDate}");
-                            byte[] bytes = DeviceManager.Instance.GetInitialParameters(response.User.Token);
-                            StoreConfigureBytes = bytes;
-                            Logger.Log("InitialParameters returned ByteArray: " + byteConversionUtils.ByteArrayToHexString(bytes));
+                            Logger.Log($"User ID: {response.User.Id}, Token: {response.User.Token}, Expire Date: {response.User.ExpireDate}");
+                            byte[]? bytes = DeviceManager.Instance.GetInitialParameters(response.User.Token);
+                            _storeConfigureBytes = bytes;
+                            Logger.Log("InitialParameters returned ByteArray: " + _byteConversionUtils.ByteArrayToHexString(bytes));
                             await WriteConfig(bytes);
                             // I'm really not sure why sending this TWICE makes any difference.
                             await Task.Delay(200);
@@ -440,7 +376,8 @@ public class BluetoothManager : IDisposable
                         */
                     }
                 }
-                App.SharedVM.LMStatus = "CONNECTED";
+
+                if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTED";
 
                 Logger.Log("Connected, did not run InitialParameters");
             }
@@ -449,53 +386,59 @@ public class BluetoothManager : IDisposable
             //mLaunchMonitorInfo.setFromRapsodoDeviceInfo(mRapsodoDeviceInfo);
             //sendMessageResponse();
         }
-        else if (uuid == EVENTS_CHARACTERISTIC_UUID && !settingUpConnection)
+        else if (uuid == _eventsCharacteristicUuid && !_settingUpConnection)
         {
             try
             {
-                byte[] decrypted = btEncryption.Decrypt(value);
+                byte[]? decrypted = _btEncryption.Decrypt(value);
                 if (decrypted == null)
                 {
                     Logger.Log("Decryption failed for EVENT");
-                    await RetryBTConnection();
+                    await RetryBtConnection();
                 }
                 else
                 {
-                    Logger.Log($"### EVENT = {string.Join(", ", byteConversionUtils.ArrayByteToInt(decrypted))}");
-                    int isBattlife = decrypted[2];
+                    Logger.Log($"### EVENT = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(decrypted))}");
 
-                    if (decrypted[0] == 0)
+                    switch (decrypted[0])
                     {
-                        App.SharedVM.LMStatus = "CONNECTED, SHOT HAPPENED";
-                        Logger.Log("BluetoothManager: Shot happened!");
-                    }
-                    else if (decrypted[0] == 1)
-                    {
-                        App.SharedVM.LMStatus = "CONNECTED, PROCESSING SHOT";
-                        Logger.Log("BluetoothManager: Device is processing shot!");
-                    }
-                    else if (decrypted[0] == 2)
-                    {
-                        App.SharedVM.LMStatus = "CONNECTED, READY";
-                        Logger.Log("BluetoothManager: Device is ready for next shot!");
-                    }
-                    else if (decrypted[0] == 3 && isBattlife >= 0 && isBattlife <= 2)
-                    {
-                        int battLife = decrypted[1];
-                        App.SharedVM.LMBattLife = battLife.ToString();
+                        case 0:
+                        {
+                            if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTED, SHOT HAPPENED";
+                            Logger.Log("BluetoothManager: Shot happened!");
+                            break;
+                        }
+                        case 1:
+                        {
+                            if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTED, PROCESSING SHOT";
+                            Logger.Log("BluetoothManager: Device is processing shot!");
+                            break;
+                        }
+                        case 2:
+                        {
+                            if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTED, READY";
+                            Logger.Log("BluetoothManager: Device is ready for next shot!");
+                            break;
+                        }
+                        case 3:
+                        {
+                            int batteryLife = decrypted[1];
+                            if (App.SharedVm != null) App.SharedVm.LmBatteryLife = batteryLife.ToString();
 
-                        DeviceManager.Instance.UpdateBatteryLevel(battLife);
-                        Logger.Log("Battery Level: " + battLife);
-                    }
-                    else if (decrypted[0] == 5 && decrypted[1] == 0)
-                    {
-                        // App.SharedVM.LMStatus = "CONNECTED, SHOT WAS A MISREAD ALL ZEROS";
-                        // Logger.Log("BluetoothManager: last shot was misread, all zeros...");
-                    }
-                    else if (decrypted[0] == 5 && decrypted[1] == 1)
-                    {
-                        App.SharedVM.LMStatus = "CONNECTED, DISARMED";
-                        Logger.Log("BluetoothManager: device disarmed");
+                            DeviceManager.Instance.UpdateBatteryLevel(batteryLife);
+                            Logger.Log("Battery Level: " + batteryLife);
+                            break;
+                        }
+                        case 5 when decrypted[1] == 0:
+                            // App.SharedVM.LMStatus = "CONNECTED, SHOT WAS A MISREAD ALL ZEROS";
+                            // Logger.Log("BluetoothManager: last shot was misread, all zeros...");
+                            break;
+                        case 5 when decrypted[1] == 1:
+                        {
+                            if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTED, DISARMED";
+                            Logger.Log("BluetoothManager: device disarmed");
+                            break;
+                        }
                     }
                 }
             }
@@ -504,24 +447,24 @@ public class BluetoothManager : IDisposable
                 Logger.Log("Decryption exception for EVENT");
             }
         }
-        else if (uuid == MEASUREMENT_CHARACTERISTIC_UUID && !settingUpConnection)
+        else if (uuid == _measurementCharacteristicUuid && !_settingUpConnection)
         {
             try
             {
-                byte[] decrypted = btEncryption.Decrypt(value);
+                byte[]? decrypted = _btEncryption.Decrypt(value);
                 if (decrypted == null)
                 {
                     Logger.Log("Decryption failed for EVENT");
-                    await RetryBTConnection();
+                    await RetryBtConnection();
                 }
                 else
                 {
                     Logger.Log("");
-                    Logger.Log($"### MEASUREMENT = {string.Join(", ", byteConversionUtils.ByteArrayToHexString(decrypted))}");
-                    Logger.Log($"### MEASUREMENT = {string.Join(", ", byteConversionUtils.ArrayByteToInt(decrypted))}");
+                    Logger.Log($"### MEASUREMENT = {string.Join(", ", _byteConversionUtils.ByteArrayToHexString(decrypted))}");
+                    Logger.Log($"### MEASUREMENT = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(decrypted))}");
                     Logger.Log("");
 
-                    OpenConnectApiMessage messageToSend = MeasurementData.Instance.ConvertHexToMeasurementData(byteConversionUtils.ByteArrayToHexString(decrypted));
+                    OpenConnectApiMessage messageToSend = MeasurementData.Instance.ConvertHexToMeasurementData(_byteConversionUtils.ByteArrayToHexString(decrypted));
                     Logger.Log("Measurement: " + JsonConvert.SerializeObject(messageToSend));
                     (Application.Current as App)?.SendShotData(messageToSend);
                 }
@@ -532,23 +475,24 @@ public class BluetoothManager : IDisposable
             }
         }
     }
-    private async Task<GattDeviceService> GetGattServiceAsync(Guid serviceUuid)
+    private async Task<GattDeviceService?> GetGattServiceAsync(Guid serviceUuid)
     {
-        var services = await bluetoothDevice?.GetGattServicesAsync();
+        var services = await _bluetoothDevice?.GetGattServicesAsync();
         return services.Services.FirstOrDefault(s => s.Uuid == serviceUuid);
     }
-    public async Task<IBuffer> ReadCharacteristicValueAsync(Guid serviceUuid, Guid characteristicUuid)
+
+    private async Task<IBuffer?> ReadCharacteristicValueAsync(Guid serviceUuid, Guid characteristicUuid)
     {
         try
         {
             // Ensure the device is connected
-            if (bluetoothDevice == null)
+            if (_bluetoothDevice == null)
             {
                 Logger.Log("Not connected to a device.");
             }
 
             // Get the GATT service
-            var serviceResult = await bluetoothDevice?.GetGattServicesForUuidAsync(serviceUuid);
+            var serviceResult = await _bluetoothDevice?.GetGattServicesForUuidAsync(serviceUuid);
             if (serviceResult.Status != GattCommunicationStatus.Success)
             {
                 Logger.Log("Service not found." + serviceUuid.ToString());
@@ -570,10 +514,10 @@ public class BluetoothManager : IDisposable
             if (readResult.Status == GattCommunicationStatus.Success)
             {
                 Logger.Log("Data Stream: from UUID:" + characteristic.Uuid);
-                Logger.Log(byteConversionUtils.ByteArrayToHexString(byteConversionUtils?.ConvertIBufferToBytes(readResult?.Value)));
+                Logger.Log(_byteConversionUtils.ByteArrayToHexString(_byteConversionUtils.ConvertIBufferToBytes(readResult.Value)));
                 Logger.Log("Decrypted Stream: from UUID:" + characteristic.Uuid);
-                byte[] decrypted = btEncryption.Decrypt(byteConversionUtils.ConvertIBufferToBytes(readResult.Value));
-                Logger.Log(byteConversionUtils.ByteArrayToHexString(decrypted));
+                byte[]? decrypted = _btEncryption.Decrypt(_byteConversionUtils.ConvertIBufferToBytes(readResult.Value));
+                Logger.Log(_byteConversionUtils.ByteArrayToHexString(decrypted));
                 Logger.Log("");
                 return readResult.Value; // This is the raw data buffer
             }
@@ -591,12 +535,7 @@ public class BluetoothManager : IDisposable
     }
     private async Task<GattCharacteristic?> GetCharacteristicAsync(GattDeviceService service, Guid characteristicUuid)
     {
-        if (service == null)
-        {
-            Logger.Log("Service is null: " + service);
-        }
-
-        var characteristics = await service?.GetCharacteristicsAsync();
+        var characteristics = await service.GetCharacteristicsAsync();
         if (characteristics == null)
         {
             return null;
@@ -604,7 +543,8 @@ public class BluetoothManager : IDisposable
 
         return characteristics.Characteristics.FirstOrDefault(c => c.Uuid == characteristicUuid);
     }
-    public async Task<bool> WriteCharacteristic(Guid serviceUuid, Guid characteristicUuid, byte[] data, WriteType writeType)
+
+    private async Task<bool> WriteCharacteristic(Guid serviceUuid, Guid characteristicUuid, byte[]? data, WriteType writeType)
     {
         if (serviceUuid == Guid.Empty || characteristicUuid == Guid.Empty || data == null)
         {
@@ -612,7 +552,7 @@ public class BluetoothManager : IDisposable
             return false;
         }
 
-        if (bluetoothDevice == null)
+        if (_bluetoothDevice == null)
         {
             Logger.Log("Bluetooth device not connected.");
             return false;
@@ -649,12 +589,13 @@ public class BluetoothManager : IDisposable
             }
         }
     }
-    public async Task<bool> WriteValue(Guid uuid, Guid uuid2, byte[] byteArray)
+
+    private async Task<bool> WriteValue(Guid uuid, Guid uuid2, byte[]? byteArray)
     {
-        if (bluetoothDevice != null)
+        if (_bluetoothDevice != null)
         {
             bool status = await WriteCharacteristic(uuid, uuid2, byteArray, WriteType.WITH_RESPONSE);
-            Logger.Log("WriteValue: " + byteConversionUtils.ByteArrayToHexString(byteArray));
+            Logger.Log("WriteValue: " + _byteConversionUtils.ByteArrayToHexString(byteArray));
             return status;
         }
         else
@@ -663,39 +604,34 @@ public class BluetoothManager : IDisposable
             return false;
         }
     }
-    public async Task TriggerSimpleWriteConfig(byte[] data)
+    public async Task TriggerSimpleWriteConfig(byte[]? data)
     {
         // Send write request
         // Call the WriteConfig method to write the configuration
-        bool success = await WriteConfig(data);
+        var success = await WriteConfig(data);
 
-        if (success)
-        {
-            Logger.Log("Configuration write successful!");
-        }
-        else
-        {
-            Logger.Log("Configuration write failed.");
-        }
+        Logger.Log(success ? "Configuration write successful!" : "Configuration write failed.");
     }
-    public async Task WriteCommand(byte[] data)
+
+    private async Task WriteCommand(byte[]? data)
     {
         try
         {
-            Logger.Log($"### BluetoothManager: Writing COMMAND = {string.Join(", ", byteConversionUtils.ArrayByteToInt(data))}");
-            await WriteValue(SERVICE_UUID, COMMAND_CHARACTERISTIC_UUID, btEncryption.Encrypt(data));
+            Logger.Log($"### BluetoothManager: Writing COMMAND = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(data))}");
+            await WriteValue(_serviceUuid, _commandCharacteristicUuid, _btEncryption.Encrypt(data));
         }
         catch (Exception)
         {
             Logger.Log("### BluetoothManager: Encryption exception when writing to command");
         }
     }
-    public async Task<bool> WriteConfig(byte[] data)
+
+    private async Task<bool> WriteConfig(byte[]? data)
     {
         try
         {
-            Logger.Log($"### BluetoothManager: Writing CONFIG = " + byteConversionUtils.ByteArrayToHexString(data));
-            await WriteValue(SERVICE_UUID, CONFIGURE_CHARACTERISTIC_UUID, btEncryption.Encrypt(data));
+            Logger.Log($"### BluetoothManager: Writing CONFIG = " + _byteConversionUtils.ByteArrayToHexString(data));
+            await WriteValue(_serviceUuid, _configureCharacteristicUuid, _btEncryption.Encrypt(data));
             return true;
         }
         catch (Exception)
@@ -704,45 +640,47 @@ public class BluetoothManager : IDisposable
             return false;
         }
     }
-    public void StartHeartbeat()
+
+    private void StartHeartbeat()
     {
         // Stop the timer if it's already running
-        heartbeatTimer?.Dispose();
+        _heartbeatTimer?.Dispose();
 
         // Start the timer to call the SendHeartbeatSignal method every 2 seconds (2000 milliseconds)
-        heartbeatTimer = new Timer(SendHeartbeatSignal, null, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(2));
-        lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
+        _heartbeatTimer = new Timer(SendHeartbeatSignal, null, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(2));
+        _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
     }
-    private async void SendHeartbeatSignal(object state)
+    private async void SendHeartbeatSignal(object? state)
     {
-        if (bluetoothDevice != null)
+        if (_bluetoothDevice == null) return;
+        if (_lastHeartbeatReceived < DateTimeOffset.Now.ToUnixTimeSeconds() - 20)
         {
-            if (lastHeartbeatReceived < DateTimeOffset.Now.ToUnixTimeSeconds() - 20)
-            {
-                Logger.Log("Heartbeat not received for 20 seconds, resubing...");
-                lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
-                await UnSubAndReSub();
-            }
-            byte[] heartbeatData = new byte[] { 0x01 };
-            // Send the heartbeat signal to the HEARTBEAT_CHARACTERISTIC_UUID
-            await WriteCharacteristic(SERVICE_UUID, HEARTBEAT_CHARACTERISTIC_UUID, heartbeatData, WriteType.WITH_RESPONSE);
-
-            // Logger.Log("Heartbeat signal sent.");
+            Logger.Log("Heartbeat not received for 20 seconds, resubscribing...");
+            _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
+            await UnSubAndReSub();
         }
+        byte[] heartbeatData = [0x01];
+        // Send the heartbeat signal to the HEARTBEAT_CHARACTERISTIC_UUID
+        await WriteCharacteristic(_serviceUuid, _heartbeatCharacteristicUuid, heartbeatData, WriteType.WITH_RESPONSE);
+
+        // Logger.Log("Heartbeat signal sent.");
     }
-    public async Task<bool> SendDeviceAuthRequest()
+
+    private async Task<bool?> SendDeviceAuthRequest()
     {
-        byte[] intToByteArray = byteConversionUtils.IntToByteArray(1, true);
-        byte[] encryptionTypeBytes = btEncryption.GetEncryptionTypeBytes();
-        byte[] keyBytes = btEncryption.GetKeyBytes();
-        byte[] bArr = new byte[intToByteArray.Length + encryptionTypeBytes.Length + keyBytes.Length];
+        var intToByteArray = _byteConversionUtils.IntToByteArray(1, true);
+        var encryptionTypeBytes = _btEncryption.GetEncryptionTypeBytes();
+        var keyBytes = _btEncryption.GetKeyBytes();
+        if (keyBytes == null) return null;
+        var bArr = new byte[intToByteArray.Length + encryptionTypeBytes.Length + keyBytes.Length];
         Array.Copy(intToByteArray, 0, bArr, 0, intToByteArray.Length);
         Array.Copy(encryptionTypeBytes, 0, bArr, intToByteArray.Length, encryptionTypeBytes.Length);
         Array.Copy(keyBytes, 0, bArr, intToByteArray.Length + encryptionTypeBytes.Length, keyBytes.Length);
-        Logger.Log(string.Format("### DEVICE: AUTH Request = " + byteConversionUtils.ByteArrayToHexString(bArr)));
-        App.SharedVM.LMStatus = "SENDING AUTH REQUEST";
-        bool status = await WriteValue(SERVICE_UUID, AUTH_REQUEST_CHARACTERISTIC_UUID, bArr);
+        Logger.Log(string.Format("### DEVICE: AUTH Request = " + _byteConversionUtils.ByteArrayToHexString(bArr)));
+        if (App.SharedVm != null) App.SharedVm.LMStatus = "SENDING AUTH REQUEST";
+        var status = await WriteValue(_serviceUuid, _authRequestCharacteristicUuid, bArr);
         return status;
+
     }
     public Task<byte[]> ConvertAuthRequest(byte[] input)
     {
@@ -754,27 +692,27 @@ public class BluetoothManager : IDisposable
         System.Buffer.BlockCopy(input, intToByteArrayLength + encryptionTypeBytesLength, keyBytes, 0, keyBytesLength);
 
         // Outputting keyBytes to console
-        Logger.Log("KeyBytes: " + byteConversionUtils.ByteArrayToHexString(keyBytes));
+        Logger.Log("KeyBytes: " + _byteConversionUtils.ByteArrayToHexString(keyBytes));
         return Task.FromResult(keyBytes);
     }
     public void StartSubscriptionVerificationTimer()
     {
         // Stop the timer if it's already running
-        subscriptionVerificationTimer?.Dispose();
+        _subscriptionVerificationTimer?.Dispose();
 
         // Set the timer to check every 60 seconds
-        subscriptionVerificationTimer = new Timer(VerifyConnection, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(30));
+        _subscriptionVerificationTimer = new Timer(VerifyConnection, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(30));
     }
-    private async void VerifyConnection(object state)
+    private async void VerifyConnection(object? state)
     {
         try
         {
-            var readResult = await ReadCharacteristicValueAsync(SERVICE_UUID, MEASUREMENT_CHARACTERISTIC_UUID);
+            var readResult = await ReadCharacteristicValueAsync(_serviceUuid, _measurementCharacteristicUuid);
             if (readResult == null || readResult.Length == 0)
             {
-                App.SharedVM.LMStatus = "CONNECTION MIGHT BE LOST, RECONNECTING";
+                if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTION MIGHT BE LOST, RECONNECTING";
                 Logger.Log("Connection might be lost. Re-subscribing...");
-                await RetryBTConnection();
+                await RetryBtConnection();
             }
             else
             {
@@ -788,50 +726,52 @@ public class BluetoothManager : IDisposable
     }
     public async Task DisconnectAndCleanup()
     {
-        deviceWatcher.Stop();
-        foundDevices.Clear();
-        subscriptionVerificationTimer?.Dispose();
-        heartbeatTimer?.Dispose();
+        _deviceWatcher?.Stop();
+        _foundDevices.Clear();
+        if (_subscriptionVerificationTimer != null) await _subscriptionVerificationTimer.DisposeAsync();
+        if (_heartbeatTimer != null) await _heartbeatTimer.DisposeAsync();
 
         await Task.Delay(1000);
-        App.SharedVM.LMStatus = "DISCONNECTING...";
+        if (App.SharedVm != null) App.SharedVm.LMStatus = "DISCONNECTING...";
 
-        if (isDeviceArmed)
+        if (_isDeviceArmed)
         {
             await DisarmDevice();
         }
 
-        if (bluetoothDevice != null)
+        if (_bluetoothDevice != null)
         {
-            byte[] data = new byte[] { 0, 0, 0, 0, 0, 0, 0 }; // Tell the Launch Monitor to disconnect
+            byte[] data = [0, 0, 0, 0, 0, 0, 0]; // Tell the Launch Monitor to disconnect
             await WriteCommand(data);
             await UnsubscribeFromAllNotifications();
         }
 
-        bluetoothDevice?.Dispose();
-        bluetoothDevice = null;
+        _bluetoothDevice?.Dispose();
+        _bluetoothDevice = null;
 
-        App.SharedVM.LMStatus = "DISCONNECTED";
+        if (App.SharedVm != null) App.SharedVm.LMStatus = "DISCONNECTED";
         Logger.Log("Disconnected and cleaned up resources.");
     }
-    public async Task RetryBTConnection()
+
+    private async Task RetryBtConnection()
     {
         // await DisconnectAndCleanup();
         await SetupBluetoothDevice();
     }
     public async Task UnSubAndReSub()
     {
-        App.SharedVM.LMStatus = "CONNECTED, NOT READY";
+        if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTED, NOT READY";
         await UnsubscribeFromAllNotifications();
         await SubscribeToCharacteristicsAsync();
     }
-    public async Task UnsubscribeFromAllNotifications()
+
+    private async Task UnsubscribeFromAllNotifications()
     {
-        if (bluetoothDevice != null)
+        if (_bluetoothDevice != null)
         {
             try
             {
-                var services = await bluetoothDevice.GetGattServicesForUuidAsync(SERVICE_UUID);
+                var services = await _bluetoothDevice.GetGattServicesForUuidAsync(_serviceUuid);
                 foreach (var service in services.Services)
                 {
                     var characteristics = await service.GetCharacteristicsAsync();
@@ -853,24 +793,8 @@ public class BluetoothManager : IDisposable
             }
         }
     }
-    public byte[] getEncryptionKey()
+    public byte[]? GetEncryptionKey()
     {
-        return btEncryption.GetKeyBytes();
-    }
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                DisconnectAndCleanup();
-            }
-            _disposed = true;
-        }
+        return _btEncryption.GetKeyBytes();
     }
 }

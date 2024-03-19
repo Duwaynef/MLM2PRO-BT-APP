@@ -1,9 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
-using Windows.Web.Http;
+﻿using Windows.Web.Http;
+using MLM2PRO_BT_APP.util;
 using Newtonsoft.Json;
 
-namespace MLM2PRO_BT_APP.WebApiClient
+namespace MLM2PRO_BT_APP.connections
 {
     public class WebApiClient
     {

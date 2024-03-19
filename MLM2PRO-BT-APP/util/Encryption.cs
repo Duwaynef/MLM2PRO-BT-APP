@@ -1,12 +1,11 @@
-﻿using System;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
-namespace MLM2PRO_BT_APP
+namespace MLM2PRO_BT_APP.util
 {
     public class Encryption
     {
         private byte[] IvParameter = { 109, 46, 82, 19, 33, 50, 4, 69, 111, 44, 121, 72, 16, 101, 109, 66 };
-        private byte[] encryptionKey;
+        private byte[]? encryptionKey;
 
         public byte[] GetEncryptionTypeBytes()
         {
@@ -24,12 +23,12 @@ namespace MLM2PRO_BT_APP
             }
         }
 
-        public byte[] GetKeyBytes()
+        public byte[]? GetKeyBytes()
         {
             return encryptionKey;
         }
 
-        public byte[] Encrypt(byte[] input)
+        public byte[]? Encrypt(byte[]? input)
         {
             if (input == null)
             {
@@ -53,7 +52,7 @@ namespace MLM2PRO_BT_APP
         }
 
 
-        public byte[] Decrypt(byte[] input)
+        public byte[]? Decrypt(byte[]? input)
         {
             try
             {

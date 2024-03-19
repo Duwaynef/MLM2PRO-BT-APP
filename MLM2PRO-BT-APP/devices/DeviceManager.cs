@@ -1,7 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using MLM2PRO_BT_APP.util;
 
-namespace MLM2PRO_BT_APP
+namespace MLM2PRO_BT_APP.devices
 {
     class DeviceManager
     {
@@ -35,9 +34,9 @@ namespace MLM2PRO_BT_APP
         public string SerialNumber { get; set; } = "";
         public string Model { get; set; } = "";
         public int Battery { get; set; } = 0;
-        public int[] ResponseMessage { get; set; } = null;
-        public int[] Events { get; set; } = null;
-        public int[] Measurement { get; set; } = null;
+        public int[]? ResponseMessage { get; set; } = null;
+        public int[]? Events { get; set; } = null;
+        public int[]? Measurement { get; set; } = null;
         private bool infoComplete = false;
 
         public bool DeviceInfoComplete()
@@ -58,8 +57,7 @@ namespace MLM2PRO_BT_APP
 
         private void UpdateInfoComplete()
         {
-            if (!string.IsNullOrEmpty(SerialNumber) && !string.IsNullOrEmpty(Model)
-                && Battery != null && Battery > 0)
+            if (!string.IsNullOrEmpty(SerialNumber) && !string.IsNullOrEmpty(Model) && Battery > 0)
             {
                 infoComplete = true;
             }
@@ -90,31 +88,31 @@ namespace MLM2PRO_BT_APP
             }
         }
 
-        public void UpdateEvents(byte[] events)
+        public void UpdateEvents(byte[]? events)
         {
             if (events != null)
             {
-                Events = byteConversionUtils.ArrayByteToInt(events);
+                Events = ByteConversionUtils.ArrayByteToInt(events);
             }
         }
 
-        public void UpdateResponseMessage(byte[] responseMessage)
+        public void UpdateResponseMessage(byte[]? responseMessage)
         {
             if (responseMessage != null)
             {
-                ResponseMessage = byteConversionUtils.ArrayByteToInt(responseMessage);
+                ResponseMessage = ByteConversionUtils.ArrayByteToInt(responseMessage);
             }
         }
 
-        public void UpdateMeasurement(byte[] measurement)
+        public void UpdateMeasurement(byte[]? measurement)
         {
             if (measurement != null)
             {
-                Measurement = byteConversionUtils.ArrayByteToInt(measurement);
+                Measurement = ByteConversionUtils.ArrayByteToInt(measurement);
             }
         }
 
-        public byte[] GetInitialParameters(string tokenInput)
+        public byte[]? GetInitialParameters(string tokenInput)
         {
             UserToken = tokenInput;
             Logger.Log("GetInitialParameters: UserToken: " + UserToken);
@@ -126,7 +124,7 @@ namespace MLM2PRO_BT_APP
             byte[] longToUintToByteArray = byteConversionUtils.LongToUintToByteArray(long.Parse(UserToken), true);
 
             // Concatenate all byte arrays
-            byte[] concatenatedBytes = new byte[] { 1, 2, 0, 0 }.Concat(airPressureBytes)
+            byte[]? concatenatedBytes = new byte[] { 1, 2, 0, 0 }.Concat(airPressureBytes)
              .Concat(temperatureBytes)
              .Concat(longToUintToByteArray)
              .Concat(new byte[] { 0, 0 })
