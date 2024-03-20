@@ -309,6 +309,7 @@ public partial class App
     public Task PuttingDisable()
     {
         if (PuttingConnection != null) PuttingConnection.PuttingEnabled = false;
+        StopPutting();
         return Task.CompletedTask;
     }
     public Task StartPutting()
