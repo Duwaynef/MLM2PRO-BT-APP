@@ -31,11 +31,10 @@
                 </Grid.RowDefinitions>
                 <TextBlock Text="GSPro" FontSize="40" Foreground="White" Height="64" HorizontalAlignment="Center"/>
                 <TextBlock Text="{Binding GSProClub, Mode=OneWay}" Background="{Binding LmBatteryLifeBackground, Mode=OneWay}" FontSize="40" Foreground="White"
-                           Grid.Row="0" Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"
-                           d:DataContext="{d:DesignInstance }" />
+                           Grid.Row="0" Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 <TextBox x:Name="GsProStatusBox" Width="auto" Height="40" TextWrapping="Wrap" 
                      Text="{Binding GSProStatus, Mode=OneWay}" Background="{Binding GSProStatusBackground, Mode=OneWay}" Margin="0,0,0,10" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
-                     Grid.Column="0" Grid.Row="1" d:DataContext="{d:DesignInstance }" />
+                     Grid.Column="0" Grid.Row="1"/>
             </Grid>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -104,8 +103,7 @@
                 </Grid.RowDefinitions>
                 <TextBlock Text="Putting" FontSize="40" Foreground="White" Height="64" HorizontalAlignment="Center"/>
                 <TextBlock Text="{Binding PuttingEnabled, Mode=OneWay}" FontSize="40" Foreground="White" Grid.Row="0"
-                           Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"
-                           d:DataContext="{d:DesignInstance }" />
+                           Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 <TextBox x:Name="PuttingStatusTextBox" Width="auto" Height="40" TextWrapping="Wrap" 
                     Text="{Binding PuttingStatus, Mode=OneWay}" Background="{Binding PuttingStatusBackground, Mode=OneWay}" Margin="0,0,0,10" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
                     Grid.Column="0" Grid.Row="1"/>
@@ -129,23 +127,22 @@
         <!-- Shot Data Section -->
         <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="0" HorizontalAlignment="Center" Height="390">
             <TextBlock Text="Shot Data" FontSize="36" HorizontalAlignment="Center" Foreground="White"/>
-            <DataGrid x:Name="ShotDataDataGrid" Margin="10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" AlternatingRowBackground="#FFC5C5C5" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="270" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="270"
-                      d:DataContext="{d:DesignInstance }">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Club" Binding="{Binding Club}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="*" IsReadOnly="True"/>
-                    <!--<DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
+            <DataGrid x:Name="ShotDataDataGrid" Margin="10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" AlternatingRowBackground="#FFC5C5C5" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="270" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="270">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Club" Binding="{Binding Club}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="*" IsReadOnly="True"/>
+                <!--<DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Side Spin" Binding="{Binding SideSpin}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Impact Angle" Binding="{Binding ImpactAngle}" Width="*" IsReadOnly="True"/> -->
-                </DataGrid.Columns>
+            </DataGrid.Columns>
             </DataGrid>
         </StackPanel>
     </Grid>

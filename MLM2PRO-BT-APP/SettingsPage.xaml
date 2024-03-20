@@ -89,6 +89,10 @@
                     <CheckBox IsChecked="{Binding Settings.LaunchMonitor.AutoWake, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                 </DockPanel>
                 <DockPanel Margin="10,5,10,5">
+                    <TextBlock Text="Use Backup Bluetooth Manager" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <CheckBox IsChecked="{Binding Settings.LaunchMonitor.UseBackupManager, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </DockPanel>
+                <DockPanel Margin="10,5,10,5">
                     <TextBlock Text="Device Name" Foreground="White" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                     <TextBox Text="{Binding Settings.LaunchMonitor.BluetoothDeviceName, Mode=OneWay}" FontSize="14" IsEnabled="False" VerticalAlignment="Center" HorizontalAlignment="Right" Width="240"/>
                 </DockPanel>

@@ -43,7 +43,7 @@ namespace MLM2PRO_BT_APP.connections
 
         protected override void OnError(SocketError error)
         {
-            Console.WriteLine($"Chat TCP server caught an error with code {error}");
+            Logger.Log($"Chat TCP server caught an error with code {error}");
         }
     }
 }
