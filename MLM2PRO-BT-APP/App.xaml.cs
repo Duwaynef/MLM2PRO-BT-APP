@@ -33,6 +33,7 @@ public partial class App
             _manager = new BluetoothManager();
         }
 
+
     }
     private void CheckWebApiToken()
     {
@@ -411,6 +412,8 @@ public partial class App
         AutoConnectGsPro();
 
         Logger.Log("Bluetooth Backup Manager is " + (SettingsManager.Instance.Settings.LaunchMonitor.UseBackupManager ? "enabled" : "disabled"));
+
+
     }
     private void App_Exit(object sender, ExitEventArgs e)
     {

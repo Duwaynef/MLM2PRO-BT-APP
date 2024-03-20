@@ -85,7 +85,8 @@ namespace MLM2PRO_BT_APP.connections
                         {
                             Logger.Log($"OpenConnectTCPClient: Processing last received message: {lastMessage}");
                             var fiveSecondsAgo = DateTimeOffset.Now.ToUnixTimeSeconds() - 5;
-                            var delayAfterShotForDisarm = DateTimeOffset.Now.ToUnixTimeSeconds() - 15;
+                            var delayAfterShotForDisarm = DateTimeOffset.Now.ToUnixTimeSeconds() - 20;
+                            bool autoDisarmEnabled = SettingsManager.Instance.Settings.LaunchMonitor.AutoDisarm;
                             switch (response.Code)
                             {
                                 case 200:
@@ -114,7 +115,7 @@ namespace MLM2PRO_BT_APP.connections
                                     }
                                     break;
                                 }
-                                case 203 when _howRecentlyTakenShot <= delayAfterShotForDisarm:
+                                case 203 when _howRecentlyTakenShot <= delayAfterShotForDisarm && autoDisarmEnabled:
                                 {
                                     Logger.Log($"OpenConnectTCPClient: Received 203: " + response);
                                     Logger.Log("OpenConnectTCPClient: Sending disarm message");

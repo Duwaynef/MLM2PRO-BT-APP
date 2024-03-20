@@ -6,6 +6,9 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Diagnostics;
 using MLM2PRO_BT_APP.util;
+using MaterialDesignColors;
+using MaterialDesignThemes.Wpf;
+using static MaterialDesignThemes.Wpf.Theme.ToolBar;
 
 namespace MLM2PRO_BT_APP
 {
@@ -14,12 +17,15 @@ namespace MLM2PRO_BT_APP
         private static Popup? DebugConsolePopup { get; set; }
         private static TextBox? DebugConsoleTextBox { get; set; }
         private readonly ByteConversionUtils _byteConversionUtils = new();
+        private PaletteHelper paletteHelper = new PaletteHelper();
+        private Theme _theme;
 
         public MainWindow()
         {
             InitializeComponent();
             Closing += MainWindow_Closing;
 
+            _theme = paletteHelper.GetTheme();
             // Create the debug console TextBox
             DebugConsoleTextBox = new TextBox
             {
@@ -28,8 +34,8 @@ namespace MLM2PRO_BT_APP
                 IsReadOnly = false,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                Background = new SolidColorBrush(Colors.DarkSlateGray),
-                Foreground = new SolidColorBrush(Colors.White)
+                Background = new SolidColorBrush(_theme.Background),
+                Foreground = new SolidColorBrush(_theme.Foreground)
             };
 
             // Create the Popup to host the debug console
@@ -47,6 +53,7 @@ namespace MLM2PRO_BT_APP
             Logger.Log("Application Started");
             Logger.Log("CurrentKey: " + _byteConversionUtils.ByteArrayToHexString((Application.Current as App)?.GetBtKey()));
             MainContentFrame.Navigate(new HomeMenu());
+            setAppTheme();
         }
 
         public class CustomTextWriter(Action<string> logAction) : TextWriter
@@ -110,5 +117,30 @@ namespace MLM2PRO_BT_APP
             }
         }
 
+        public void setAppTheme()
+        {
+            if (SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme)
+            {
+                _theme.SetBaseTheme(BaseTheme.Dark);
+            }
+            else
+            {
+                _theme.SetBaseTheme(BaseTheme.Light);
+            }
+            paletteHelper.SetTheme(_theme);
+        }
+
+        public void changeAppTheme()
+        {
+            _theme.SetBaseTheme(!SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme ? BaseTheme.Dark : BaseTheme.Light);
+            paletteHelper.SetTheme(_theme);
+            SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme = !SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme;
+            SettingsManager.Instance.SaveSettings();
+        }
+
+        private void Button_Toggle_ToggleDarkMode(object sender, RoutedEventArgs e)
+        {
+            changeAppTheme();
+        }
     }
 }

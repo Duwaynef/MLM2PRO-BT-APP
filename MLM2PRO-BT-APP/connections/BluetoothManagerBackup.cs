@@ -26,20 +26,24 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         _deviceDiscoveryTimer?.Dispose();
 
         // Start the timer to call the SendHeartbeatSignal method every 2 seconds (2000 milliseconds)
-        _deviceDiscoveryTimer = new Timer(deviceDiscoveryTimerSignal, null, 0, 5000);
+        _deviceDiscoveryTimer = new Timer(deviceDiscoveryTimerSignal, null, 0, 10000);
     }
 
     protected async void deviceDiscoveryTimerSignal(object? state)
     {
-        if (_bluetoothDevice != null || currentlySearching)
+        if (_bluetoothDevice != null)
         {
             _deviceDiscoveryTimer?.Dispose();
+            return;
+        }
+        else if (currentlySearching)
+        {
             return;
         }
         else if (_bluetoothDevice == null && !currentlySearching)
         {
             await DiscoverDevicesAsync();
-        }     
+        }
     }
 
     public override async Task TriggerDeviceDiscovery()
@@ -59,8 +63,8 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             {
                 if (pairedDevice.Name.Contains("MLM2-") || pairedDevice.Name.Contains("BlueZ "))
                 {
-                    if (App.SharedVm != null) App.SharedVm.LMStatus = "FOUND DEVICE: " + pairedDevice.Name;
-                    Logger.Log("BACKUP BLUETOOTH MANAGER FOUND PAIRED DEVICE CONNECTING: " + pairedDevice.Name);
+                    if (App.SharedVm != null) App.SharedVm.LMStatus = "FOUND PAIRED DEVICE: " + pairedDevice.Name;
+                    Logger.Log("BACKUP BLUETOOTH MANAGER FOUND PAIRED DEVICE IN BT CACHE ATTEMPTING TO CONNECT CONNECTING: " + pairedDevice.Name);
                     await ConnectToDeviceAsync(pairedDevice);
                     return;
                 }
@@ -82,11 +86,15 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     {
         try
         {
+
+            if (App.SharedVm != null) App.SharedVm.LMStatus = "ATTEMPTING TO CONNECT: : " + device.Name;
             device.GattServerDisconnected += Device_GattServerDisconnected;
             device.Gatt.ConnectAsync().Wait();
             device.Gatt.AutoConnect = true;
             _bluetoothDevice = device;
             _primaryService = _bluetoothDevice.Gatt.GetPrimaryServiceAsync(_serviceUuid).WaitAsync(TimeSpan.FromSeconds(5)).Result;
+            if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTION ESTABILISHED: " + device.Name ;
+            currentlySearching = false;
             await SetupBluetoothDevice();
         }
         catch (Exception ex)

@@ -5,7 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MLM2PRO_BT_APP"
         mc:Ignorable="d"
-        Title="Set Web Api Token" Height="220" Width="500" Background="#FF313131">
+        Title="Set Web Api Token" Height="245" Width="500"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        TextElement.FontWeight="Medium"
+        TextElement.FontSize="22"
+        FontFamily="{materialDesign:MaterialDesignFont}">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -15,8 +21,12 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Label Grid.Row="0" Margin="10" x:Name="WebAPILabel" Content="Set Web API Token" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="36" />
-        <TextBox Grid.Row="1" Margin="10" x:Name="WebAPITextBox" HorizontalAlignment="Center" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Width="400" FontSize="18"/>
-        <Button Grid.Row="2" Margin="10" Height="40" Width="300" x:Name="WebAPISaveButton" Content="Save" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18" Click="WebAPISaveButton_Click"/>
+        <materialDesign:Card VerticalAlignment="Center" Margin="10">
+            <StackPanel>
+            <Label Grid.Row="0" Margin="10" x:Name="WebAPILabel" Content="Set Web API Token" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="36" />
+            <TextBox Grid.Row="1" Margin="10" x:Name="WebAPITextBox" TextWrapping="Wrap" Text="" VerticalAlignment="Center" />
+            <Button Grid.Row="2" Margin="10" Height="40" Width="300" x:Name="WebAPISaveButton" Content="Save" HorizontalAlignment="Center" VerticalAlignment="Center" Click="WebAPISaveButton_Click"/>
+            </StackPanel>
+        </materialDesign:Card>
     </Grid>
 </Window>
