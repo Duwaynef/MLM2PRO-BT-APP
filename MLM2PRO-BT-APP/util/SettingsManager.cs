@@ -101,7 +101,7 @@ namespace MLM2PRO_BT_APP.util
             public bool AutoStartLaunchMonitor { get; set; } = true;
             public string BluetoothDeviceName { get; set; } = "MLM2-";
             public int ReconnectInterval { get; set; } = 10;
-            public bool UseBackupManager { get; set; } = false;
+            public bool UseBackupManager { get; set; } = true;
             public bool AutoWake { get; set; } = true;
 
             //public bool DebugLogging { get; set; } = false;

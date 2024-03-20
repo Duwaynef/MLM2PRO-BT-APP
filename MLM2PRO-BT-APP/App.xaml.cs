@@ -21,17 +21,18 @@ public partial class App
     {
         SharedVm = new SharedViewModel();
         LoadSettings();
-        if (!SettingsManager.Instance.Settings.LaunchMonitor.UseBackupManager)
+        PuttingConnection = new HttpPuttingServer();
+        _client = new OpenConnectTcpClient();
+
+        if (SettingsManager.Instance.Settings.LaunchMonitor.UseBackupManager)
         {
-            _manager = new BluetoothManager();
+            _manager = new BluetoothManagerBackup();
         }
         else
         {
-            // _manager = new BluetoothManagerBackup();
+            _manager = new BluetoothManager();
         }
 
-        PuttingConnection = new HttpPuttingServer();
-        _client = new OpenConnectTcpClient();
     }
     private void CheckWebApiToken()
     {
@@ -387,6 +388,7 @@ public partial class App
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         CheckWebApiToken();
+
         if (SettingsManager.Instance.Settings.Putting.PuttingEnabled)
         {
             if (SettingsManager.Instance.Settings.Putting.AutoStartPutting)
@@ -406,6 +408,8 @@ public partial class App
         }
 
         AutoConnectGsPro();
+
+        Logger.Log("Bluetooth Backup Manager is " + (SettingsManager.Instance.Settings.LaunchMonitor.UseBackupManager ? "enabled" : "disabled"));
     }
     private void App_Exit(object sender, ExitEventArgs e)
     {

@@ -25,7 +25,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
 
         _deviceWatcher.Added += DeviceWatcher_Added;
         _deviceWatcher.Updated += DeviceWatcher_Updated;
-        _deviceWatcher.Removed += DeviceWatcher_Removed;
+        // _deviceWatcher.Removed += DeviceWatcher_Removed;
         if (SettingsManager.Instance.Settings.LaunchMonitor.AutoStartLaunchMonitor)
         {
             _deviceWatcher.Start();
@@ -56,10 +56,10 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     {
         // Remove the device from the internal dictionary.
         if (!_foundDevices.TryGetValue(deviceInfoUpdate.Id, out var deviceInfo)) return;
-        deviceInfo?.Update(deviceInfoUpdate);
-        _foundDevices.Remove(deviceInfoUpdate.Id);
+        //deviceInfo?.Update(deviceInfoUpdate);
+        //_foundDevices.Remove(deviceInfoUpdate.Id);
         Logger.Log("Device Watcher removed " + deviceInfo?.Name);
-        await DisconnectAndCleanup();
+        //await DisconnectAndCleanup();
     }
     private async void DeviceWatcher_StartDeviceConnection(DeviceInformation deviceInfo)
     {
@@ -81,8 +81,8 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             }
         } else
         {
-            Logger.Log("Device Watcher stopped device connection " + deviceInfo.Name + " web api token is blank");
-            if (App.SharedVm != null) App.SharedVm.LMStatus = "WEB API TOKEN MISSING";
+            Logger.Log("Device Watcher stopped device connection " + deviceInfo.Name + " web api token is blank or incorrect");
+            if (App.SharedVm != null) App.SharedVm.LMStatus = "WEB API TOKEN MISSING OR INCORRECT";
         }
     }
     public override async Task RestartDeviceWatcher()
@@ -166,7 +166,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
 
         return characteristics.Characteristics.FirstOrDefault(c => c.Uuid == characteristicUuid);
     }
-    protected override async Task<bool> WriteCharacteristic(Guid serviceUuid, Guid characteristicUuid, byte[]? data, WriteType writeType)
+    protected override async Task<bool> WriteCharacteristic(Guid serviceUuid, Guid characteristicUuid, byte[]? data)
     {
         if (serviceUuid == Guid.Empty || characteristicUuid == Guid.Empty || data == null)
         {
@@ -195,13 +195,9 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         }
         else
         {
-            var writeOption = writeType == WriteType.WITH_RESPONSE ?
-                                GattWriteOption.WriteWithResponse :
-                                GattWriteOption.WriteWithoutResponse;
-
             try
             {
-                var writeResult = await characteristic.WriteValueAsync(data.AsBuffer(), writeOption);
+                var writeResult = await characteristic.WriteValueAsync(data.AsBuffer());
                 return writeResult == GattCommunicationStatus.Success;
             }
             catch
@@ -232,6 +228,10 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             Logger.Log($"Error verifying connection: {ex.Message}");
         }
     }
+    public override async Task TriggerDeviceDiscovery()
+    {
+        RestartDeviceWatcher();
+    }
     protected override async void ChildDisconnectAndCleanupFirst()
     {
         if (_deviceWatcher != null && (_deviceWatcher.Status == DeviceWatcherStatus.Started || _deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted))
@@ -243,7 +243,6 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         _bluetoothDevice?.Dispose();
         _bluetoothDevice = null;
     }
-
     protected override async Task UnsubscribeFromAllNotifications()
     {
         if (_bluetoothDevice != null)
@@ -272,11 +271,9 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             }
         }
     }
-
-
-    protected async Task<bool> VerifyDeviceConnection(BluetoothLEDevice device)
+    public override async Task<bool> VerifyDeviceConnection(object device)
     {
-        var servicesResult = await device.GetGattServicesForUuidAsync(_serviceUuid, BluetoothCacheMode.Uncached);
+        var servicesResult = await ((BluetoothLEDevice)device).GetGattServicesForUuidAsync(_serviceUuid, BluetoothCacheMode.Uncached);
 
         if (servicesResult.Status == GattCommunicationStatus.Success && servicesResult.Services.Count > 0)
         {

@@ -137,7 +137,7 @@ namespace MLM2PRO_BT_APP.connections
         protected abstract Task<bool> SubscribeToCharacteristicsAsync();
         protected abstract Task<byte[]> GetCharacteristicValueAsync(object args);
         protected abstract Task<Guid> GetSenderUuidAsync(object sender);
-        protected async void Characteristic_ValueChanged(object sender, object args)
+        protected async void Characteristic_ValueChanged(object? sender, object? args)
         {
             byte[] value = await GetCharacteristicValueAsync(args);
             Guid senderUuid = await GetSenderUuidAsync(sender);
@@ -331,12 +331,12 @@ namespace MLM2PRO_BT_APP.connections
         }
         // protected abstract Task<object> GetGattServiceAsync(Guid serviceUuid);
         // protected abstract Task<object?> GetCharacteristicAsync(object service, Guid characteristicUuid);
-        protected abstract Task<bool> WriteCharacteristic(Guid serviceUuid, Guid characteristicUuid, byte[]? data, WriteType writeType);
+        protected abstract Task<bool> WriteCharacteristic(Guid serviceUuid, Guid characteristicUuid, byte[]? data);
         protected async Task<bool> WriteValue(Guid uuid, Guid uuid2, byte[]? byteArray)
         {
             if (_bluetoothDevice != null)
             {
-                bool status = await WriteCharacteristic(uuid, uuid2, byteArray, WriteType.WITH_RESPONSE);
+                bool status = await WriteCharacteristic(uuid, uuid2, byteArray);
                 Logger.Log("WriteValue: " + _byteConversionUtils.ByteArrayToHexString(byteArray));
                 return status;
             }
@@ -400,7 +400,7 @@ namespace MLM2PRO_BT_APP.connections
             }
             byte[] heartbeatData = [0x01];
             // Send the heartbeat signal to the HEARTBEAT_CHARACTERISTIC_UUID
-            await WriteCharacteristic(_serviceUuid, _heartbeatCharacteristicUuid, heartbeatData, WriteType.WITH_RESPONSE);
+            await WriteCharacteristic(_serviceUuid, _heartbeatCharacteristicUuid, heartbeatData);
 
             // Logger.Log("Heartbeat signal sent.");
         }
@@ -474,10 +474,12 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log("Disconnected and cleaned up resources.");
         }
 
+        public abstract Task TriggerDeviceDiscovery();
+
         protected async Task RetryBtConnection()
         {
             // await DisconnectAndCleanup();
-            await SetupBluetoothDevice();
+            await TriggerDeviceDiscovery();
         }
         public async Task UnSubAndReSub()
         {
@@ -494,10 +496,7 @@ namespace MLM2PRO_BT_APP.connections
             return _btEncryption.GetKeyBytes();
         }
 
-        protected async Task<bool> VerifyDeviceConnection(object input)
-        {
-            return false;
-        }
+        public abstract Task<bool> VerifyDeviceConnection(object input);
 
         public abstract Task RestartDeviceWatcher();
 
