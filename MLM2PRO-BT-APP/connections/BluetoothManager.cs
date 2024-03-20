@@ -228,7 +228,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             Logger.Log($"Error verifying connection: {ex.Message}");
         }
     }
-    public override async Task TriggerDeviceDiscovery()
+    public override async void TriggerDeviceDiscovery()
     {
         RestartDeviceWatcher();
     }

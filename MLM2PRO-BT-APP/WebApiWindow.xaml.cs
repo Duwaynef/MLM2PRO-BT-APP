@@ -44,7 +44,7 @@ namespace MLM2PRO_BT_APP
                     SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret = WebAPITextBox.Text;
                     SettingsManager.Instance.SaveSettings();
                     Logger.Log("API Token saved");
-                    (Application.Current as App)?.ConnectAndSetupBluetooth();
+                    (Application.Current as App)?.ConnectGsProButton();
                     Close();
                 }
             }

@@ -474,12 +474,12 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log("Disconnected and cleaned up resources.");
         }
 
-        public abstract Task TriggerDeviceDiscovery();
+        public abstract void TriggerDeviceDiscovery();
 
         protected async Task RetryBtConnection()
         {
             // await DisconnectAndCleanup();
-            await TriggerDeviceDiscovery();
+            TriggerDeviceDiscovery();
         }
         public async Task UnSubAndReSub()
         {

@@ -252,11 +252,11 @@ public partial class App
         });
         return Task.CompletedTask;
     }
-    public Task ConnectAndSetupBluetooth()
+    public async void ConnectAndSetupBluetooth()
     {
+        await Task.Delay(1000);
         SharedVm.LMStatus = "LOOKING FOR DEVICE";
         _manager.RestartDeviceWatcher();
-        return Task.CompletedTask;
     }
     public async Task LmArmDevice()
     {

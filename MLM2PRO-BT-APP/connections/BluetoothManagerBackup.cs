@@ -46,7 +46,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         }
     }
 
-    public override async Task TriggerDeviceDiscovery()
+    public override async void TriggerDeviceDiscovery()
     {
         if (App.SharedVm != null) App.SharedVm.LMStatus = "TRIGGERING DISCOVERY";
         DiscoverDevicesAsync();
@@ -91,8 +91,13 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             device.GattServerDisconnected += Device_GattServerDisconnected;
             device.Gatt.ConnectAsync().Wait();
             device.Gatt.AutoConnect = true;
+            _primaryService = device.Gatt.GetPrimaryServiceAsync(_serviceUuid).WaitAsync(TimeSpan.FromSeconds(5)).Result;
+            if (_primaryService == null)
+            {
+                Logger.Log("Primary service not found.");
+                return;
+            }
             _bluetoothDevice = device;
-            _primaryService = _bluetoothDevice.Gatt.GetPrimaryServiceAsync(_serviceUuid).WaitAsync(TimeSpan.FromSeconds(5)).Result;
             if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTION ESTABILISHED: " + device.Name ;
             currentlySearching = false;
             await SetupBluetoothDevice();
@@ -120,7 +125,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         if (_bluetoothDevice != null)
         {
             Logger.Log("Device disconnected. Attempting to reconnect...");
-            await ConnectToDeviceAsync(_bluetoothDevice);
+            TriggerDeviceDiscovery();
         }
     }
 
@@ -206,14 +211,15 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         throw new NotImplementedException();
     }
 
-    protected override void ChildDisconnectAndCleanupFirst()
+    protected override async void ChildDisconnectAndCleanupFirst()
     {
-        
+        _deviceDiscoveryTimer?.Dispose();
     }
 
-    protected override void ChildDisconnectAndCleanupSecond()
+    protected override async void ChildDisconnectAndCleanupSecond()
     {
-        
+        _bluetoothDevice?.Gatt.Disconnect();
+        _bluetoothDevice = null;
     }
 
     protected override async Task UnsubscribeFromAllNotifications()
@@ -239,8 +245,6 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     {
 
         var characteristic = await ((BluetoothDevice)device).Gatt.GetPrimaryServiceAsync(_serviceUuid);
-        var rssi = await ((BluetoothDevice)device).Gatt.ReadRssi();
-        Logger.Log("Device RSSI: " + rssi);
         if (characteristic != null)
         {
             Logger.Log("verify device connection: got GATT services");
