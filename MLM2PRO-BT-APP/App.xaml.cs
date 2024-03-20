@@ -11,7 +11,8 @@ namespace MLM2PRO_BT_APP;
 public partial class App
 {
     public static SharedViewModel? SharedVm { get; private set; }
-    private readonly BluetoothManager _manager;
+
+    private readonly BluetoothBaseInterface _manager;
     private HttpPuttingServer? PuttingConnection { get; }
     private readonly OpenConnectTcpClient _client;
     private readonly OpenConnectServer _openConnectServerInstance = new(IPAddress.Any, 951);
@@ -20,7 +21,15 @@ public partial class App
     {
         SharedVm = new SharedViewModel();
         LoadSettings();
-        _manager = new BluetoothManager();
+        if (!SettingsManager.Instance.Settings.LaunchMonitor.UseBackupManager)
+        {
+            _manager = new BluetoothManager();
+        }
+        else
+        {
+            // _manager = new BluetoothManagerBackup();
+        }
+
         PuttingConnection = new HttpPuttingServer();
         _client = new OpenConnectTcpClient();
     }
