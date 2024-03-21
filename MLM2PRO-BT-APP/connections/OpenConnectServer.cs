@@ -13,26 +13,26 @@ namespace MLM2PRO_BT_APP.connections
 
         protected override void OnConnected()
         {
-            Logger.Log($"OpenConnectServer TCP session with Id {Id} connected!");
+            Logger.Log($"OpenConnectServer: TCP session with Id {Id} connected!");
             (Application.Current as App)?.Dispatcher.Invoke(() => (Application.Current as App)?.SendOpenConnectServerNewClientMessage());
-            Logger.Log($"OpenConnectServer Sent opening messages");
+            Logger.Log($"OpenConnectServer: Sent opening messages");
         }
 
         protected override void OnDisconnected()
         {
-            Logger.Log($"OpenConnect server disconnected {Id}");
+            Logger.Log($"OpenConnectServer: disconnected {Id}");
         }
-
+        
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
-            Logger.Log($"OpenConnect server received {size} bytes");
+            Logger.Log($"OpenConnectServer: received {size} bytes");
             string? message = Encoding.UTF8.GetString(buffer, (int)offset, (int)size);
             (Application.Current as App)?.Dispatcher.Invoke(() => (Application.Current as App)?.RelayOpenConnectServerMessage(message));
         }
 
         protected override void OnError(SocketError error)
         {
-            Logger.Log($"OpenConnect server caught an error with code {error}");
+            Logger.Log($"OpenConnectServer: caught an error with code {error}");
         }
     }
     class OpenConnectServer : TcpServer
@@ -43,7 +43,7 @@ namespace MLM2PRO_BT_APP.connections
 
         protected override void OnError(SocketError error)
         {
-            Logger.Log($"Chat TCP server caught an error with code {error}");
+            Logger.Log($"OpenConnectServer: Chat TCP server caught an error with code {error}");
         }
     }
 }

@@ -34,7 +34,9 @@ namespace MLM2PRO_BT_APP.connections
                 {
                     string key = request.Url;
                     string value = request.Body;
+                    Logger.Log("Received Putting request: " + value);
                     PuttingDataMessage? message = JsonSerializer.Deserialize<PuttingDataMessage>(value);
+                    Logger.Log("Putting request converted");
                     Logger.Log(request.Body);
 
                     if (message != null)
@@ -48,10 +50,6 @@ namespace MLM2PRO_BT_APP.connections
                                 (App.Current as App)?.SendShotData(messageToSend);
                                 App.SharedVm.PuttingStatus = "SHOT SENT";
                             }
-                            else
-                            {
-                                
-                            }
                         }
                         else
                         {
@@ -64,8 +62,9 @@ namespace MLM2PRO_BT_APP.connections
                 SendResponseAsync(Response.MakeOkResponse());
 
             }
-            catch
+            catch(Exception ex)
             {
+                Logger.Log("Putting incoming message exception" + ex);
                 SendResponseAsync(Response.MakeErrorResponse());
             }
 
@@ -144,7 +143,7 @@ namespace MLM2PRO_BT_APP.connections
 
             OnlyLaunchWhenPutting = SettingsManager.Instance.Settings.Putting.OnlyLaunchWhenPutting;
             KeepPuttingCamOnTop = SettingsManager.Instance.Settings.Putting.KeepPuttingCamOnTop;
-            LaunchBallTracker = SettingsManager.Instance.Settings.Putting.LaunchBallTracker;
+            LaunchBallTracker = SettingsManager.Instance.Settings.Putting.PuttingEnabled;
             WebcamIndex = SettingsManager.Instance.Settings.Putting.WebcamIndex;
             BallColor = SettingsManager.Instance.Settings.Putting.BallColor;
             CamPreviewWidth = SettingsManager.Instance.Settings.Putting.CamPreviewWidth;

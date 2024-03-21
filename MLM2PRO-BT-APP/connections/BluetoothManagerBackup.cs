@@ -14,10 +14,15 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     public GattCharacteristic _GaTTmeasurementCharacteristic;
     protected Timer? _deviceDiscoveryTimer;
     bool currentlySearching = false;
+    bool cleaningUp = false;
     public BluetoothManagerBackup() : base()
     {
-        Logger.Log("BACKUP BLUETOOTH MANAGER INITIALIZED");
-        StartDeviceDiscoveryTimer();
+        Logger.Log("BackupBluetooth: Running");
+        if (SettingsManager.Instance.Settings.LaunchMonitor.AutoStartLaunchMonitor)
+        {
+            Logger.Log("BackupBluetooth: initialized");
+            StartDeviceDiscoveryTimer();
+        }
     }
 
     protected async Task StartDeviceDiscoveryTimer()
@@ -46,6 +51,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     }
     public override async Task TriggerDeviceDiscovery()
     {
+        cleaningUp = false;
         if (App.SharedVm != null) App.SharedVm.LMStatus = "TRIGGERING DISCOVERY";
         DiscoverDevicesAsync();
     }
@@ -116,7 +122,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     private async void Device_GattServerDisconnected(object sender, EventArgs e)
     {
         var device = sender as BluetoothDevice;
-        if (_bluetoothDevice != null)
+        if (_bluetoothDevice != null && !cleaningUp)
         {
             Logger.Log("Device disconnected. Attempting to reconnect...");
             TriggerDeviceDiscovery();
@@ -201,6 +207,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     }
     protected override async Task ChildDisconnectAndCleanupFirst()
     {
+        cleaningUp = true;
         _deviceDiscoveryTimer?.Dispose();
     }
     protected override async Task ChildDisconnectAndCleanupSecond()

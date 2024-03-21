@@ -36,7 +36,7 @@ namespace MLM2PRO_BT_APP.connections
             _notifyUuiDs.Add(_heartbeatCharacteristicUuid);
             _notifyUuiDs.Add(_measurementCharacteristicUuid);
             _notifyUuiDs.Add(_writeResponseCharacteristicUuid);
-            if (App.SharedVm != null) App.SharedVm.LMStatus = "Watching for bluetooth devices...";
+            if (App.SharedVm != null && SettingsManager.Instance.Settings.LaunchMonitor.AutoStartLaunchMonitor) App.SharedVm.LMStatus = "Watching for bluetooth devices...";
         }
 
         protected async Task SetupBluetoothDevice()
@@ -449,7 +449,10 @@ namespace MLM2PRO_BT_APP.connections
         protected abstract Task ChildDisconnectAndCleanupSecond();
         public async Task DisconnectAndCleanup()
         {
+            _heartbeatTimer.Dispose();
+            await Task.Delay(TimeSpan.FromSeconds(2));
             ChildDisconnectAndCleanupFirst();
+
             if (_subscriptionVerificationTimer != null) await _subscriptionVerificationTimer.DisposeAsync();
             if (_heartbeatTimer != null) await _heartbeatTimer.DisposeAsync();
 

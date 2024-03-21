@@ -7,18 +7,17 @@ public class PuttingDataMessage
     [JsonPropertyName("ballData")]
     public BallData? BallData { get; init; }
 }
-
-public abstract class BallData(double ballSpeed, double totalSpin, double launchDirection)
+public class BallData
 {
     [JsonPropertyName("BallSpeed")]
-    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)] // Ensure this attribute is here
-    public double BallSpeed { get; } = ballSpeed;
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
+    public double BallSpeed { get; set; }
 
     [JsonPropertyName("TotalSpin")]
     [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-    public double TotalSpin { get; } = totalSpin;
+    public double TotalSpin { get; set; }
 
     [JsonPropertyName("LaunchDirection")]
     [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
-    public double LaunchDirection { get; } = launchDirection;
+    public double LaunchDirection { get; set; }
 }

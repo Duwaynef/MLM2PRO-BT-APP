@@ -342,7 +342,7 @@ public partial class App : Application
         if (!string.IsNullOrEmpty(_lastMessage))
         {
             await Task.Delay(1000);
-            Logger.Log("Sending message to OpenConnectServerClients:");
+            Logger.Log("OpenConnectServer: Sending message");
             Logger.Log(_lastMessage);
             Logger.Log("");
             _openConnectServerInstance.Multicast(_lastMessage);
@@ -352,7 +352,7 @@ public partial class App : Application
     {
         if (_openConnectServerInstance.IsStarted)
         {
-            Logger.Log("Sending message to OpenConnectServerClients");
+            Logger.Log("OpenConnectServer: Sending message");
             Logger.Log(incomingMessage);
             Logger.Log("");
             _openConnectServerInstance.Multicast(incomingMessage);
