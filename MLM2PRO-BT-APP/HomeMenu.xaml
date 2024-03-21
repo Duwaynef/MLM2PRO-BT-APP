@@ -151,9 +151,9 @@
                     <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="*" IsReadOnly="True"/>
-                    <!--<DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Side Spin" Binding="{Binding SideSpin}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="*" IsReadOnly="True"/>
+                    <!-- <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Impact Angle" Binding="{Binding ImpactAngle}" Width="*" IsReadOnly="True"/> -->
                 </DataGrid.Columns>
             </DataGrid>

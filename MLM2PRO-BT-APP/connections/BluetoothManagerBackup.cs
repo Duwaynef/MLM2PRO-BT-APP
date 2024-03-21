@@ -20,7 +20,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         StartDeviceDiscoveryTimer();
     }
 
-    protected void StartDeviceDiscoveryTimer()
+    protected async Task StartDeviceDiscoveryTimer()
     {
         // Stop the timer if it's already running
         _deviceDiscoveryTimer?.Dispose();
@@ -28,7 +28,6 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         // Start the timer to call the SendHeartbeatSignal method every 2 seconds (2000 milliseconds)
         _deviceDiscoveryTimer = new Timer(deviceDiscoveryTimerSignal, null, 0, 10000);
     }
-
     protected async void deviceDiscoveryTimerSignal(object? state)
     {
         if (_bluetoothDevice != null)
@@ -45,13 +44,11 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             await DiscoverDevicesAsync();
         }
     }
-
-    public override async void TriggerDeviceDiscovery()
+    public override async Task TriggerDeviceDiscovery()
     {
         if (App.SharedVm != null) App.SharedVm.LMStatus = "TRIGGERING DISCOVERY";
         DiscoverDevicesAsync();
     }
-
     public async Task DiscoverDevicesAsync()
     {
         try
@@ -107,18 +104,15 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             Logger.Log($"Error connecting to device: {ex.Message}");
         }
     }
-
     private async void Bluetooth_AvailabilityChanged(object sender, EventArgs e)
     {
         var current = await Bluetooth.GetAvailabilityAsync();
         System.Diagnostics.Debug.Write($"Availability: {current}");
     }
-
     private void Bluetooth_AdvertisementReceived(object sender, BluetoothAdvertisingEvent e)
     {
         Logger.Log($"Name:{e.Name} Rssi:{e.Rssi}");
     }
-
     private async void Device_GattServerDisconnected(object sender, EventArgs e)
     {
         var device = sender as BluetoothDevice;
@@ -128,7 +122,6 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             TriggerDeviceDiscovery();
         }
     }
-
     protected override async Task<bool> SubscribeToCharacteristicsAsync()
     {
         try
@@ -153,17 +146,14 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         }
         return true;
     }
-
     protected override async Task<byte[]> GetCharacteristicValueAsync(object args)
     {
         return (args as GattCharacteristicValueChangedEventArgs)?.Value?.ToArray() ?? new byte[0];
     }
-
     protected override async Task<Guid> GetSenderUuidAsync(object sender)
     {
         return (sender as GattCharacteristic)?.Uuid ?? Guid.Empty;
     }
-
     protected override async Task<bool> WriteCharacteristic(Guid serviceUuid, Guid characteristicUuid, byte[]? data)
     {
         if (serviceUuid == Guid.Empty || characteristicUuid == Guid.Empty || data == null)
@@ -205,23 +195,19 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             }
         }
     }
-
-    protected override void VerifyConnection(object? state)
+    protected override async void VerifyConnection(object? state)
     {
         throw new NotImplementedException();
     }
-
-    protected override async void ChildDisconnectAndCleanupFirst()
+    protected override async Task ChildDisconnectAndCleanupFirst()
     {
         _deviceDiscoveryTimer?.Dispose();
     }
-
-    protected override async void ChildDisconnectAndCleanupSecond()
+    protected override async Task ChildDisconnectAndCleanupSecond()
     {
         _bluetoothDevice?.Gatt.Disconnect();
         _bluetoothDevice = null;
     }
-
     protected override async Task UnsubscribeFromAllNotifications()
     {
         if (_bluetoothDevice != null)
@@ -240,7 +226,6 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             }
         }
     }
-
     public override async Task<bool> VerifyDeviceConnection(object device)
     {
 
@@ -256,9 +241,8 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             return false;
         }
     }
-
     public override async Task RestartDeviceWatcher()
     {
-        DiscoverDevicesAsync();
+        await DiscoverDevicesAsync();
     }
 }

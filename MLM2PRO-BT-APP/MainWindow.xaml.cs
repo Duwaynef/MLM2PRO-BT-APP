@@ -12,7 +12,7 @@ using static MaterialDesignThemes.Wpf.Theme.ToolBar;
 
 namespace MLM2PRO_BT_APP
 {
-    public partial class MainWindow
+    public partial class MainWindow : Window
     {
         private static Popup? DebugConsolePopup { get; set; }
         private static TextBox? DebugConsoleTextBox { get; set; }
@@ -56,52 +56,31 @@ namespace MLM2PRO_BT_APP
             setAppTheme();
         }
 
-        public class CustomTextWriter(Action<string> logAction) : TextWriter
-        {
-            public override void Write(char value)
-            {
-                Write(value.ToString());
-            }
-
-            public override void Write(string? value)
-            {
-                if (value != null) logAction.Invoke(value);
-            }
-
-            public override void WriteLine(string? value)
-            {
-                Write(value + Environment.NewLine);
-            }
-
-            public override Encoding Encoding => Encoding.UTF8;
-        }
-
-        private void Button_Toggle_DebugConsole(object sender, RoutedEventArgs e)
+        private async void Button_Toggle_DebugConsole(object sender, RoutedEventArgs e)
         {
             ToggleDebugConsole();
         }
-
-        private static void ToggleDebugConsole()
+        private async static void ToggleDebugConsole()
         {
             if (DebugConsolePopup != null) DebugConsolePopup.IsOpen = !DebugConsolePopup.IsOpen;
         }
-        private void Settings_Click(object sender, RoutedEventArgs e)
+        private async void Settings_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new SettingsPage());
         }
-        private void About_Click(object sender, RoutedEventArgs e)
+        private async void About_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new AboutPage());
         }
-        private void Exit_Click(object sender, RoutedEventArgs e)
+        private async void Exit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
         }
-        private void Home_Click(object sender, RoutedEventArgs e)
+        private async void Home_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new HomeMenu());
         }
-        private void Coffee_Click(object sender, RoutedEventArgs e)
+        private async void Coffee_Click(object sender, RoutedEventArgs e)
         {
             Process.Start(new ProcessStartInfo
             {
@@ -109,7 +88,7 @@ namespace MLM2PRO_BT_APP
                 UseShellExecute = true
             });
         }
-        private static void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        private async static void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             if (DebugConsolePopup is { IsOpen: true })
             {
@@ -117,7 +96,7 @@ namespace MLM2PRO_BT_APP
             }
         }
 
-        public void setAppTheme()
+        public async void setAppTheme()
         {
             if (SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme)
             {
@@ -130,7 +109,7 @@ namespace MLM2PRO_BT_APP
             paletteHelper.SetTheme(_theme);
         }
 
-        public void changeAppTheme()
+        public async void changeAppTheme()
         {
             _theme.SetBaseTheme(!SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme ? BaseTheme.Dark : BaseTheme.Light);
             paletteHelper.SetTheme(_theme);
@@ -138,7 +117,7 @@ namespace MLM2PRO_BT_APP
             SettingsManager.Instance.SaveSettings();
         }
 
-        private void Button_Toggle_ToggleDarkMode(object sender, RoutedEventArgs e)
+        private async void Button_Toggle_ToggleDarkMode(object sender, RoutedEventArgs e)
         {
             changeAppTheme();
         }

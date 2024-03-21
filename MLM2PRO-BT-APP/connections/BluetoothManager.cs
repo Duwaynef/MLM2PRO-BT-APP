@@ -228,17 +228,17 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             Logger.Log($"Error verifying connection: {ex.Message}");
         }
     }
-    public override async void TriggerDeviceDiscovery()
+    public override async Task TriggerDeviceDiscovery()
     {
         RestartDeviceWatcher();
     }
-    protected override async void ChildDisconnectAndCleanupFirst()
+    protected override async Task ChildDisconnectAndCleanupFirst()
     {
         if (_deviceWatcher != null && (_deviceWatcher.Status == DeviceWatcherStatus.Started || _deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted))
         _deviceWatcher?.Stop();
         _foundDevices.Clear();
     }
-    protected override async void ChildDisconnectAndCleanupSecond()
+    protected override async Task ChildDisconnectAndCleanupSecond()
     {
         _bluetoothDevice?.Dispose();
         _bluetoothDevice = null;

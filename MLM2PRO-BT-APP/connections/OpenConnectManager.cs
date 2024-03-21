@@ -245,8 +245,8 @@ namespace MLM2PRO_BT_APP.connections
                     Speed = input.BallData.Speed,
                     SpinAxis = input.BallData.SpinAxis,
                     TotalSpin = input.BallData.TotalSpin,
-                    // BackSpin = backSpin,
-                    // SideSpin = sideSpin,
+                    BackSpin = input.BallData.BackSpin,
+                    SideSpin = input.BallData.SideSpin,
                     HLA = input.BallData.HLA,
                     VLA = input.BallData.VLA
                 },
@@ -287,8 +287,8 @@ namespace MLM2PRO_BT_APP.connections
                     Speed = speed,
                     SpinAxis = spinAxis,
                     TotalSpin = totalSpin,
-                    // BackSpin = backSpin,
-                    // SideSpin = sideSpin,
+                    BackSpin = backSpin,
+                    SideSpin = sideSpin,
                     HLA = hla,
                     VLA = vla
                 },
@@ -320,18 +320,11 @@ namespace MLM2PRO_BT_APP.connections
         public double Speed { get; set; }
         public double SpinAxis { get; set; }
         public double TotalSpin { get; set; }
-        // public double BackSpin { get; set; }
-        // public double SideSpin { get; set; }
+        public double BackSpin { get; set; }
+        public double SideSpin { get; set; }
         public double HLA { get; set; }
         public double VLA { get; set; }
         // public double CarryDistance { get; set; }
-
-        /* how mlm2pro connector gets back and side spin. not sure if actually needed.
-        self.back_spin = round(
-            self.total_spin * math.cos(math.radians(self.spin_axis)))
-        self.side_spin = round(
-            self.total_spin * math.sin(math.radians(self.spin_axis)))
-        */
 
     }
     public class ClubData

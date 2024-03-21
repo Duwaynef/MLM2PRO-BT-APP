@@ -25,6 +25,21 @@ namespace MLM2PRO_BT_APP.devices
         public int Unknown1 { get; set; }
         public int Unknown2 { get; set; }
 
+        public int CalculateBackSpin(int totalSpin, double spinAxis)
+        {
+            return (int)Math.Round(totalSpin * Math.Cos(DegreesToRadians(spinAxis)));
+        }
+
+        public int CalculateSideSpin(int totalSpin, double spinAxis)
+        {
+            return (int)Math.Round(totalSpin * Math.Sin(DegreesToRadians(spinAxis)));
+        }
+
+        private double DegreesToRadians(double degrees)
+        {
+            return (Math.PI / 180) * degrees;
+        }
+
         public OpenConnectApiMessage ConvertHexToMeasurementData(string? hexData)
         {
             double multiplier = 2.2375;
@@ -43,6 +58,8 @@ namespace MLM2PRO_BT_APP.devices
             Unknown2 = BitConverter.ToUInt16(bytes, 14); // total distance? both seem lower than AG, but not crazy off...
             // Serialize MeasurementData instance to JSON string
 
+            double BackSpin = CalculateBackSpin(TotalSpin, SpinAxis);
+            double SideSpin = CalculateSideSpin(TotalSpin, SpinAxis);
             OpenConnectApiMessage.Instance.ShotNumber++;
             return new OpenConnectApiMessage()
             {
