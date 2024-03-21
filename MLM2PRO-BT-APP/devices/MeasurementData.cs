@@ -25,7 +25,22 @@ namespace MLM2PRO_BT_APP.devices
         public int Unknown1 { get; set; }
         public int Unknown2 { get; set; }
 
-        public OpenConnectApiMessage ConvertHexToMeasurementData(string? hexData)
+        public int CalculateBackSpin(int totalSpin, double spinAxis)
+        {
+            return (int)Math.Round(totalSpin * Math.Cos(DegreesToRadians(spinAxis)));
+        }
+
+        public int CalculateSideSpin(int totalSpin, double spinAxis)
+        {
+            return (int)Math.Round(totalSpin * Math.Sin(DegreesToRadians(spinAxis)));
+        }
+
+        private double DegreesToRadians(double degrees)
+        {
+            return (Math.PI / 180) * degrees;
+        }
+
+        public OpenConnectApiMessage ConvertHexToMeasurementData(string? hexData) 
         {
             double multiplier = 2.2375;
             byte[] bytes = Enumerable.Range(0, hexData.Length)
