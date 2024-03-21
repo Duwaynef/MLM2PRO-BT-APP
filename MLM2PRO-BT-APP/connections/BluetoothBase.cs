@@ -120,19 +120,17 @@ namespace MLM2PRO_BT_APP.connections
 
             _settingUpConnection = false;
         }
-        public Task ArmDevice()
+        public async Task ArmDevice()
         {
             var data = _byteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
             _ = WriteCommand(data);
             _isDeviceArmed = true;
-            return Task.CompletedTask;
         }
-        public Task DisarmDevice()
+        public async Task DisarmDevice()
         {
             var data = _byteConversionUtils.HexStringToByteArray("010D0000000000"); //01180000000000 also found 010D0000000000 == disarm device???
             _ = WriteCommand(data);
             _isDeviceArmed = false;
-            return Task.CompletedTask;
         }
         protected abstract Task<bool> SubscribeToCharacteristicsAsync();
         protected abstract Task<byte[]> GetCharacteristicValueAsync(object args);
@@ -380,7 +378,7 @@ namespace MLM2PRO_BT_APP.connections
                 return false;
             }
         }
-        protected void StartHeartbeat()
+        protected async Task StartHeartbeat()
         {
             // Stop the timer if it's already running
             _heartbeatTimer?.Dispose();
@@ -396,7 +394,8 @@ namespace MLM2PRO_BT_APP.connections
             {
                 Logger.Log("Heartbeat not received for 20 seconds, resubscribing...");
                 _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
-                await UnSubAndReSub();
+                // await UnSubAndReSub();
+                await SubscribeToCharacteristicsAsync();
             }
             byte[] heartbeatData = [0x01];
             // Send the heartbeat signal to the HEARTBEAT_CHARACTERISTIC_UUID
@@ -404,7 +403,6 @@ namespace MLM2PRO_BT_APP.connections
 
             // Logger.Log("Heartbeat signal sent.");
         }
-
         protected async Task<bool?> SendDeviceAuthRequest()
         {
             var intToByteArray = _byteConversionUtils.IntToByteArray(1, true);
@@ -434,7 +432,7 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log("KeyBytes: " + _byteConversionUtils.ByteArrayToHexString(keyBytes));
             return Task.FromResult(keyBytes);
         }
-        public void StartSubscriptionVerificationTimer()
+        public async Task StartSubscriptionVerificationTimer()
         {
             // Stop the timer if it's already running
             _subscriptionVerificationTimer?.Dispose();
@@ -443,10 +441,8 @@ namespace MLM2PRO_BT_APP.connections
             _subscriptionVerificationTimer = new Timer(VerifyConnection, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(30));
         }
         protected abstract void VerifyConnection(object? state);
-
-        protected abstract void ChildDisconnectAndCleanupFirst();
-        protected abstract void ChildDisconnectAndCleanupSecond();
-
+        protected abstract Task ChildDisconnectAndCleanupFirst();
+        protected abstract Task ChildDisconnectAndCleanupSecond();
         public async Task DisconnectAndCleanup()
         {
             ChildDisconnectAndCleanupFirst();
@@ -473,13 +469,11 @@ namespace MLM2PRO_BT_APP.connections
             if (App.SharedVm != null) App.SharedVm.LMStatus = "DISCONNECTED";
             Logger.Log("Disconnected and cleaned up resources.");
         }
-
         public abstract Task TriggerDeviceDiscovery();
-
         protected async Task RetryBtConnection()
         {
             // await DisconnectAndCleanup();
-            await TriggerDeviceDiscovery();
+            TriggerDeviceDiscovery();
         }
         public async Task UnSubAndReSub()
         {
@@ -487,17 +481,12 @@ namespace MLM2PRO_BT_APP.connections
             await UnsubscribeFromAllNotifications();
             await SubscribeToCharacteristicsAsync();
         }
-
-        protected abstract Task UnsubscribeFromAllNotifications();
-
-        
+        protected abstract Task UnsubscribeFromAllNotifications();        
         public byte[]? GetEncryptionKey()
         {
             return _btEncryption.GetKeyBytes();
         }
-
         public abstract Task<bool> VerifyDeviceConnection(object input);
-
         public abstract Task RestartDeviceWatcher();
 
     }

@@ -1,11 +1,11 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using MLM2PRO_BT_APP.connections;
 using MLM2PRO_BT_APP.util;
 
-// ReSharper disable UnusedAutoPropertyAccessor.Global
 namespace MLM2PRO_BT_APP;
 
-public sealed partial class HomeMenu
+public partial class HomeMenu : Page
 {
     public HomeMenu()
     {
@@ -15,15 +15,15 @@ public sealed partial class HomeMenu
         ShotDataDataGrid.ItemsSource = SharedViewModel.Instance.ShotDataCollection;
     }
 
-    private void GSPro_Connect_Click(object sender, RoutedEventArgs e)
+    private async void GSPro_Connect_Click(object sender, RoutedEventArgs e)
     {
         (Application.Current as App)?.ConnectGsProButton();
     }
-    private void GSPro_Disconnect_Click(object sender, RoutedEventArgs e)
+    private async void GSPro_Disconnect_Click(object sender, RoutedEventArgs e)
     {
         (Application.Current as App)?.DisconnectGsPro();
     }
-    private void GSPro_Send_TestShot_Click(object sender, RoutedEventArgs e)
+    private async void GSPro_Send_TestShot_Click(object sender, RoutedEventArgs e)
     {
         (Application.Current as App)?.SendTestShotData();
     } 
@@ -59,13 +59,14 @@ public sealed partial class HomeMenu
         public string Result { get; set; } = "";
         public string Club { get; set; } = "";
         public double ClubSpeed { get; set; }
-        public double BallSpeed { get; set; }
+        public double BallSpeed { get; set; } 
         public double SpinAxis { get; set; }
         public double SpinRate { get; set; }
         public double HLA { get; set; }
         public double VLA { get; set; }
-        //public double BackSpin { get; set; }
-        //public double SideSpin { get; set; }
+        public double BackSpin { get; set; }
+        public double SideSpin { get; set; }
+
         //public double ClubPath { get; set; }
         //public double ImpactAngle { get; set; }
     }
@@ -94,32 +95,32 @@ public sealed partial class HomeMenu
             Logger.Log("Failed to get a valid response.");
         }
     }
-    private void LaunchMonitor_Connect_Click(object sender, RoutedEventArgs e)
+    private async void LaunchMonitor_Connect_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.ConnectAndSetupBluetooth();
+        await (Application.Current as App)?.ConnectAndSetupBluetooth();
     }
-    private void LM_ARMButton_Click(object sender, RoutedEventArgs e)
+    private async void LM_ARMButton_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.LmArmDevice();
+        await (Application.Current as App)?.LmArmDevice();
     }
-    private void LM_DISARMButton_Click(object sender, RoutedEventArgs e)
+    private async void LM_DISARMButton_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.LmDisarmDevice();
+        await (Application.Current as App)?.LmDisarmDevice();
     }
-    private void LaunchMonitor_Disconnect_Click(object sender, RoutedEventArgs e)
+    private async void LaunchMonitor_Disconnect_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.LmDisconnect();
+        await (Application.Current as App)?.LmDisconnect();
     }
-    private void LM_Resub_Click(object sender, RoutedEventArgs e)
+    private async void LM_Resub_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.BtManagerResub();
+        await (Application.Current as App)?.BtManagerResub();
     }
-    private void Putting_Connect_Click(object sender, RoutedEventArgs e)
+    private async void Putting_Connect_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.PuttingEnable();
+        await (Application.Current as App)?.PuttingEnable();
     }
-    private void Putting_Disconnect_Click(object sender, RoutedEventArgs e)
+    private async void Putting_Disconnect_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.PuttingDisable();
+        await (Application.Current as App)?.PuttingDisable();
     }
 }

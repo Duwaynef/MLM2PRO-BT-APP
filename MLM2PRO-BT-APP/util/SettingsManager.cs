@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Reflection;
+using MaterialDesignThemes.Wpf;
 using Newtonsoft.Json;
 
 namespace MLM2PRO_BT_APP.util
@@ -35,6 +37,7 @@ namespace MLM2PRO_BT_APP.util
                 {
                     string settingsJson = File.ReadAllText(_settingsFilePath);
                     Settings = JsonConvert.DeserializeObject<AppSettings>(settingsJson);
+                    CompareDefaultSettings();
                     Debug.WriteLine("Settings loaded successfully.");
                 }
                 else
@@ -62,16 +65,55 @@ namespace MLM2PRO_BT_APP.util
             SaveSettings();
             Debug.WriteLine("All settings cleared and reset to default.");
         }
-
-        private void InitializeDefaultSettings()
+        public void CompareDefaultSettings()
         {
-            Settings = new AppSettings
+            var defaultSettings = new AppSettings
             {
+                ApplicationSettings = new ApplicationSettings(),
                 OpenConnect = new OpenConnectSettings(),
                 WebApiSettings = new WebApiSettings(),
                 LaunchMonitor = new LaunchMonitorSettings(),
                 Putting = new PuttingSettings()
             };
+            Settings = Settings ?? defaultSettings;
+            MergeWithDefaultSettings(defaultSettings, Settings);
+        }
+        private void MergeWithDefaultSettings(dynamic defaultSettings, dynamic currentSettings)
+        {
+            Type currentType = currentSettings.GetType();
+            foreach (PropertyInfo propertyInfo in currentType.GetProperties())
+            {
+                var defaultValue = propertyInfo.GetValue(defaultSettings);
+                var currentValue = propertyInfo.GetValue(currentSettings);
+                if (defaultValue == currentValue) continue;
+                if (currentValue == null)
+                {
+                    propertyInfo.SetValue(currentSettings, defaultValue);
+                }
+                else if (propertyInfo.PropertyType.IsClass && !propertyInfo.PropertyType.Equals(typeof(string)))
+                {
+                    MergeWithDefaultSettings((dynamic)defaultValue, (dynamic)currentValue);
+                }
+            }
+        }
+
+        private void InitializeDefaultSettings()
+        {
+            Settings = new AppSettings
+            {
+                ApplicationSettings = new ApplicationSettings(),
+                OpenConnect = new OpenConnectSettings(),
+                WebApiSettings = new WebApiSettings(),
+                LaunchMonitor = new LaunchMonitorSettings(),
+                Putting = new PuttingSettings()
+            };
+        }
+
+        public class ApplicationSettings
+        {
+            public bool DarkTheme { get; set; } = true;
+            public string Accent { get; set; } = "Blue";
+            public bool DebugConsole { get; set; } = false;
         }
 
         public class OpenConnectSettings
@@ -101,8 +143,9 @@ namespace MLM2PRO_BT_APP.util
             public bool AutoStartLaunchMonitor { get; set; } = true;
             public string BluetoothDeviceName { get; set; } = "MLM2-";
             public int ReconnectInterval { get; set; } = 10;
-            public bool UseBackupManager { get; set; } = false;
+            public bool UseBackupManager { get; set; } = true;
             public bool AutoWake { get; set; } = true;
+            public bool AutoDisarm { get; set; } = false;
 
             //public bool DebugLogging { get; set; } = false;
             //public int Altitude { get; set; } = 0;
@@ -144,6 +187,7 @@ namespace MLM2PRO_BT_APP.util
 
         public class AppSettings
         {
+            public ApplicationSettings? ApplicationSettings { get; init; }
             public OpenConnectSettings? OpenConnect { get; init; }
             public WebApiSettings? WebApiSettings { get; init; }
             public LaunchMonitorSettings? LaunchMonitor { get; init; }

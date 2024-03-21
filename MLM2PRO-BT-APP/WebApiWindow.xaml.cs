@@ -31,11 +31,22 @@ namespace MLM2PRO_BT_APP
             {
                 Logger.Log("Save API Token called");
                 // Save the token to the settings
-                SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret = WebAPITextBox.Text;
-                SettingsManager.Instance.SaveSettings();
-                Logger.Log("API Token saved");
-                (Application.Current as App)?.ConnectAndSetupBluetooth();
-                Close();
+                if (String.IsNullOrEmpty(WebAPITextBox.Text) || 
+                    WebAPITextBox.Text.Contains("Secret") || 
+                    WebAPITextBox.Text.Contains(" ") ||
+                    WebAPITextBox.Text.Contains(":") ||
+                    WebAPITextBox.Text.Length != 36)
+                {
+                    WebAPITextBox.Text = "Invalid Token Syntax";
+                } 
+                else
+                {
+                    SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret = WebAPITextBox.Text;
+                    SettingsManager.Instance.SaveSettings();
+                    Logger.Log("API Token saved");
+                    (Application.Current as App)?.ConnectGsProButton();
+                    Close();
+                }
             }
         }
     }

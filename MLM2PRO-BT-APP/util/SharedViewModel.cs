@@ -4,6 +4,10 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 using static MLM2PRO_BT_APP.HomeMenu;
+using MaterialDesignColors;
+using MaterialDesignThemes.Wpf;
+using static MaterialDesignThemes.Wpf.Theme.ToolBar;
+using MaterialDesignColors.Recommended;
 
 namespace MLM2PRO_BT_APP.util
 {
@@ -13,6 +17,11 @@ namespace MLM2PRO_BT_APP.util
 
         private static SharedViewModel _instance;
         public static SharedViewModel Instance => _instance ??= new SharedViewModel();
+
+        public SharedViewModel()
+        {
+
+        }
 
         private string _gsProStatus;
         public string GSProStatus
@@ -81,37 +90,42 @@ namespace MLM2PRO_BT_APP.util
         {
             // Normalize the status string to lower case for case-insensitive comparison
             var lowerCaseStatus = status.ToLower();
+            Color Cyan = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Cyan];
+            Color BlueGrey = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.BlueGrey];
+            Color Red = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Red];
+            Color Green = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Green];
+
             if (int.TryParse(status, out var batteryLevel))
             {
                 if (batteryLevel < 15)
                 {
-                    return new SolidColorBrush(Colors.DarkRed);
+                    return new SolidColorBrush(Red);
                 }
                 else if (batteryLevel <50)
                 {
-                    return new SolidColorBrush(Colors.DarkCyan);
+                    return new SolidColorBrush(Cyan);
                 }
                 else
                 {
-                    return new SolidColorBrush(Colors.Green);
+                    return new SolidColorBrush(Green);
                 }
             }
             
             if (lowerCaseStatus.Contains("failed"))
             {
-                return new SolidColorBrush(Colors.DarkRed);
+                return new SolidColorBrush(Red);
             }
             else if (lowerCaseStatus.Contains("disconnected"))
             {
-                return new SolidColorBrush(Colors.DarkCyan);
+                return new SolidColorBrush(Cyan);
             }
             else if (lowerCaseStatus.Contains("connected") || lowerCaseStatus.Contains("success"))
             {
-                return new SolidColorBrush(Colors.Green);
+                return new SolidColorBrush(Green);
             }
             else
             {
-                return new SolidColorBrush(Colors.DarkCyan);
+                return new SolidColorBrush(BlueGrey);
             }
         }
 

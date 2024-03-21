@@ -232,13 +232,13 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     {
         RestartDeviceWatcher();
     }
-    protected override async void ChildDisconnectAndCleanupFirst()
+    protected override async Task ChildDisconnectAndCleanupFirst()
     {
         if (_deviceWatcher != null && (_deviceWatcher.Status == DeviceWatcherStatus.Started || _deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted))
         _deviceWatcher?.Stop();
         _foundDevices.Clear();
     }
-    protected override async void ChildDisconnectAndCleanupSecond()
+    protected override async Task ChildDisconnectAndCleanupSecond()
     {
         _bluetoothDevice?.Dispose();
         _bluetoothDevice = null;

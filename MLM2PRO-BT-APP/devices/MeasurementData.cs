@@ -40,7 +40,7 @@ namespace MLM2PRO_BT_APP.devices
             return (Math.PI / 180) * degrees;
         }
 
-        public OpenConnectApiMessage ConvertHexToMeasurementData(string? hexData) 
+        public OpenConnectApiMessage ConvertHexToMeasurementData(string? hexData)
         {
             double multiplier = 2.2375;
             byte[] bytes = Enumerable.Range(0, hexData.Length)
@@ -58,6 +58,8 @@ namespace MLM2PRO_BT_APP.devices
             Unknown2 = BitConverter.ToUInt16(bytes, 14); // total distance? both seem lower than AG, but not crazy off...
             // Serialize MeasurementData instance to JSON string
 
+            double BackSpin = CalculateBackSpin(TotalSpin, SpinAxis);
+            double SideSpin = CalculateSideSpin(TotalSpin, SpinAxis);
             OpenConnectApiMessage.Instance.ShotNumber++;
             return new OpenConnectApiMessage()
             {

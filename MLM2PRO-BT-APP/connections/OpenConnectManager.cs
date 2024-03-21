@@ -85,7 +85,8 @@ namespace MLM2PRO_BT_APP.connections
                         {
                             Logger.Log($"OpenConnectTCPClient: Processing last received message: {lastMessage}");
                             var fiveSecondsAgo = DateTimeOffset.Now.ToUnixTimeSeconds() - 5;
-                            var delayAfterShotForDisarm = DateTimeOffset.Now.ToUnixTimeSeconds() - 15;
+                            var delayAfterShotForDisarm = DateTimeOffset.Now.ToUnixTimeSeconds() - 20;
+                            bool autoDisarmEnabled = SettingsManager.Instance.Settings.LaunchMonitor.AutoDisarm;
                             switch (response.Code)
                             {
                                 case 200:
@@ -114,7 +115,7 @@ namespace MLM2PRO_BT_APP.connections
                                     }
                                     break;
                                 }
-                                case 203 when _howRecentlyTakenShot <= delayAfterShotForDisarm:
+                                case 203 when _howRecentlyTakenShot <= delayAfterShotForDisarm && autoDisarmEnabled:
                                 {
                                     Logger.Log($"OpenConnectTCPClient: Received 203: " + response);
                                     Logger.Log("OpenConnectTCPClient: Sending disarm message");
@@ -244,8 +245,8 @@ namespace MLM2PRO_BT_APP.connections
                     Speed = input.BallData.Speed,
                     SpinAxis = input.BallData.SpinAxis,
                     TotalSpin = input.BallData.TotalSpin,
-                    // BackSpin = backSpin,
-                    // SideSpin = sideSpin,
+                    BackSpin = input.BallData.BackSpin,
+                    SideSpin = input.BallData.SideSpin,
                     HLA = input.BallData.HLA,
                     VLA = input.BallData.VLA
                 },
@@ -286,8 +287,8 @@ namespace MLM2PRO_BT_APP.connections
                     Speed = speed,
                     SpinAxis = spinAxis,
                     TotalSpin = totalSpin,
-                    // BackSpin = backSpin,
-                    // SideSpin = sideSpin,
+                    BackSpin = backSpin,
+                    SideSpin = sideSpin,
                     HLA = hla,
                     VLA = vla
                 },
@@ -319,18 +320,11 @@ namespace MLM2PRO_BT_APP.connections
         public double Speed { get; set; }
         public double SpinAxis { get; set; }
         public double TotalSpin { get; set; }
-        // public double BackSpin { get; set; }
-        // public double SideSpin { get; set; }
+        public double BackSpin { get; set; }
+        public double SideSpin { get; set; }
         public double HLA { get; set; }
         public double VLA { get; set; }
         // public double CarryDistance { get; set; }
-
-        /* how mlm2pro connector gets back and side spin. not sure if actually needed.
-        self.back_spin = round(
-            self.total_spin * math.cos(math.radians(self.spin_axis)))
-        self.side_spin = round(
-            self.total_spin * math.sin(math.radians(self.spin_axis)))
-        */
 
     }
     public class ClubData

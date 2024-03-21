@@ -3,7 +3,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d" Width="1260" Height="710">
+    mc:Ignorable="d"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        TextElement.FontWeight="Medium"
+        TextElement.FontSize="14"
+        FontFamily="{materialDesign:MaterialDesignFont}" >
 
 
     <Grid>
@@ -13,137 +19,145 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="320" />
+            <RowDefinition Height="270" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- GSPro Section -->
-        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0">
-            <Grid Margin="10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="80" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <TextBlock Text="GSPro" FontSize="40" Foreground="White" Height="64" HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding GSProClub, Mode=OneWay}" Background="{Binding LmBatteryLifeBackground, Mode=OneWay}" FontSize="40" Foreground="White"
-                           Grid.Row="0" Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                <TextBox x:Name="GsProStatusBox" Width="auto" Height="40" TextWrapping="Wrap" 
-                     Text="{Binding GSProStatus, Mode=OneWay}" Background="{Binding GSProStatusBackground, Mode=OneWay}" Margin="0,0,0,10" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
+        <materialDesign:Card Grid.Row="0" Grid.Column="0" Margin="5">
+            <StackPanel >
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="285" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="60" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="GSPro" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding GSProClub, Mode=OneWay}" FontSize="40"
+                           Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <TextBox x:Name="GsProStatusBox" Width="auto" Height="40" TextWrapping="Wrap" 
+                     Text="{Binding GSProStatus, Mode=OneWay}" Background="{Binding GSProStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
                      Grid.Column="0" Grid.Row="1"/>
-            </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Button Grid.Row="0" Grid.Column="0" x:Name="GsProConnect" Content="Connect" Height="40" Width="280" Click="GSPro_Connect_Click" Margin="5" HorizontalAlignment="Center"/>
-                <Button Grid.Row="0" Grid.Column="1" x:Name="GsProDisconnect" Content="Disconnect" Height="40" Width="280" Click="GSPro_Disconnect_Click" Margin="5" HorizontalAlignment="Center"/>
-                <Button Grid.Row="1" Grid.Column="0" x:Name="GsProTextShot" Content="Send TestShot" Height="40" Width="280" Click="GSPro_Send_TestShot_Click" Margin="5" HorizontalAlignment="Center"/>
-            </Grid>
-        </StackPanel>
+                </Grid>
+                <Grid VerticalAlignment="Top" Height="135">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Button Grid.Row="0" Grid.Column="0" x:Name="GsProConnect" Content="Connect" Padding="50,0,50,0" Margin="0,5,0,5" Click="GSPro_Connect_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="0" Grid.Column="1" x:Name="GsProDisconnect" Content="Disconnect" Padding="50,0,50,0" Margin="0,5,0,5" Click="GSPro_Disconnect_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="1" x:Name="GsProTextShot" Content="Send Test Shot" Padding="28,0,28,0" Margin="0,5,0,5" Click="GSPro_Send_TestShot_Click" HorizontalAlignment="Center" Width="190"/>
+                </Grid>
+            </StackPanel>
+        </materialDesign:Card>
 
         <!-- Launch Monitor Section -->
-        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0">
-            <Grid Margin="10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="80" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <TextBlock Text="Launch Monitor" FontSize="40" Foreground="White" Height="64" HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding LmBatteryLife, Mode=OneWay}" Background="{Binding LMBattLifeBackground, Mode=OneWay}" FontSize="40" Foreground="White"
-                           Grid.Row="0" Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                <TextBox x:Name="LmStatus" Width="auto" Height="40" TextWrapping="Wrap" 
-         Text="{Binding LMStatus, Mode=OneWay}" Background="{Binding LMStatusBackground, Mode=OneWay}" Margin="0,0,0,10" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
+        <materialDesign:Card Grid.Row="0" Grid.Column="1" Margin="5">
+            <StackPanel>
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="285" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="60" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Launch Monitor" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding LmBatteryLife, Mode=OneWay}" Background="{Binding LMBattLifeBackground, Mode=OneWay}" FontSize="40"
+                           Grid.Row="0" Grid.Column="1"  VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <TextBox x:Name="LmStatus" Width="auto" Height="40" 
+         Text="{Binding LMStatus, Mode=OneWay}" Background="{Binding LMStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="20" Grid.ColumnSpan="2"
          Grid.Column="0" Grid.Row="1"/>
-            </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Button Grid.Row="0" Grid.Column="0" x:Name="LmConnectButton" Content="Connect" Height="40" Width="280" Click="LaunchMonitor_Connect_Click" Margin="5" HorizontalAlignment="Center"/>
-                <Button Grid.Row="0" Grid.Column="1" x:Name="LmDisconnectButton" Content="Disconnect" Height="40" Width="280" Click="LaunchMonitor_Disconnect_Click" Margin="5" HorizontalAlignment="Center"/>
-                <Button Grid.Row="2" Grid.Column="0" x:Name="LmWebApiTest" Content="Test WebApi" Height="40" Width="280" Click="LM_WebApiTest_Click" Margin="5" HorizontalAlignment="Center"/>
-                <Button Grid.Row="1" Grid.Column="0" x:Name="LmArmDevice" Content="ARM" Height="40" Width="280" Click="LM_ARMButton_Click" Margin="5" HorizontalAlignment="Center"/>
-                <Button Grid.Row="1" Grid.Column="1" x:Name="LmDisarmButton" Content="DISARM" Height="40" Width="280" Click="LM_DISARMButton_Click" Margin="5" HorizontalAlignment="Center"/>
-                <Button Grid.Row="2" Grid.Column="1" x:Name="LmReSubButton" Content="ReSub" Height="40" Width="280" Click="LM_Resub_Click" Margin="5" HorizontalAlignment="Center"/>
-            </Grid>
-
-        </StackPanel>
+                </Grid>
+                <Grid Height="135">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Button Grid.Row="0" x:Name="LmConnectButton" Content="Connect" Padding="50,0,50,0" Margin="0,5,0,5" Click="LaunchMonitor_Connect_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="0" Grid.Column="1" x:Name="LmDisconnectButton" Content="Disconnect" Padding="50,0,50,0" Margin="0,5,0,5" Click="LaunchMonitor_Disconnect_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="2" Grid.Column="0" x:Name="LmWebApiTest" Content="Test WebApi" Padding="50,0,50,0" Margin="0,5,0,5" Click="LM_WebApiTest_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="1" Grid.Column="0" x:Name="LmArmDevice" Content="ARM" Padding="50,0,50,0" Margin="0,5,0,5" Click="LM_ARMButton_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="1" Grid.Column="1" x:Name="LmDisarmButton" Content="DISARM" Padding="50,0,50,0" Margin="0,5,0,5" Click="LM_DISARMButton_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="2" Grid.Column="1" x:Name="LmReSubButton" Content="ReSub" Padding="50,0,50,0" Margin="0,5,0,5" Click="LM_Resub_Click" HorizontalAlignment="Center" Width="190"/>
+                </Grid>
+            </StackPanel>
+        </materialDesign:Card>
 
         <!-- Putting Section -->
-        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0">
-            <Grid Margin="10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="80" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <TextBlock Text="Putting" FontSize="40" Foreground="White" Height="64" HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding PuttingEnabled, Mode=OneWay}" FontSize="40" Foreground="White" Grid.Row="0"
-                           Grid.Column="1" Height="64" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                <TextBox x:Name="PuttingStatusTextBox" Width="auto" Height="40" TextWrapping="Wrap" 
-                    Text="{Binding PuttingStatus, Mode=OneWay}" Background="{Binding PuttingStatusBackground, Mode=OneWay}" Margin="0,0,0,10" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
+        <materialDesign:Card Grid.Row="0" Grid.Column="2" Margin="5">
+            <StackPanel>
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="285" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="60" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Putting" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding PuttingEnabled, Mode=OneWay}" FontSize="40" Grid.Row="0"
+                           Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <TextBox x:Name="PuttingStatusTextBox" Width="auto" Height="40" TextWrapping="Wrap" 
+                    Text="{Binding PuttingStatus, Mode=OneWay}" Background="{Binding PuttingStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
                     Grid.Column="0" Grid.Row="1"/>
-            </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Button Grid.Row="0" Grid.Column="0" x:Name="PuttingConnect" Content="Connect" Height="40" Width="280" Click="Putting_Connect_Click" Margin="5" HorizontalAlignment="Center"/>
-                <Button Grid.Row="0" Grid.Column="1" x:Name="PuttingDisconnect" Content="Disconnect" Height="40" Width="280" Click="Putting_Disconnect_Click" Margin="5" HorizontalAlignment="Center"/>
-            </Grid>
-        </StackPanel>
+                </Grid>
+                <Grid Height="135">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Button Grid.Row="0" Grid.Column="0" x:Name="PuttingConnect" Content="Connect" Padding="50,0,50,0" Margin="0,5,0,5" Click="Putting_Connect_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="0" Grid.Column="1" x:Name="PuttingDisconnect" Content="Disconnect" Padding="50,0,50,0" Margin="0,5,0,5" Click="Putting_Disconnect_Click" HorizontalAlignment="Center" Width="190"/>
+                </Grid>
+            </StackPanel>
+        </materialDesign:Card>
 
 
         <!-- Shot Data Section -->
-        <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="0" HorizontalAlignment="Center" Height="390">
-            <TextBlock Text="Shot Data" FontSize="36" HorizontalAlignment="Center" Foreground="White"/>
-            <DataGrid x:Name="ShotDataDataGrid" Margin="10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" AlternatingRowBackground="#FFC5C5C5" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="270" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="270">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Club" Binding="{Binding Club}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="*" IsReadOnly="True"/>
-                <!--<DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
+        <materialDesign:Card Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="0" HorizontalAlignment="Center" Height="Auto" Margin="5">
+        <StackPanel>
+            <TextBlock Text="Shot Data" FontSize="36" HorizontalAlignment="Center"/>
+                <DataGrid x:Name="ShotDataDataGrid" Margin="10,0,10,10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="300" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="300" MinWidth="1200"  AlternatingRowBackground="#FF333333">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Club" Binding="{Binding Club}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Side Spin" Binding="{Binding SideSpin}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="*" IsReadOnly="True"/>
+                    <!-- <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Impact Angle" Binding="{Binding ImpactAngle}" Width="*" IsReadOnly="True"/> -->
-            </DataGrid.Columns>
+                </DataGrid.Columns>
             </DataGrid>
-        </StackPanel>
+            </StackPanel>
+        </materialDesign:Card>
     </Grid>
 </Page>

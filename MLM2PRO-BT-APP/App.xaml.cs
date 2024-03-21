@@ -8,7 +8,7 @@ using MLM2PRO_BT_APP.connections;
 using MLM2PRO_BT_APP.devices;
 using MLM2PRO_BT_APP.util;
 namespace MLM2PRO_BT_APP;
-public partial class App
+public partial class App : Application
 {
     public static SharedViewModel? SharedVm { get; private set; }
 
@@ -32,6 +32,7 @@ public partial class App
         {
             _manager = new BluetoothManager();
         }
+
 
     }
     private void CheckWebApiToken()
@@ -136,15 +137,13 @@ public partial class App
             Logger.Log("Exception in connecting: " + ex.Message);
         }
     }
-    public Task ConnectGsProButton()
+    public async Task ConnectGsProButton()
     {
         if (!_client.IsConnected)
         {
             Logger.Log("Connecting to OpenConnect API.");
             _client.ConnectAsync();
         }
-
-        return Task.CompletedTask;
     }
     public async Task DisconnectGsPro()
     {
@@ -226,7 +225,6 @@ public partial class App
             Logger.Log($"Error sending message: {ex.Message}");
         }
     }
-
     private Task InsertRow(OpenConnectApiMessage inputData, string result)
     {
         HomeMenu.ShotData shotData = new HomeMenu.ShotData
@@ -240,8 +238,8 @@ public partial class App
             VLA = inputData.BallData?.VLA ?? 0,
             HLA = inputData.BallData?.HLA ?? 0,
             ClubSpeed = inputData.ClubData?.Speed ?? 0,
-            //BackSpin = 0,
-            //SideSpin = 0,
+            BackSpin = inputData.BallData?.BackSpin ?? 0,
+            SideSpin = inputData.BallData?.SideSpin ?? 0
             //ClubPath = 0,
             //ImpactAngle = 0
         };
@@ -251,11 +249,10 @@ public partial class App
         });
         return Task.CompletedTask;
     }
-    public Task ConnectAndSetupBluetooth()
+    public async Task ConnectAndSetupBluetooth()
     {
         SharedVm.LMStatus = "LOOKING FOR DEVICE";
         _manager.RestartDeviceWatcher();
-        return Task.CompletedTask;
     }
     public async Task LmArmDevice()
     {
@@ -284,12 +281,11 @@ public partial class App
     {
         return _manager.GetEncryptionKey();
     }
-    public Task BtManagerResub()
+    public async Task BtManagerResub()
     {
         _ = _manager.UnSubAndReSub();
-        return Task.CompletedTask;
     }
-    public Task PuttingEnable()
+    public async Task PuttingEnable()
     {
         var fullPath = Path.GetFullPath(SettingsManager.Instance.Settings.Putting.ExePath);
         if (File.Exists(fullPath))
@@ -298,11 +294,13 @@ public partial class App
             var puttingStarted = PuttingConnection is { IsStarted: true };
             if (puttingStarted == false)
             {
+                Logger.Log("Starting putting server.");
                 var isStarted = PuttingConnection?.Start();
-                if (isStarted != true) return Task.CompletedTask;
+                if (isStarted != true) return;
                 if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
                 if (PuttingConnection != null) PuttingConnection.PuttingEnabled = true;
-            } else
+            } 
+            else
             {
                 if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
                 if (PuttingConnection != null) PuttingConnection.PuttingEnabled = true;
@@ -313,40 +311,31 @@ public partial class App
             Logger.Log("Putting executable missing.");
             if (SharedVm != null) SharedVm.PuttingStatus = "ball_tracking.exe missing";
         }
-
-        return Task.CompletedTask;
     }
-    public Task PuttingDisable()
+    public async Task PuttingDisable()
     {
         if (PuttingConnection != null) PuttingConnection.PuttingEnabled = false;
         StopPutting();
-        return Task.CompletedTask;
     }
-    public Task StartPutting()
+    public async Task StartPutting()
     {
         PuttingConnection?.StartPutting();
-        return Task.CompletedTask;
     }
-    public Task StopPutting()
+    public async Task StopPutting()
     {
         PuttingConnection?.StopPutting();
-        return Task.CompletedTask;
     }
-
-    private void LoadSettings()
+    private async void LoadSettings()
     {
         SettingsManager.Instance.LoadSettings();
     }
-
-    private Task StartOpenConnectServer()
+    private async Task StartOpenConnectServer()
     {
         _openConnectServerInstance.Start();
-        return Task.CompletedTask;
     }
-    public Task StopOpenConnectServer()
+    public async Task StopOpenConnectServer()
     {
         _openConnectServerInstance.Stop();
-        return Task.CompletedTask;
     }
     public async Task SendOpenConnectServerNewClientMessage()
     {
@@ -359,7 +348,7 @@ public partial class App
             _openConnectServerInstance.Multicast(_lastMessage);
         }
     }
-    public Task SendOpenConnectServerMessage(string? incomingMessage)
+    public async Task SendOpenConnectServerMessage(string? incomingMessage)
     {
         if (_openConnectServerInstance.IsStarted)
         {
@@ -368,8 +357,6 @@ public partial class App
             Logger.Log("");
             _openConnectServerInstance.Multicast(incomingMessage);
         }
-
-        return Task.CompletedTask;
     }
     public async Task RelayOpenConnectServerMessage(string? outgoingMessage)
     {
@@ -411,6 +398,8 @@ public partial class App
         AutoConnectGsPro();
 
         Logger.Log("Bluetooth Backup Manager is " + (SettingsManager.Instance.Settings.LaunchMonitor.UseBackupManager ? "enabled" : "disabled"));
+
+
     }
     private void App_Exit(object sender, ExitEventArgs e)
     {
