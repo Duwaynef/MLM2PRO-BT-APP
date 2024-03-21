@@ -55,7 +55,8 @@
                     </Grid.RowDefinitions>
                     <Button Grid.Row="0" Grid.Column="0" x:Name="GsProConnect" Content="Connect" Padding="50,0,50,0" Margin="0,5,0,5" Click="GSPro_Connect_Click" HorizontalAlignment="Center" Width="190"/>
                     <Button Grid.Row="0" Grid.Column="1" x:Name="GsProDisconnect" Content="Disconnect" Padding="50,0,50,0" Margin="0,5,0,5" Click="GSPro_Disconnect_Click" HorizontalAlignment="Center" Width="190"/>
-                    <Button Grid.Row="1" x:Name="GsProTextShot" Content="Send Test Shot" Padding="28,0,28,0" Margin="0,5,0,5" Click="GSPro_Send_TestShot_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="1" Grid.Column="0" x:Name="GsProTextShot" Content="Send Test Shot" Padding="28,0,28,0" Margin="0,5,0,5" Click="GSPro_Send_TestShot_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="1" Grid.Column="1" x:Name="GsProLaunch" Content="Start GSPro" Padding="28,0,28,0" Margin="0,5,0,5" Click="GSPro_Launch_Click" HorizontalAlignment="Center" Width="190"/>
                 </Grid>
             </StackPanel>
         </materialDesign:Card>
@@ -140,7 +141,7 @@
         <materialDesign:Card Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="0" HorizontalAlignment="Center" Height="Auto" Margin="5">
         <StackPanel>
             <TextBlock Text="Shot Data" FontSize="36" HorizontalAlignment="Center"/>
-                <DataGrid x:Name="ShotDataDataGrid" Margin="10,0,10,10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="300" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="300" MinWidth="1200"  AlternatingRowBackground="#FF333333">
+                <DataGrid x:Name="ShotDataDataGrid" Margin="10,0,10,10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="300" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="300" MinWidth="1200">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="*" IsReadOnly="True"/>

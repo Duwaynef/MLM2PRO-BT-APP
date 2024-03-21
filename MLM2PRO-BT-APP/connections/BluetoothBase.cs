@@ -8,7 +8,7 @@ namespace MLM2PRO_BT_APP.connections
 {
     public abstract class BluetoothBase<bluetoothDeviceType> : BluetoothBaseInterface where bluetoothDeviceType : class
     {
-        protected bluetoothDeviceType? _bluetoothDevice;
+        public bluetoothDeviceType? _bluetoothDevice;
         protected Timer? _heartbeatTimer;
         protected Timer? _subscriptionVerificationTimer;
         protected readonly ByteConversionUtils _byteConversionUtils = new ByteConversionUtils();
@@ -125,6 +125,17 @@ namespace MLM2PRO_BT_APP.connections
             var data = _byteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
             _ = WriteCommand(data);
             _isDeviceArmed = true;
+        }
+        public bool isBluetoothDeviceValid()
+        {
+            if (_bluetoothDevice != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         public async Task DisarmDevice()
         {

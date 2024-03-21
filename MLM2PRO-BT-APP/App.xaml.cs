@@ -49,7 +49,7 @@ public partial class App : Application
         }
     }
 
-    private async Task StartGsPro()
+    public async Task StartGsPro()
     {
         String executablePath = Path.GetFullPath(SettingsManager.Instance.Settings.OpenConnect.GSProEXE ?? "C:\\GSProV1\\Core\\GSP\\GSPro.exe");
         var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(executablePath));
@@ -272,10 +272,10 @@ public partial class App : Application
         await Task.Delay(1000);
         await LmDisarmDevice();
     }
-    public Task LmDisconnect()
+    public async Task LmDisconnect()
     {
+        if (!_manager.isBluetoothDeviceValid()) return;
         _ = _manager.DisconnectAndCleanup();
-        return Task.CompletedTask;
     }
     public byte[]? GetBtKey()
     {

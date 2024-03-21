@@ -153,4 +153,12 @@ public partial class HomeMenu : Page
             (Application.Current as App)?.PuttingDisable();
         });        
     }
+
+    private async void GSPro_Launch_Click(object sender, RoutedEventArgs e)
+    {
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.StartGsPro();
+        });
+    }
 }

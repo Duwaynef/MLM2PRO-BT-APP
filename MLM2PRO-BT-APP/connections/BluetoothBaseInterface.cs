@@ -8,6 +8,7 @@ namespace MLM2PRO_BT_APP.connections
 {
     public interface BluetoothBaseInterface
     {
+        public abstract bool isBluetoothDeviceValid();
         public abstract Task ArmDevice();
         public abstract Task DisarmDevice();
         public abstract Task RestartDeviceWatcher();
