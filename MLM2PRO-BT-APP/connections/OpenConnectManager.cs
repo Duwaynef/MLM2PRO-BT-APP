@@ -263,6 +263,20 @@ namespace MLM2PRO_BT_APP.connections
                 }
             };
         }
+        public int CalculateBackSpin(double totalSpin, double spinAxis)
+        {
+            return (int)Math.Round(totalSpin * Math.Cos(DegreesToRadians(spinAxis)));
+        }
+
+        public int CalculateSideSpin(double totalSpin, double spinAxis)
+        {
+            return (int)Math.Round(totalSpin * Math.Sin(DegreesToRadians(spinAxis)));
+        }
+
+        private double DegreesToRadians(double degrees)
+        {
+            return (Math.PI / 180) * degrees;
+        }
         public OpenConnectApiMessage TestShot()
         {
             Instance.ShotNumber++;
@@ -273,8 +287,8 @@ namespace MLM2PRO_BT_APP.connections
             double speed = Math.Round(random.NextDouble() * (160 - 30) + 30, 1);
             double spinAxis = Math.Round(random.NextDouble() * (20 - -20) + 0, 1);
             double totalSpin = Math.Round(random.NextDouble() * (13000 - 2000) + 2000, 0);
-            double sideSpin = Math.Round(random.NextDouble() * (1000 - 20) + 20, 0);
-            double backSpin = Math.Round(random.NextDouble() * (13000 - 2000) + 2000, 0);
+            double BackSpin = CalculateBackSpin(totalSpin, spinAxis);
+            double SideSpin = CalculateSideSpin(totalSpin, spinAxis);
             double hla = Math.Round(random.NextDouble() * (5.0 - -5.0) + 0.0, 1);
             double vla = Math.Round(random.NextDouble() * (40 - 10) + 10, 1);
             double clubspeed = Math.Round(random.NextDouble() * (160 - 30) + 30, 1);
@@ -287,8 +301,8 @@ namespace MLM2PRO_BT_APP.connections
                     Speed = speed,
                     SpinAxis = spinAxis,
                     TotalSpin = totalSpin,
-                    BackSpin = backSpin,
-                    SideSpin = sideSpin,
+                    BackSpin = BackSpin,
+                    SideSpin = SideSpin,
                     HLA = hla,
                     VLA = vla
                 },
