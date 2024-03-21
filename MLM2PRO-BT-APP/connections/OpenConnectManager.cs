@@ -103,15 +103,28 @@ namespace MLM2PRO_BT_APP.connections
                                     {
                                         _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
                                         _isDeviceArmed = true;
-                                        (Application.Current as App)?.LmArmDevice();
-                                        (Application.Current as App)?.SendOpenConnectServerMessage(lastMessage);
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.LmArmDevice();
+                                        });
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.SendOpenConnectServerMessage(lastMessage);
+                                        });                                           
+                                        
                                     }
                                     else if (!_isDeviceArmed)
                                     {
                                         _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
                                         _isDeviceArmed = true;
-                                        (Application.Current as App)?.LmArmDeviceWithDelay();
-                                        (Application.Current as App)?.SendOpenConnectServerMessage(lastMessage);
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.LmArmDeviceWithDelay();
+                                        });
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.SendOpenConnectServerMessage(lastMessage);
+                                        }); 
                                     }
                                     break;
                                 }
@@ -123,13 +136,21 @@ namespace MLM2PRO_BT_APP.connections
                                     {
                                         _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
                                         _isDeviceArmed = false;
-                                        (Application.Current as App)?.LmDisarmDevice();
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.LmDisarmDevice();
+                                        });
+                                            
                                     }
                                     else if (_isDeviceArmed)
                                     {
                                         _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
                                         _isDeviceArmed = false;
-                                        (Application.Current as App)?.LmDisarmDeviceWithDelay();
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.LmDisarmDeviceWithDelay();
+                                        });
+                                            
                                     }
                                     break;
                                 }
@@ -169,7 +190,11 @@ namespace MLM2PRO_BT_APP.connections
                         if (_isPutting == false)
                         {
                             _isPutting = true;
-                            (Application.Current as App)?.StartPutting();
+                            Task.Run(() =>
+                            {
+                                (Application.Current as App)?.StartPutting();
+                            });
+                            
                         }
                     }
                     else
@@ -179,8 +204,12 @@ namespace MLM2PRO_BT_APP.connections
                         App.SharedVm.GSProClub = playerClub.Value.ToString();
                         if (_isPutting == true)
                         {
-                            _isPutting = false;
-                            (Application.Current as App)?.StopPutting();
+                            _isPutting = false; 
+                            Task.Run(() =>
+                            {
+                                (Application.Current as App)?.StopPutting();
+                            });
+                            
                         }
                     }
                 }

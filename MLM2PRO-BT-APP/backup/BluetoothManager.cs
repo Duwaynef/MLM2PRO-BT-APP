@@ -466,7 +466,11 @@ public class BluetoothManager2
 
                     OpenConnectApiMessage messageToSend = MeasurementData.Instance.ConvertHexToMeasurementData(_byteConversionUtils.ByteArrayToHexString(decrypted));
                     Logger.Log("Measurement: " + JsonConvert.SerializeObject(messageToSend));
-                    (Application.Current as App)?.SendShotData(messageToSend);
+                    Task.Run(() =>
+                    {
+                        (Application.Current as App)?.SendShotData(messageToSend);
+                    });
+                    
                 }
             }
             catch (Exception)

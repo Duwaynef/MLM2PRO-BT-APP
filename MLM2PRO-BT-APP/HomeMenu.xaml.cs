@@ -17,15 +17,24 @@ public partial class HomeMenu : Page
 
     private async void GSPro_Connect_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.ConnectGsProButton();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.ConnectGsProButton();
+        });        
     }
     private async void GSPro_Disconnect_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.DisconnectGsPro();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.DisconnectGsPro();
+        });        
     }
     private async void GSPro_Send_TestShot_Click(object sender, RoutedEventArgs e)
     {
-        (Application.Current as App)?.SendTestShotData();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.SendTestShotData();
+        });        
     } 
     
     /* interesting code to hold on to
@@ -97,30 +106,51 @@ public partial class HomeMenu : Page
     }
     private async void LaunchMonitor_Connect_Click(object sender, RoutedEventArgs e)
     {
-        await (Application.Current as App)?.ConnectAndSetupBluetooth();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.ConnectAndSetupBluetooth();
+        });
     }
     private async void LM_ARMButton_Click(object sender, RoutedEventArgs e)
     {
-        await (Application.Current as App)?.LmArmDevice();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.LmArmDevice();
+        });
     }
     private async void LM_DISARMButton_Click(object sender, RoutedEventArgs e)
     {
-        await (Application.Current as App)?.LmDisarmDevice();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.LmDisarmDevice();
+        });
     }
     private async void LaunchMonitor_Disconnect_Click(object sender, RoutedEventArgs e)
     {
-        await (Application.Current as App)?.LmDisconnect();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.LmDisconnect();
+        });
     }
     private async void LM_Resub_Click(object sender, RoutedEventArgs e)
     {
-        await (Application.Current as App)?.BtManagerResub();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.BtManagerResub();
+        });
     }
     private async void Putting_Connect_Click(object sender, RoutedEventArgs e)
     {
-        await (Application.Current as App)?.PuttingEnable();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.PuttingEnable();
+        });
     }
     private async void Putting_Disconnect_Click(object sender, RoutedEventArgs e)
     {
-        await (Application.Current as App)?.PuttingDisable();
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.PuttingDisable();
+        });        
     }
 }
