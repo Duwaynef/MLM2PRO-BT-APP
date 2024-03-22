@@ -10,6 +10,7 @@ namespace MLM2PRO_BT_APP.connections
     {
         public abstract bool isBluetoothDeviceValid();
         public abstract Task ArmDevice();
+        public abstract byte[] ConvertAuthRequest(byte[] input);
         public abstract Task DisarmDevice();
         public abstract Task RestartDeviceWatcher();
         public abstract Task DisconnectAndCleanup();

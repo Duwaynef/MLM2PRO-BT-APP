@@ -10,7 +10,7 @@
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
         TextElement.FontWeight="Medium"
-        TextElement.FontSize="22"
+        TextElement.FontSize="18"
         FontFamily="{materialDesign:MaterialDesignFont}">
 
     <materialDesign:Card Margin="10">
@@ -49,10 +49,11 @@
                     VerticalScrollBarVisibility="Auto"
                 />
                     <CheckBox
+                        x:Name="AdvancedDebugGetKeyCheckbox"
                         Margin="5"
                         Grid.Row="0"
                         Grid.Column="1"
-                        Content="Get Key"                        
+                        Content="Get Key"
                         Style="{StaticResource MaterialDesignCheckBox}" HorizontalAlignment="Center" VerticalAlignment="Center"
                     />
                 
@@ -68,7 +69,7 @@
                         AcceptsReturn="True"
                         VerticalScrollBarVisibility="Auto"
                     />
-                    <Button x:Name="AdvancedDebug_Decrypt_Button"
+                    <Button x:Name="AdvancedDebugDecryptButton"
                         Grid.Column="1"
                         Grid.Row="1"
                         Margin="5"

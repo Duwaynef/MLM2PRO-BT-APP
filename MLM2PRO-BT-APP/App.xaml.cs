@@ -16,9 +16,12 @@ public partial class App : Application
     private HttpPuttingServer? PuttingConnection { get; }
     private readonly OpenConnectTcpClient _client;
     private readonly OpenConnectServer _openConnectServerInstance = new(IPAddress.Any, 951);
+    private String currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
     private string? _lastMessage = "";
     public App()
     {
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
         SharedVm = new SharedViewModel();
         LoadSettings();
         PuttingConnection = new HttpPuttingServer();
@@ -35,6 +38,12 @@ public partial class App : Application
 
 
     }
+
+    public byte[] GetEncryptedKeyFromHex(byte[] input)
+    {
+        return _manager.ConvertAuthRequest(input);
+    }
+
     private void CheckWebApiToken()
     {
         if (string.IsNullOrWhiteSpace(SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret))
@@ -412,6 +421,18 @@ public partial class App : Application
 
 
     }
+    private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+    {
+        e.Handled = true;
+        Logger.Log($"AppCrash: " + e.Exception.ToString());
+    }
+
+    private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        var exception = e.ExceptionObject as Exception;
+        Logger.Log($"AppCrash: " + exception?.ToString());
+    }
+
     private void App_Exit(object sender, ExitEventArgs e)
     {
         _openConnectServerInstance.Stop();

@@ -434,7 +434,7 @@ namespace MLM2PRO_BT_APP.connections
             return status;
 
         }
-        public Task<byte[]> ConvertAuthRequest(byte[] input)
+        public byte[] ConvertAuthRequest(byte[] input)
         {
             // Extracting keyBytes from input
             int intToByteArrayLength = sizeof(int);
@@ -445,7 +445,7 @@ namespace MLM2PRO_BT_APP.connections
 
             // Outputting keyBytes to console
             Logger.Log("KeyBytes: " + _byteConversionUtils.ByteArrayToHexString(keyBytes));
-            return Task.FromResult(keyBytes);
+            return keyBytes;
         }
         public async Task StartSubscriptionVerificationTimer()
         {
