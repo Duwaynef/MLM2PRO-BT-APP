@@ -55,6 +55,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         if (App.SharedVm != null) App.SharedVm.LMStatus = "TRIGGERING DISCOVERY";
         DiscoverDevicesAsync();
     }
+
     public async Task DiscoverDevicesAsync()
     {
         try
@@ -133,15 +134,22 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         try
         {
             _GaTTeventsCharacteristicUuid = _primaryService.GetCharacteristicAsync(_eventsCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5)).Result;
+            if (_GaTTeventsCharacteristicUuid == null) return false;
             _GaTTeventsCharacteristicUuid.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _GaTTeventsCharacteristicUuid.StartNotificationsAsync();
+
             _GaTTheartbeatCharacteristicUuid = _primaryService.GetCharacteristicAsync(_heartbeatCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5)).Result;
+            if (_GaTTheartbeatCharacteristicUuid == null) return false;
             _GaTTheartbeatCharacteristicUuid.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _GaTTheartbeatCharacteristicUuid.StartNotificationsAsync();
+
             _GaTTwriteResponseCharacteristicUuid = _primaryService.GetCharacteristicAsync(_writeResponseCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5)).Result;
+            if (_GaTTwriteResponseCharacteristicUuid == null) return false;
             _GaTTwriteResponseCharacteristicUuid.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _GaTTwriteResponseCharacteristicUuid.StartNotificationsAsync();
+
             _GaTTmeasurementCharacteristic = _primaryService.GetCharacteristicAsync(_measurementCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5)).Result;
+            if (_GaTTmeasurementCharacteristic == null) return false;
             _GaTTmeasurementCharacteristic.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _GaTTmeasurementCharacteristic.StartNotificationsAsync();
         } 
@@ -250,6 +258,6 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     }
     public override async Task RestartDeviceWatcher()
     {
-        await DiscoverDevicesAsync();
+        DiscoverDevicesAsync();
     }
 }
