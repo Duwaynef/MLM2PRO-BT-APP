@@ -7,6 +7,9 @@
     <Compile Update="AboutPage.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="AdvancedDebug.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="HomeMenu.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -19,6 +22,9 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="AboutPage.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="AdvancedDebug.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="HomeMenu.xaml">

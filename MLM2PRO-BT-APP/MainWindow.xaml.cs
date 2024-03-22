@@ -9,6 +9,8 @@ using MLM2PRO_BT_APP.util;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using static MaterialDesignThemes.Wpf.Theme.ToolBar;
+using System.Windows.Threading;
+using System.Windows.Input;
 
 namespace MLM2PRO_BT_APP
 {
@@ -19,6 +21,8 @@ namespace MLM2PRO_BT_APP
         private readonly ByteConversionUtils _byteConversionUtils = new();
         private PaletteHelper paletteHelper = new PaletteHelper();
         private Theme _theme;
+        private DispatcherTimer pressHoldTimer;
+        private bool isPressAndHold = false;
 
         public MainWindow()
         {
@@ -54,15 +58,46 @@ namespace MLM2PRO_BT_APP
             Logger.Log("CurrentKey: " + _byteConversionUtils.ByteArrayToHexString((Application.Current as App)?.GetBtKey()));
             MainContentFrame.Navigate(new HomeMenu());
             setAppTheme();
+
+            pressHoldTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            pressHoldTimer.Tick += PressHoldTimer_Tick;
         }
 
         private async void Button_Toggle_DebugConsole(object sender, RoutedEventArgs e)
         {
-            ToggleDebugConsole();
+            if (!isPressAndHold)
+            {
+                ToggleDebugConsole();
+            }
+            isPressAndHold = false;
+
         }
         private async static void ToggleDebugConsole()
         {
             if (DebugConsolePopup != null) DebugConsolePopup.IsOpen = !DebugConsolePopup.IsOpen;
+        }
+        private void OpenAdvancedDebugWindow()
+        {
+            AdvancedDebug advancedDebug = new AdvancedDebug();
+            advancedDebug.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            advancedDebug.Show();
+        }
+
+        private void PressHoldTimer_Tick(object sender, EventArgs e)
+        {
+            isPressAndHold = true;
+            pressHoldTimer.Stop();
+            OpenAdvancedDebugWindow();
+        }
+
+        private void Button_DebugConsole_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            pressHoldTimer.Start();
+        }
+
+        private void Button_DebugConsole_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            pressHoldTimer.Stop();
         }
         private async void Settings_Click(object sender, RoutedEventArgs e)
         {
@@ -84,7 +119,7 @@ namespace MLM2PRO_BT_APP
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = "https://ko-fi.com/duwayne",
+                FileName = "https://ko-fi.com/D1D8VL7RV",
                 UseShellExecute = true
             });
         }
@@ -120,6 +155,15 @@ namespace MLM2PRO_BT_APP
         private async void Button_Toggle_ToggleDarkMode(object sender, RoutedEventArgs e)
         {
             changeAppTheme();
+        }
+
+        private void ReportBug_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://github.com/Duwaynef/MLM2PRO-BT-APP/issues",
+                UseShellExecute = true
+            });
         }
     }
 }

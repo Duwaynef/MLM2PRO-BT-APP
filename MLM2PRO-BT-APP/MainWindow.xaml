@@ -16,7 +16,8 @@
             <MenuItem Header="Settings" Click="Settings_Click" Margin="5,0,5,0"/>
             <MenuItem Header="Help" Click="About_Click" Margin="5,0,5,0"/>
             <MenuItem Header="Buy me a coffee" Click="Coffee_Click" HorizontalAlignment="Right" Margin="5,0,5,0"/>
-            <MenuItem Header="Debug Console" Click="Button_Toggle_DebugConsole" Margin="5,0,5,0"/>
+            <MenuItem Header="Debug Console" Click="Button_Toggle_DebugConsole" PreviewMouseDown="Button_DebugConsole_PreviewMouseDown" PreviewMouseUp="Button_DebugConsole_PreviewMouseUp" Margin="5,0,5,0"/>
+            <MenuItem Header="Report Bug" Click="ReportBug_Click" HorizontalAlignment="Right" Margin="5,0,5,0"/>
             <MenuItem Header="Toggle Dark Mode" Click="Button_Toggle_ToggleDarkMode" Margin="5,0,5,0"/>
         </Menu>
 
