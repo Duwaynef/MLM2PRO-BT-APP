@@ -52,3 +52,13 @@ getting a connection can sometimes be unstable, easiest method is to turn device
 if you get it all connected and all seems well, and you have a green light, but you do not get shot data.
 press the **Resub** button. when the light is green avoid the other buttons as it may break the connection with the device.
 and if that happens you need to close the app, power cycle the device, and reopen the app when the device is solid red again.
+
+## Thank you
+I just want to say thank you to the many projects that came before mine where i am using, have used as inpiration, used code, or even just design ideas.
+
+[cam-putting-py by alleexx](https://github.com/alleexx/cam-putting-py)
+
+[gsp-r10-adapter by mholow](https://github.com/mholow/gsp-r10-adapter)
+
+[MLM2PRO-GSPro-Connector by springbok](https://github.com/springbok/MLM2PRO-GSPro-Connector)
+
