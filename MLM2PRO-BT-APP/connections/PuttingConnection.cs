@@ -26,7 +26,7 @@ namespace MLM2PRO_BT_APP.connections
             };
         }
 
-        protected override void OnReceivedRequest(HttpRequest request)
+        protected override async void OnReceivedRequest(HttpRequest request)
         {
             try
             {  
@@ -56,6 +56,8 @@ namespace MLM2PRO_BT_APP.connections
                             App.SharedVm.PuttingStatus = "CONNECTED";
                             Logger.Log("Not sending Putt because selected club is not putter");
                         }
+                        await Task.Delay(2000);
+                        App.SharedVm.PuttingStatus = "CONNECTED, READY";
                     }
 
                 }
@@ -125,7 +127,7 @@ namespace MLM2PRO_BT_APP.connections
         public Process? PuttingProcess { get; private set; }
         public bool OnlyLaunchWhenPutting { get; }
         public bool KeepPuttingCamOnTop { get; }
-        public bool LaunchBallTracker { get; }
+        public bool LaunchBallTracker { get; set; }
         public int WebcamIndex { get; }
         public string BallColor { get; }
         public int CamPreviewWidth { get; }
@@ -156,7 +158,9 @@ namespace MLM2PRO_BT_APP.connections
             {
                 LaunchProcess();
                 if (KeepPuttingCamOnTop)
+                {
                     FocusProcess();
+                }
             }
         }
 
@@ -166,7 +170,6 @@ namespace MLM2PRO_BT_APP.connections
             if (LaunchBallTracker && PuttingProcess == null)
             {
                 LaunchProcess();
-                App.SharedVm.PuttingStatus = "CONNECTED";
             }
             if (KeepPuttingCamOnTop)
                 FocusProcess();
@@ -280,6 +283,7 @@ namespace MLM2PRO_BT_APP.connections
                     BringWindowToTop(handle);
                     SetForegroundWindow(handle);
                 }
+                App.SharedVm.PuttingStatus = "CONNECTED, READY";
             }
         }
 

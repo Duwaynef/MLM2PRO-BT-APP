@@ -146,6 +146,7 @@ namespace MLM2PRO_BT_APP.util
             public bool UseBackupManager { get; set; } = true;
             public bool AutoWake { get; set; } = true;
             public bool AutoDisarm { get; set; } = false;
+            public string CustomExportPath { get; set; } = "Export";
 
             //public bool DebugLogging { get; set; } = false;
             //public int Altitude { get; set; } = 0;

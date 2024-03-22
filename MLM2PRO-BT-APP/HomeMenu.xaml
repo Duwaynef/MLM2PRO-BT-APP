@@ -22,7 +22,7 @@
             <RowDefinition Height="270" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        </Grid.RowDefinitions>       
 
         <!-- GSPro Section -->
         <materialDesign:Card Grid.Row="0" Grid.Column="0" Margin="5">
@@ -139,26 +139,38 @@
 
         <!-- Shot Data Section -->
         <materialDesign:Card Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="0" HorizontalAlignment="Center" Height="Auto" Margin="5">
-        <StackPanel>
-            <TextBlock Text="Shot Data" FontSize="36" HorizontalAlignment="Center"/>
+            <StackPanel>
+                <materialDesign:Snackbar x:Name="DataGridSnackBar" HorizontalAlignment="Center" VerticalAlignment="Bottom" Panel.ZIndex="10" MinWidth="800" MaxWidth="1200"/>
+                <Grid>
+                    <TextBlock Text="Shot Data" FontSize="36" HorizontalAlignment="Center"/>
+
+                    <Button HorizontalAlignment="Right" Margin="0,0,10,0" Click="ShotData_Export_Click" >
+                        <materialDesign:PackIcon x:Name="ExportIcon" Kind="TableArrowRight" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
                 <DataGrid x:Name="ShotDataDataGrid" Margin="10,0,10,10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="300" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="300" MinWidth="1200">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Club" Binding="{Binding Club}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="*" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="SizeToHeader" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Side Spin" Binding="{Binding SideSpin}" Width="*" IsReadOnly="True"/>
-                    <!-- <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="*" IsReadOnly="True"/>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="Auto" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="Auto" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Club" Binding="{Binding Club}" Width="Auto" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Smash" Binding="{Binding SmashFactor}" Width="Auto" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Club Speed" Binding="{Binding ClubSpeed}" Width="Auto" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Side Spin" Binding="{Binding SideSpin}" Width="*" IsReadOnly="True"/>
+                        <!-- <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="*" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Impact Angle" Binding="{Binding ImpactAngle}" Width="*" IsReadOnly="True"/> -->
-                </DataGrid.Columns>
-            </DataGrid>
+                    </DataGrid.Columns>
+                </DataGrid>
             </StackPanel>
         </materialDesign:Card>
+
+
+        
     </Grid>
+    
 </Page>

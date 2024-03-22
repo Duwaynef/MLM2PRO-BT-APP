@@ -40,6 +40,12 @@ namespace MLM2PRO_BT_APP.devices
             return (Math.PI / 180) * degrees;
         }
 
+        public static double CalculateSmashFactor(double ballSpeed, double clubheadSpeed)
+        {
+            if (clubheadSpeed == 0) return 0;
+            return Math.Round(ballSpeed / clubheadSpeed, 2);
+        }
+
         public OpenConnectApiMessage ConvertHexToMeasurementData(string? hexData)
         {
             double multiplier = 2.2375;

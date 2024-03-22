@@ -1,5 +1,9 @@
-﻿using System.Windows;
+﻿using System.Collections.ObjectModel;
+using System.IO;
+using System.Text;
+using System.Windows;
 using System.Windows.Controls;
+using MaterialDesignThemes.Wpf;
 using MLM2PRO_BT_APP.connections;
 using MLM2PRO_BT_APP.util;
 
@@ -13,6 +17,7 @@ public partial class HomeMenu : Page
         this.DataContext = App.SharedVm;
         // ShotDataDataGrid.ItemsSource = App.SharedVM.ShotDataCollection;
         ShotDataDataGrid.ItemsSource = SharedViewModel.Instance.ShotDataCollection;
+        DataGridSnackBar.MessageQueue = new SnackbarMessageQueue(TimeSpan.FromMilliseconds(2000));
     }
 
     private async void GSPro_Connect_Click(object sender, RoutedEventArgs e)
@@ -66,6 +71,7 @@ public partial class HomeMenu : Page
     {
         public int ShotNumber { get; set; }
         public string Result { get; set; } = "";
+        public double SmashFactor { get; set; } = 0;
         public string Club { get; set; } = "";
         public double ClubSpeed { get; set; }
         public double BallSpeed { get; set; } 
@@ -79,6 +85,47 @@ public partial class HomeMenu : Page
         //public double ClubPath { get; set; }
         //public double ImpactAngle { get; set; }
     }
+
+    private (bool success, string path) ExportShotDataToCsv(ObservableCollection<ShotData> shotDataCollection)
+    {
+        try
+        {
+            string folderPath = "";
+            if (String.IsNullOrWhiteSpace(SettingsManager.Instance.Settings.LaunchMonitor.CustomExportPath))
+            {
+                folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Export");
+            }
+            else
+            {
+                folderPath = SettingsManager.Instance.Settings.LaunchMonitor.CustomExportPath;
+            }
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            string fileName = $"ShotData_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            string fullPath = Path.Combine(folderPath, fileName);
+
+            StringBuilder csvContent = new StringBuilder();
+            csvContent.AppendLine("ShotNumber,Result,Club,ClubSpeed,BallSpeed,SpinAxis,SpinRate,HLA,VLA");
+
+            foreach (var shotData in shotDataCollection)
+            {
+                csvContent.AppendLine($"{shotData.ShotNumber},{shotData.Result},{shotData.Club},{shotData.ClubSpeed},{shotData.BallSpeed},{shotData.SpinAxis},{shotData.SpinRate},{shotData.HLA},{shotData.VLA}");
+            }
+            File.WriteAllText(fullPath, csvContent.ToString());
+
+            return (true, fullPath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to export shot data to CSV: {ex.Message}");
+            return (false, string.Empty);
+        }
+    }
+
+
     private async void LM_WebApiTest_Click(object sender, RoutedEventArgs e)
     {
         App.SharedVm.LMStatus = "TESTING WEBAPI";
@@ -161,4 +208,55 @@ public partial class HomeMenu : Page
             (Application.Current as App)?.StartGsPro();
         });
     }
+
+    private async void ShotData_Export_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var (success, path) = ExportShotDataToCsv(SharedViewModel.Instance.ShotDataCollection);
+            if (success)
+            {
+                ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Check;
+                DataGridSnackBar.MessageQueue?.Enqueue(
+                    $"Saved successfully to {path}",
+                    null,
+                    null,
+                    null,
+                    false,
+                    true,
+                    TimeSpan.FromSeconds(2));
+            }
+            else
+            {
+                ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Close;
+                DataGridSnackBar.MessageQueue?.Enqueue(
+                    "Failed to save data.",
+                    null,
+                    null,
+                    null,
+                    false,
+                    true,
+                    TimeSpan.FromSeconds(2));
+            }
+            await Task.Delay(2000);
+        }
+        catch (Exception ex)
+        {
+            ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Close;
+            DataGridSnackBar.MessageQueue?.Enqueue(
+                $"Export failed: {ex.Message}",
+                null,
+                null,
+                null,
+                false,
+                true,
+                TimeSpan.FromSeconds(3));
+        }
+        finally
+        {
+            ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.TableArrowRight;
+        }
+    }
+
+
 }

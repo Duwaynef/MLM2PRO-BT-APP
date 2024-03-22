@@ -84,6 +84,10 @@
                         <TextBlock Text="Reconnect Interval" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding Settings.LaunchMonitor.ReconnectInterval, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Width="200"/>
                     </DockPanel>
+                    <DockPanel Margin="10,5,10,5">
+                        <TextBlock Text="Data Export Path" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Settings.LaunchMonitor.CustomExportPath, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Width="200"/>
+                    </DockPanel>
 
                 </StackPanel>
             </materialDesign:Card>

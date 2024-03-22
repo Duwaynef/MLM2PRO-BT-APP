@@ -18,6 +18,12 @@ namespace MLM2PRO_BT_APP.connections
         {
             
         }
+        public void DisconnectAndStop()
+        {
+            DisconnectAsync();
+            while (IsConnected)
+                Thread.Yield();
+        }
         protected override void OnConnected()
         {
             Logger.Log("OpenConnectTCPClient: Connected to server.");
@@ -182,6 +188,7 @@ namespace MLM2PRO_BT_APP.connections
                             Task.Run(() =>
                             {
                                 (Application.Current as App)?.StopPutting();
+                                App.SharedVm.PuttingStatus = "CONNECTED, PUTTER NOT SELECTED";
                             });
                             
                         }

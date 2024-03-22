@@ -149,12 +149,12 @@ public partial class App : Application
     {
         try
         {
-            string? lmNotReadyJson = "{\"DeviceID\": \"GSPRO-MLM2PRO\",\"Units\": \"Yards\",\"ShotNumber\": 0,\"APIversion\": \"1\",\"ShotDataOptions\": {\"ContainsBallData\": false,\"ContainsClubData\": false,\"LaunchMonitorIsReady\": false}}";
-            await _client.SendDirectJsonAsync(lmNotReadyJson);
-            await Task.Delay(1000);
-            _client.Disconnect();
+            // string? lmNotReadyJson = "{\"DeviceID\": \"GSPRO-MLM2PRO\",\"Units\": \"Yards\",\"ShotNumber\": 0,\"APIversion\": \"1\",\"ShotDataOptions\": {\"ContainsBallData\": false,\"ContainsClubData\": false,\"LaunchMonitorIsReady\": false}}";
+            // await _client.SendDirectJsonAsync(lmNotReadyJson);
+            // await Task.Delay(2000);
+            _client.DisconnectAndStop();
             Logger.Log("Disconnected from server.");
-            SharedVm.GSProStatus = "DISCONNECTED"; // or "NOT CONNECTED" or any other desired value
+            SharedVm.GSProStatus = "DISCONNECTED";
             
         }
         catch (Exception ex)
@@ -231,6 +231,7 @@ public partial class App : Application
         {
             ShotNumber = OpenConnectApiMessage.Instance.ShotNumber,
             Result = result,
+            SmashFactor = MeasurementData.CalculateSmashFactor(inputData.BallData?.Speed ?? 0, inputData.ClubData?.Speed ?? 0),
             Club = DeviceManager.Instance.ClubSelection ?? "",
             BallSpeed = inputData.BallData?.Speed ?? 0,
             SpinAxis = inputData.BallData?.SpinAxis ?? 0,
@@ -292,6 +293,7 @@ public partial class App : Application
         {
             Logger.Log("Putting executable exists.");
             var puttingStarted = PuttingConnection is { IsStarted: true };
+            Logger.Log("Putting started: " + puttingStarted);
             if (puttingStarted == false)
             {
                 Logger.Log("Starting putting server.");
@@ -303,8 +305,17 @@ public partial class App : Application
             else
             {
                 if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
-                if (PuttingConnection != null) PuttingConnection.PuttingEnabled = true;
-            }           
+                if (PuttingConnection != null)
+                {
+                    PuttingConnection.PuttingEnabled = true;
+                    PuttingConnection.LaunchBallTracker = true;
+                }
+            }
+            if (DeviceManager.Instance.ClubSelection == "PT")
+            {
+                await Task.Delay(1000);
+                await StartPutting();
+            }
         }
         else
         {
