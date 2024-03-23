@@ -14,11 +14,17 @@ public partial class HomeMenu
     public HomeMenu()
     {
         InitializeComponent();
+        EventAggregator.Instance.SnackBarMessagePublished += OnSnackBarMessagePublished;
+        this.Unloaded += HomeMenu_Unloaded;
         DataContext = App.SharedVm;
         ShotDataDataGrid.ItemsSource = SharedViewModel.Instance.ShotDataCollection;
         DataGridSnackBar.MessageQueue = new SnackbarMessageQueue(TimeSpan.FromMilliseconds(2000));
     }
-
+    private void OnSnackBarMessagePublished(string message, int duration)
+    {
+        Logger.Log("SnackBarMessagePublished: " + message);
+        HomeMenuSnackBarMessage(message, duration);
+    }
     private async void GSPro_Connect_Click(object sender, RoutedEventArgs e)
     {
         await Task.Run(() =>
@@ -188,10 +194,23 @@ public partial class HomeMenu
     }
     private async void Putting_Disconnect_Click(object sender, RoutedEventArgs e)
     {
+        HomeMenuSnackBarMessage("Test Message");
         await Task.Run(() =>
         {
             (Application.Current as App)?.PuttingDisable();
         });        
+    }
+
+    private void HomeMenuSnackBarMessage(string message, int duration = 2)
+    {
+        DataGridSnackBar.MessageQueue?.Enqueue(
+            message,
+            null,
+            null,
+            null,
+            false,
+            true,
+            TimeSpan.FromSeconds(duration));
     }
 
     private async void GSPro_Launch_Click(object sender, RoutedEventArgs e)
@@ -210,26 +229,12 @@ public partial class HomeMenu
             if (success)
             {
                 ExportIcon.Kind = PackIconKind.Check;
-                DataGridSnackBar.MessageQueue?.Enqueue(
-                    $"Saved successfully to {path}",
-                    null,
-                    null,
-                    null,
-                    false,
-                    true,
-                    TimeSpan.FromSeconds(2));
+                HomeMenuSnackBarMessage($"Saved successfully to {path}", 2);
             }
             else
             {
                 ExportIcon.Kind = PackIconKind.Close;
-                DataGridSnackBar.MessageQueue?.Enqueue(
-                    "Failed to save data.",
-                    null,
-                    null,
-                    null,
-                    false,
-                    true,
-                    TimeSpan.FromSeconds(2));
+                HomeMenuSnackBarMessage("Failed to save data.", 2);
             }
 
             await Task.Delay(2000);
@@ -237,20 +242,16 @@ public partial class HomeMenu
         catch (Exception ex)
         {
             ExportIcon.Kind = PackIconKind.Close;
-            DataGridSnackBar.MessageQueue?.Enqueue(
-                $"Export failed: {ex.Message}",
-                null,
-                null,
-                null,
-                false,
-                true,
-                TimeSpan.FromSeconds(3));
+            HomeMenuSnackBarMessage($"Export failed: {ex.Message}", 3);
         }
         finally
         {
             ExportIcon.Kind = PackIconKind.TableArrowRight;
         }
+        
     }
-
-
+    private void HomeMenu_Unloaded(object sender, RoutedEventArgs e)
+    {
+        EventAggregator.Instance.SnackBarMessagePublished -= OnSnackBarMessagePublished;
+    }
 }

@@ -33,6 +33,7 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
     private async void DeviceDiscoveryTimerSignal(object? state)
     {
         if (_currentlySearching) return;
+        if (_cleaningUp) return;
         if (BluetoothDevice != null)
         {
             if (_deviceDiscoveryTimer != null) await _deviceDiscoveryTimer.DisposeAsync();
@@ -53,10 +54,11 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
     {
         try
         {
+            if (_currentlySearching || _cleaningUp) return;
             if (App.SharedVm != null) App.SharedVm.LmStatus = "LOOKING FOR DEVICES";
             Logger.Log("BACKUP BLUETOOTH MANAGER LOOKING FOR DEVICES");
             _currentlySearching = true;
-            foreach (BluetoothDevice pairedDevice in Bluetooth.GetPairedDevicesAsync().Result)
+            foreach (var pairedDevice in Bluetooth.GetPairedDevicesAsync().Result)
             {
                 if (pairedDevice.Name.Contains("MLM2-") || pairedDevice.Name.Contains("BlueZ "))
                 {
@@ -96,8 +98,8 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             }
             BluetoothDevice = device;
             if (App.SharedVm != null) App.SharedVm.LmStatus = "CONNECTION ESTABLISHED: " + device.Name ;
-            _currentlySearching = false;
             await SetupBluetoothDevice();
+            _currentlySearching = false;
         }
         catch (Exception ex)
         {

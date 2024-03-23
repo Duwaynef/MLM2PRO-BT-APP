@@ -1,4 +1,5 @@
-﻿using MLM2PRO_BT_APP.devices;
+﻿using System.Globalization;
+using MLM2PRO_BT_APP.devices;
 using MLM2PRO_BT_APP.util;
 using Newtonsoft.Json;
 using System.Windows;
@@ -220,6 +221,23 @@ namespace MLM2PRO_BT_APP.connections
                                     SettingsManager.Instance.Settings.WebApiSettings.WebApiToken = response.User.Token;
                                     SettingsManager.Instance.Settings.WebApiSettings.WebApiExpireDate = response.User.ExpireDate;
                                     SettingsManager.Instance.SaveSettings();
+                                    var dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(response.User.ExpireDate);
+                                    var localDateTime = dateTimeOffset.ToLocalTime().DateTime;
+                                    if (response.User.ExpireDate > DateTimeOffset.Now.ToUnixTimeSeconds() &&
+                                        response.User.ExpireDate < DateTimeOffset.Now.ToUnixTimeSeconds() + 10800)
+                                    {
+                                        Application.Current.Dispatcher.Invoke(() =>
+                                        {
+                                            EventAggregator.Instance.PublishSnackBarMessage($"Your 3rd party token is close to expiry: {localDateTime:yyyy-MM-dd hh:mm:ss tt}", 10);
+                                        });
+                                    }
+                                    else if (response.User.ExpireDate < DateTimeOffset.Now.ToUnixTimeSeconds())
+                                    {
+                                        Application.Current.Dispatcher.Invoke(() =>
+                                        {
+                                            EventAggregator.Instance.PublishSnackBarMessage($"Your 3rd party token is expired, Expiry: {localDateTime:yyyy-MM-dd hh:mm:ss tt}", 10);
+                                        });
+                                    }
                                 }
                                 Logger.Log($"User ID: {response.User.Id}, Token: {response.User.Token}, Expire Date: {response.User.ExpireDate}");
                                 byte[]? bytes = DeviceManager.Instance?.GetInitialParameters(response.User.Token);
@@ -473,11 +491,12 @@ namespace MLM2PRO_BT_APP.connections
         }
         public async Task DisconnectAndCleanup()
         {
-            await Task.Delay(TimeSpan.FromSeconds(2));
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "DISCONNECTING...";
+            await Task.Delay(TimeSpan.FromSeconds(1));
             _heartbeatTimer?.Dispose();
             ChildDisconnectAndCleanupFirst();
 
-            await Task.Delay(1000);
+            await Task.Delay(250);
             if (App.SharedVm != null) App.SharedVm.LmStatus = "DISCONNECTING...";
 
             if (_isDeviceArmed)

@@ -1,12 +1,12 @@
 ﻿namespace MLM2PRO_BT_APP.util
 {
-    public static class DebugMessageService
+    public class EventAggregator
     {
-        public static event EventHandler<string>? OnMessageReceived;
-
-        public static void SendMessage(string message)
+        public static EventAggregator Instance { get; } = new();
+        public event Action<string, int>? SnackBarMessagePublished;
+        public void PublishSnackBarMessage(string message, int duration = 2)
         {
-            OnMessageReceived?.Invoke(null, message);
+            SnackBarMessagePublished?.Invoke(message, duration);
         }
     }
 }

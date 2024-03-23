@@ -9,7 +9,8 @@ namespace MLM2PRO_BT_APP.connections
         private readonly string _baseUrl = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUrl ?? "";
         private const string SecretKey = "Secret";
         private readonly string _secretValue = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret ?? "";
-        public abstract class User
+
+        public class User
         {
             public int Id { get; set; }
             public string? Token { get; set; }

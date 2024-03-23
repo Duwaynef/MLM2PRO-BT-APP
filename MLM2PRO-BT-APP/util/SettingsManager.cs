@@ -24,11 +24,15 @@ namespace MLM2PRO_BT_APP.util
             LoadSettings(); // Optionally load settings upon instantiation
         }
 
+        private readonly object _lockObject = new();
         public void SaveSettings()
         {
-            var settingsJson = JsonConvert.SerializeObject(Settings, Formatting.Indented);
-            File.WriteAllText(_settingsFilePath, settingsJson);
-            SettingsUpdated?.Invoke(this, EventArgs.Empty);
+            lock (_lockObject)
+            {
+                string settingsJson = JsonConvert.SerializeObject(Settings, Formatting.Indented);
+                File.WriteAllText(_settingsFilePath, settingsJson);
+                SettingsUpdated?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public void LoadSettings()

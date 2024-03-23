@@ -418,7 +418,7 @@ public partial class App
         await Task.Run(AutoConnectGsPro);
         
         Logger.Log("Bluetooth Backup Manager is " + (SettingsManager.Instance.Settings?.LaunchMonitor?.UseBackupManager ?? false ? "enabled" : "disabled"));
-
+        
     }
 
 
