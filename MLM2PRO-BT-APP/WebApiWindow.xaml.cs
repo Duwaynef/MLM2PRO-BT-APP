@@ -33,7 +33,7 @@ namespace MLM2PRO_BT_APP
                         Logger.Log("API Token saved");
                         Task.Run(() =>
                         {
-                            (Application.Current as App)?.ConnectGsProButton();
+                            (Application.Current as App)?.ConnectAndSetupBluetooth();
                         });
                         Close();
 
