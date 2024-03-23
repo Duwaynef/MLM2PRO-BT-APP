@@ -77,8 +77,8 @@ public partial class HomeMenu : Page
         public double BallSpeed { get; set; } 
         public double SpinAxis { get; set; }
         public double SpinRate { get; set; }
-        public double HLA { get; set; }
-        public double VLA { get; set; }
+        public double Hla { get; set; }
+        public double Vla { get; set; }
         public double BackSpin { get; set; }
         public double SideSpin { get; set; }
 
@@ -112,7 +112,7 @@ public partial class HomeMenu : Page
 
             foreach (var shotData in shotDataCollection)
             {
-                csvContent.AppendLine($"{shotData.ShotNumber},{shotData.Result},{shotData.Club},{shotData.ClubSpeed},{shotData.BallSpeed},{shotData.SpinAxis},{shotData.SpinRate},{shotData.HLA},{shotData.VLA}");
+                csvContent.AppendLine($"{shotData.ShotNumber},{shotData.Result},{shotData.Club},{shotData.ClubSpeed},{shotData.BallSpeed},{shotData.SpinAxis},{shotData.SpinRate},{shotData.Hla},{shotData.Vla}");
             }
             File.WriteAllText(fullPath, csvContent.ToString());
 
@@ -128,26 +128,28 @@ public partial class HomeMenu : Page
 
     private async void LM_WebApiTest_Click(object sender, RoutedEventArgs e)
     {
-        App.SharedVm.LMStatus = "TESTING WEBAPI";
+        if (App.SharedVm != null)App.SharedVm.LmStatus = "TESTING WEBAPI";
         
-        WebApiClient webApiClient = new WebApiClient();
+        var webApiClient = new WebApiClient();
         Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiToken);
         Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId);
-        WebApiClient.ApiResponse response = await webApiClient.SendRequestAsync(SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId ?? 0);
+        var response = await webApiClient.SendRequestAsync(SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId ?? 0);
 
-        if (response.Success && SettingsManager.Instance?.Settings?.WebApiSettings != null)
+        if (response is { Success: true } && SettingsManager.Instance?.Settings?.WebApiSettings != null)
         {
-            SettingsManager.Instance.Settings.WebApiSettings.WebApiDeviceId = response.User.Id;
-            SettingsManager.Instance.Settings.WebApiSettings.WebApiToken = response.User.Token;
-            SettingsManager.Instance.Settings.WebApiSettings.WebApiExpireDate = response.User.ExpireDate;
-            SettingsManager.Instance.SaveSettings();
-            Logger.Log($"User ID: {response.User.Id}, Token: {response.User.Token}, Expire Date: {response.User.ExpireDate}");
-            App.SharedVm.LMStatus = "WEBAPI SUCCESS";
-            
+            if (response.User != null)
+            {
+                SettingsManager.Instance.Settings.WebApiSettings.WebApiDeviceId = response.User.Id;
+                SettingsManager.Instance.Settings.WebApiSettings.WebApiToken = response.User.Token;
+                SettingsManager.Instance.Settings.WebApiSettings.WebApiExpireDate = response.User.ExpireDate;
+                SettingsManager.Instance.SaveSettings();
+                Logger.Log($"User ID: {response.User.Id}, Token: {response.User.Token}, Expire Date: {response.User.ExpireDate}");
+            }
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "WEBAPI SUCCESS";
         }
         else
         {
-            App.SharedVm.LMStatus = "WEBAPI FAILED";
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "WEBAPI FAILED";
             Logger.Log("Failed to get a valid response.");
         }
     }
@@ -179,7 +181,7 @@ public partial class HomeMenu : Page
             (Application.Current as App)?.LmDisconnect();
         });
     }
-    private async void LM_Resub_Click(object sender, RoutedEventArgs e)
+    private async void LM_ReSub_Click(object sender, RoutedEventArgs e)
     {
         await Task.Run(() =>
         {
@@ -213,9 +215,9 @@ public partial class HomeMenu : Page
     {
         try
         {
-            if (SharedViewModel.Instance != null && SharedViewModel.Instance.ShotDataCollection != null)
+            if (SharedViewModel.Instance != null && SharedViewModel.Instance?.ShotDataCollection != null)
             {
-                var (success, path) = ExportShotDataToCsv(SharedViewModel.Instance?.ShotDataCollection);
+                (bool success, string path) = ExportShotDataToCsv(SharedViewModel.Instance?.ShotDataCollection!);
                 if (success)
                 {
                     ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Check;

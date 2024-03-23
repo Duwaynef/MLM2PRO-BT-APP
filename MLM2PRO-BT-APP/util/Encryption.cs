@@ -4,8 +4,8 @@ namespace MLM2PRO_BT_APP.util
 {
     public class Encryption
     {
-        private byte[] IvParameter = { 109, 46, 82, 19, 33, 50, 4, 69, 111, 44, 121, 72, 16, 101, 109, 66 };
-        private byte[]? encryptionKey;
+        private byte[] _ivParameter = { 109, 46, 82, 19, 33, 50, 4, 69, 111, 44, 121, 72, 16, 101, 109, 66 };
+        private byte[]? _encryptionKey;
 
         public byte[] GetEncryptionTypeBytes()
         {
@@ -19,13 +19,13 @@ namespace MLM2PRO_BT_APP.util
             {
                 aes.KeySize = 256;
                 aes.Key = predeterminedKey;
-                encryptionKey = aes.Key;
+                _encryptionKey = aes.Key;
             }
         }
 
         public byte[]? GetKeyBytes()
         {
-            return encryptionKey;
+            return _encryptionKey;
         }
 
         public byte[]? Encrypt(byte[]? input)
@@ -39,8 +39,8 @@ namespace MLM2PRO_BT_APP.util
 
             using (Aes aes = Aes.Create())
             {
-                aes.Key = encryptionKey ?? aes.Key;
-                aes.IV = IvParameter;
+                aes.Key = _encryptionKey ?? aes.Key;
+                aes.IV = _ivParameter;
                 aes.Mode = CipherMode.CBC;
                 aes.Padding = PaddingMode.PKCS7;
 
@@ -56,18 +56,14 @@ namespace MLM2PRO_BT_APP.util
         {
             try
             {
-                using (Aes aes = Aes.Create())
-                {
-                    aes.Key = encryptionKey ?? aes.Key;
-                    aes.IV = IvParameter;
-                    aes.Mode = CipherMode.CBC;
-                    aes.Padding = PaddingMode.PKCS7;
+                using var aes = Aes.Create();
+                aes.Key = _encryptionKey ?? aes.Key;
+                aes.IV = _ivParameter;
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.PKCS7;
 
-                    using (ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
-                    {
-                        return decryptor.TransformFinalBlock(input ?? new byte[0], 0, input.Length);
-                    }
-                }
+                using var decrypted = aes.CreateDecryptor(aes.Key, aes.IV);
+                return input is { Length: > 0 } ? decrypted.TransformFinalBlock(input ?? Array.Empty<byte>(), 0, input!.Length) : null;
             }
             catch (Exception ex)
             {
@@ -83,7 +79,7 @@ namespace MLM2PRO_BT_APP.util
                 using (Aes aes = Aes.Create())
                 {
                     aes.Key = encryptionKeyinput;
-                    aes.IV = IvParameter;
+                    aes.IV = _ivParameter;
                     aes.Mode = CipherMode.CBC;
                     aes.Padding = PaddingMode.PKCS7;
 

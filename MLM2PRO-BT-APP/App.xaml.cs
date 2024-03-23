@@ -13,7 +13,7 @@ public partial class App : Application
 {
     public static SharedViewModel? SharedVm { get; private set; }
 
-    private readonly BluetoothBaseInterface? _manager;
+    private readonly IBluetoothBaseInterface? _manager;
     private HttpPuttingServer? PuttingConnection { get; }
     private readonly OpenConnectTcpClient _client;
     private OpenConnectServer? _openConnectServerInstance;
@@ -39,7 +39,7 @@ public partial class App : Application
         }
     }
 
-    public byte[] GetEncryptedKeyFromHex(byte[] input)
+    public byte[] GetEncryptedKeyFromHex(byte[]? input)
     {
         return _manager?.ConvertAuthRequest(input) ?? new byte[0];
     }
@@ -49,7 +49,7 @@ public partial class App : Application
         if (string.IsNullOrWhiteSpace(SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret))
         {
             Logger.Log("Web api token is blank");
-            if (SharedVm != null) SharedVm.LMStatus = "WEB API TOKEN NOT CONFIGURED";
+            if (SharedVm != null) SharedVm.LmStatus = "WEB API TOKEN NOT CONFIGURED";
 
             WebApiWindow webApiWindow = new()
             {
@@ -62,7 +62,7 @@ public partial class App : Application
 
     public async Task StartGsPro()
     {
-        String executablePath = Path.GetFullPath(SettingsManager.Instance?.Settings?.OpenConnect?.GSProEXE ?? "C:\\GSProV1\\Core\\GSP\\GSPro.exe");
+        String executablePath = Path.GetFullPath(SettingsManager.Instance?.Settings?.OpenConnect?.GsProExe ?? "C:\\GSProV1\\Core\\GSP\\GSPro.exe");
         var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(executablePath));
         if (processes.Length > 0)
         {
@@ -84,7 +84,7 @@ public partial class App : Application
         {
             Process.Start(startInfo);
             Logger.Log("GSPro Started");
-            if (SettingsManager.Instance?.Settings?.OpenConnect?.SkipGSProLauncher ?? false)
+            if (SettingsManager.Instance?.Settings?.OpenConnect?.SkipGsProLauncher ?? false)
             {
                 await ClickButtonWhenWindowLoads("GSPro Configuration", "Play!");
             }
@@ -138,7 +138,7 @@ public partial class App : Application
             else
             {
                 Logger.Log("GSPro OpenAPI window did not load in time.");
-                if (SharedVm != null) SharedVm.GSProStatus = "NOT CONNECTED";
+                if (SharedVm != null) SharedVm.GsProStatus = "NOT CONNECTED";
             }
         }
         catch (Exception ex)
@@ -163,7 +163,7 @@ public partial class App : Application
             // await Task.Delay(2000);
             _client.DisconnectAndStop();
             Logger.Log("Disconnected from server.");
-            if (SharedVm != null)SharedVm.GSProStatus = "DISCONNECTED";
+            if (SharedVm != null)SharedVm.GsProStatus = "DISCONNECTED";
             
         }
         catch (Exception ex)
@@ -195,7 +195,7 @@ public partial class App : Application
             {
                 result = "Fail";
                 await InsertRow(messageToSend, result);
-                if (SharedVm != null) SharedVm.GSProStatus = "CONNECTED, LM MISREAD";
+                if (SharedVm != null) SharedVm.GsProStatus = "CONNECTED, LM MISREAD";
                 return;
             }
 
@@ -204,7 +204,7 @@ public partial class App : Application
                 result = "Success";
                 Logger.Log("message successfully sent!");
                 if (messageToSend != null) await InsertRow(messageToSend, result);
-                if (SharedVm != null) SharedVm.GSProStatus = "CONNECTED, SHOT SENT!";
+                if (SharedVm != null) SharedVm.GsProStatus = "CONNECTED, SHOT SENT!";
                 return;
             }
             else
@@ -217,14 +217,14 @@ public partial class App : Application
                     result = "Success";
                     Logger.Log("Second attempt worked!");
                     if (messageToSend != null) await InsertRow(messageToSend, result);
-                    if (SharedVm != null) SharedVm.GSProStatus = "CONNECTED, SHOT SENT!";
+                    if (SharedVm != null) SharedVm.GsProStatus = "CONNECTED, SHOT SENT!";
                     return;
                 } else
                 {
                     result = "Fail";
                     Logger.Log("Second attempt failed...");
                     if (messageToSend != null) await InsertRow(messageToSend, result);
-                    if (SharedVm != null) SharedVm.GSProStatus = "DISCONNECTED, FAILED TO SEND SHOT";
+                    if (SharedVm != null) SharedVm.GsProStatus = "DISCONNECTED, FAILED TO SEND SHOT";
                     return;
                 }
             }
@@ -241,12 +241,12 @@ public partial class App : Application
             ShotNumber = OpenConnectApiMessage.Instance.ShotNumber,
             Result = result,
             SmashFactor = MeasurementData.CalculateSmashFactor(inputData.BallData?.Speed ?? 0, inputData.ClubData?.Speed ?? 0),
-            Club = DeviceManager.Instance.ClubSelection ?? "",
+            Club = DeviceManager.Instance?.ClubSelection ?? "",
             BallSpeed = inputData.BallData?.Speed ?? 0,
             SpinAxis = inputData.BallData?.SpinAxis ?? 0,
             SpinRate = inputData.BallData?.TotalSpin ?? 0,
-            VLA = inputData.BallData?.VLA ?? 0,
-            HLA = inputData.BallData?.HLA ?? 0,
+            Vla = inputData.BallData?.Vla ?? 0,
+            Hla = inputData.BallData?.Hla ?? 0,
             ClubSpeed = inputData.ClubData?.Speed ?? 0,
             BackSpin = inputData.BallData?.BackSpin ?? 0,
             SideSpin = inputData.BallData?.SideSpin ?? 0
@@ -261,7 +261,7 @@ public partial class App : Application
     }
     public async Task ConnectAndSetupBluetooth()
     {
-        if (SharedVm != null) SharedVm.LMStatus = "LOOKING FOR DEVICE";
+        if (SharedVm != null) SharedVm.LmStatus = "LOOKING FOR DEVICE";
         await (_manager?.RestartDeviceWatcher() ?? Task.CompletedTask);
     }
     public async Task LmArmDevice()
@@ -285,7 +285,7 @@ public partial class App : Application
     }
     public void LmDisconnect()
     {
-        if (!_manager?.isBluetoothDeviceValid() ?? false) return;
+        if (!_manager?.IsBluetoothDeviceValid() ?? false) return;
         _ = _manager?.DisconnectAndCleanup();
     }
     public byte[]? GetBtKey()
@@ -321,7 +321,7 @@ public partial class App : Application
                     PuttingConnection.LaunchBallTracker = true;
                 }
             }
-            if (DeviceManager.Instance.ClubSelection == "PT")
+            if (DeviceManager.Instance?.ClubSelection == "PT")
             {
                 await Task.Delay(1000);
                 StartPutting();
@@ -352,8 +352,8 @@ public partial class App : Application
     }
     private void StartOpenConnectServer()
     {
-        _openConnectServerInstance = new(IPAddress.Any, SettingsManager.Instance?.Settings?.OpenConnect?.APIRelayPort ?? 951);
-        Logger.Log("OpenConnectServer: Starting server on port: " + SettingsManager.Instance?.Settings?.OpenConnect?.APIRelayPort);
+        _openConnectServerInstance = new(IPAddress.Any, SettingsManager.Instance?.Settings?.OpenConnect?.ApiRelayPort ?? 951);
+        Logger.Log("OpenConnectServer: Starting server on port: " + SettingsManager.Instance?.Settings?.OpenConnect?.ApiRelayPort);
         _openConnectServerInstance.Start();
     }
     public void StopOpenConnectServer()
@@ -408,13 +408,13 @@ public partial class App : Application
             }
         }
 
-        if (SettingsManager.Instance?.Settings?.OpenConnect?.AutoStartGSPro ?? false)
+        if (SettingsManager.Instance?.Settings?.OpenConnect?.AutoStartGsPro ?? false)
         {
             
             await Task.Run(() => StartGsPro());
         }
 
-        if (SettingsManager.Instance?.Settings?.OpenConnect?.EnableAPIRelay ?? false)
+        if (SettingsManager.Instance?.Settings?.OpenConnect?.EnableApiRelay ?? false)
         {
             StartOpenConnectServer();
         }

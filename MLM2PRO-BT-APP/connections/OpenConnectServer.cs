@@ -37,7 +37,7 @@ namespace MLM2PRO_BT_APP.connections
     }
     class OpenConnectServer : TcpServer
     {
-        public OpenConnectServer(IPAddress address, int port) : base(IPAddress.Any, SettingsManager.Instance?.Settings?.OpenConnect?.APIRelayPort ?? 951) { }
+        public OpenConnectServer(IPAddress address, int port) : base(IPAddress.Any, SettingsManager.Instance?.Settings?.OpenConnect?.ApiRelayPort ?? 951) { }
 
         protected override TcpSession CreateSession() { return new OpenConnectServerSession(this); }
 

@@ -4,44 +4,32 @@ namespace MLM2PRO_BT_APP.devices
 {
     class DeviceManager
     {
+        public static DeviceManager? Instance { get; } = new();
+        private string UserToken { get; set; } = "0";
 
-        private static DeviceManager instance;
-        public static DeviceManager Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new DeviceManager();
-                }
-                return instance;
-            }
-        }
-        public string UserToken { get; set; } = "0";
-
-        ByteConversionUtils byteConversionUtils = new ByteConversionUtils();
-        public string DeviceStatus { get; set; } = "NOTCONNECTED";
+        private readonly ByteConversionUtils _byteConversionUtils = new ByteConversionUtils();
+        public string DeviceStatus { get; set; } = "NOT CONNECTED";
         public string ClubSelection { get; set; } = "NONE";
-        public byte? Handedness { get; set; } = 1; // Default value of right?
-        public byte? BallType { get; set; } = 2; // Default value of rct?
-        public byte? Environment { get; set; } = 0; // Default value of outdoor?
-        public double? AltitudeMetres { get; set; } = 0.0; // Default value of 0.0
-        public double? TemperatureCelcius { get; set; } = 20.0; // Default value of 0.0
-        public byte? QuitEvent { get; set; } = 0; // Default value of 0
-        public byte? PowerMode { get; set; } = 0; // Default value of 0
+        private byte? Handedness { get; set; } = 1; // Default value of right?
+        private byte? BallType { get; set; } = 2; // Default value of rct?
+        private byte? Environment { get; set; } = 0; // Default value of outdoor?
+        private double? AltitudeMetres { get; set; } = 0.0; // Default value of 0.0
+        private double? TemperatureCelsius { get; set; } = 20.0; // Default value of 0.0
+        private byte? QuitEvent { get; set; } = 0; // Default value of 0
+        private byte? PowerMode { get; set; } = 0; // Default value of 0
 
         // DeviceInfo fields
-        public string SerialNumber { get; set; } = "";
-        public string Model { get; set; } = "";
-        public int Battery { get; set; } = 0;
+        private string SerialNumber { get; set; } = "";
+        private string Model { get; set; } = "";
+        private int Battery { get; set; } = 0;
         public int[]? ResponseMessage { get; set; } = null;
         public int[]? Events { get; set; } = null;
         public int[]? Measurement { get; set; } = null;
-        private bool infoComplete = false;
+        private bool _infoComplete = false;
 
         public bool DeviceInfoComplete()
         {
-            return infoComplete;
+            return _infoComplete;
         }
 
         public void ResetDeviceInfo()
@@ -52,18 +40,18 @@ namespace MLM2PRO_BT_APP.devices
             ResponseMessage = null;
             Events = null;
             Measurement = null;
-            infoComplete = false;
+            _infoComplete = false;
         }
 
         private void UpdateInfoComplete()
         {
             if (!string.IsNullOrEmpty(SerialNumber) && !string.IsNullOrEmpty(Model) && Battery > 0)
             {
-                infoComplete = true;
+                _infoComplete = true;
             }
             else
             {
-                infoComplete = false;
+                _infoComplete = false;
             }
         }
 
@@ -119,9 +107,9 @@ namespace MLM2PRO_BT_APP.devices
 
 
             // Generate required byte arrays
-            byte[] airPressureBytes = byteConversionUtils.GetAirPressureBytes(0.0) ?? [0];
-            byte[] temperatureBytes = byteConversionUtils.GetTemperatureBytes(15.0) ?? [0];
-            byte[] longToUintToByteArray = byteConversionUtils.LongToUintToByteArray(long.Parse(UserToken), true) ?? [0];
+            byte[] airPressureBytes = _byteConversionUtils.GetAirPressureBytes(0.0) ?? [0];
+            byte[] temperatureBytes = _byteConversionUtils.GetTemperatureBytes(15.0) ?? [0];
+            byte[] longToUintToByteArray = _byteConversionUtils.LongToUintToByteArray(long.Parse(UserToken), true) ?? [0];
 
             // Concatenate all byte arrays
             byte[]? concatenatedBytes = new byte[] { 1, 2, 0, 0 }.Concat(airPressureBytes)
@@ -130,7 +118,7 @@ namespace MLM2PRO_BT_APP.devices
              .Concat(new byte[] { 0, 0 })
              .ToArray();
 
-            Logger.Log("GetInitialParameters: ByteArrayReturned: " + byteConversionUtils.ByteArrayToHexString(concatenatedBytes));
+            Logger.Log("GetInitialParameters: ByteArrayReturned: " + _byteConversionUtils.ByteArrayToHexString(concatenatedBytes));
             return concatenatedBytes;
         }
 
@@ -142,7 +130,7 @@ namespace MLM2PRO_BT_APP.devices
             }
 
             double altitude = AltitudeMetres ?? 0.0;
-            double temperature = TemperatureCelcius ?? 15.0;
+            double temperature = TemperatureCelsius ?? 15.0;
 
             byte[] handednessBytes = Handedness != null ? [Handedness.Value] : [1];
             byte[] ballTypeBytes = BallType != null ? [BallType.Value] : [2];
@@ -150,8 +138,8 @@ namespace MLM2PRO_BT_APP.devices
             byte[] quitEventBytes = QuitEvent != null ? [QuitEvent.Value] : [0];
             byte[] powerModeBytes = PowerMode != null ? [PowerMode.Value] : [0];
 
-            byte[] airPressureBytes = byteConversionUtils.GetAirPressureBytes(altitude) ?? [0];
-            byte[] temperatureBytes = byteConversionUtils.GetTemperatureBytes(temperature) ?? [0];
+            byte[] airPressureBytes = _byteConversionUtils.GetAirPressureBytes(altitude) ?? [0];
+            byte[] temperatureBytes = _byteConversionUtils.GetTemperatureBytes(temperature) ?? [0];
             byte[] userTokenBytes = BitConverter.GetBytes(long.Parse(UserToken));
 
             byte[] concatenatedBytes = handednessBytes

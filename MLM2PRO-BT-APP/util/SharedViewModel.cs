@@ -25,24 +25,24 @@ namespace MLM2PRO_BT_APP.util
         }
 
         private string? _gsProStatus;
-        public string? GSProStatus
+        public string? GsProStatus
         {
             get => _gsProStatus;
-            set => SetProperty(ref _gsProStatus, value, nameof(GSProStatus));
+            set => SetProperty(ref _gsProStatus, value, nameof(GsProStatus));
         }
 
         private string? _gsProClub;
-        public string? GSProClub
+        public string? GsProClub
         {
             get => _gsProClub;
-            set => SetProperty(ref _gsProClub, value, nameof(GSProClub));
+            set => SetProperty(ref _gsProClub, value, nameof(GsProClub));
         }
 
         private string? _lmStatus;
-        public string? LMStatus
+        public string? LmStatus
         {
             get => _lmStatus;
-            set => SetProperty(ref _lmStatus, value, nameof(LMStatus));
+            set => SetProperty(ref _lmStatus, value, nameof(LmStatus));
         }
 
         private string? _puttingStatus;
@@ -52,81 +52,81 @@ namespace MLM2PRO_BT_APP.util
             set => SetProperty(ref _puttingStatus, value, nameof(PuttingStatus));
         }
 
-        private string? _LmBatteryLife;
+        private string? _lmBatteryLife;
         public string? LmBatteryLife
         {
-            get => _LmBatteryLife;
-            set => SetProperty(ref _LmBatteryLife, value + "%", nameof(LmBatteryLife));
+            get => _lmBatteryLife;
+            set => SetProperty(ref _lmBatteryLife, value + "%", nameof(LmBatteryLife));
         }
 
-        private SolidColorBrush? _PuttingStatusBackground;
+        private SolidColorBrush? _puttingStatusBackground;
         public SolidColorBrush? PuttingStatusBackground
         {
-            get => _PuttingStatusBackground;
-            set => SetProperty(ref _PuttingStatusBackground, value, nameof(PuttingStatusBackground));
+            get => _puttingStatusBackground;
+            set => SetProperty(ref _puttingStatusBackground, value, nameof(PuttingStatusBackground));
         }
 
         private SolidColorBrush? _lmStatusBackground;
-        public SolidColorBrush? LMStatusBackground
+        public SolidColorBrush? LmStatusBackground
         {
             get => _lmStatusBackground;
-            set => SetProperty(ref _lmStatusBackground, value, nameof(LMStatusBackground));
+            set => SetProperty(ref _lmStatusBackground, value, nameof(LmStatusBackground));
         }
 
         private SolidColorBrush? _lmBattLifeBackground;
-        public SolidColorBrush? LMBattLifeBackground
+        public SolidColorBrush? LmBattLifeBackground
         {
             get => _lmBattLifeBackground;
-            set => SetProperty(ref _lmBattLifeBackground, value, nameof(LMBattLifeBackground));
+            set => SetProperty(ref _lmBattLifeBackground, value, nameof(LmBattLifeBackground));
         }
 
         private SolidColorBrush? _gsProStatusBackground;
-        public SolidColorBrush? GSProStatusBackground
+        public SolidColorBrush? GsProStatusBackground
         {
             get => _gsProStatusBackground;
-            set => SetProperty(ref _gsProStatusBackground, value, nameof(GSProStatusBackground));
+            set => SetProperty(ref _gsProStatusBackground, value, nameof(GsProStatusBackground));
         }
 
         private static SolidColorBrush? GetStatusColor(string status)
         {
             // Normalize the status string to lower case for case-insensitive comparison
             var lowerCaseStatus = status.ToLower();
-            Color Cyan = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Cyan];
-            Color BlueGrey = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.BlueGrey];
-            Color Red = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Red];
-            Color Green = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Green];
+            Color cyan = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Cyan];
+            Color blueGrey = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.BlueGrey];
+            Color red = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Red];
+            Color green = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Green];
 
             if (int.TryParse(status, out var batteryLevel))
             {
                 if (batteryLevel < 15)
                 {
-                    return new SolidColorBrush(Red);
+                    return new SolidColorBrush(red);
                 }
                 else if (batteryLevel <50)
                 {
-                    return new SolidColorBrush(Cyan);
+                    return new SolidColorBrush(cyan);
                 }
                 else
                 {
-                    return new SolidColorBrush(Green);
+                    return new SolidColorBrush(green);
                 }
             }
             
             if (lowerCaseStatus.Contains("failed"))
             {
-                return new SolidColorBrush(Red);
+                return new SolidColorBrush(red);
             }
             else if (lowerCaseStatus.Contains("disconnected"))
             {
-                return new SolidColorBrush(Cyan);
+                return new SolidColorBrush(cyan);
             }
             else if (lowerCaseStatus.Contains("connected") || lowerCaseStatus.Contains("success"))
             {
-                return new SolidColorBrush(Green);
+                return new SolidColorBrush(green);
             }
             else
             {
-                return new SolidColorBrush(BlueGrey);
+                return new SolidColorBrush(blueGrey);
             }
         }
 
@@ -144,18 +144,18 @@ namespace MLM2PRO_BT_APP.util
                 OnPropertyChanged(propertyName);
 
                 // Update background colors for specific properties
-                if (propertyName == nameof(GSProStatus) && value is string gsProStatusValue)
+                if (propertyName == nameof(GsProStatus) && value is string gsProStatusValue)
                 {
-                    GSProStatusBackground = GetStatusColor(gsProStatusValue);
+                    GsProStatusBackground = GetStatusColor(gsProStatusValue);
                 }
-                else if (propertyName == nameof(LMStatus) && value is string lmStatusValue)
+                else if (propertyName == nameof(LmStatus) && value is string lmStatusValue)
                 {
-                    LMStatusBackground = GetStatusColor(lmStatusValue);
+                    LmStatusBackground = GetStatusColor(lmStatusValue);
                 }
                 else if (propertyName == nameof(LmBatteryLife) && value is string lmBattLifeValue)
                 {
                     var matches = string.Concat(Regex.Matches(lmBattLifeValue, @"\d+").Cast<Match>().Select(m => m.Value));
-                    LMBattLifeBackground = GetStatusColor(matches);
+                    LmBattLifeBackground = GetStatusColor(matches);
                 }
                 else if (propertyName == nameof(PuttingStatus) && value is string puttingStatusValue)
                 {

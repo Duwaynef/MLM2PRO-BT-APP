@@ -6,15 +6,15 @@ namespace MLM2PRO_BT_APP.connections
 {
     public class WebApiClient
     {
-        private string BaseUrl;
-        private string SecretKey = "Secret";
-        private string SecretValue;
+        private string _baseUrl;
+        private string _secretKey = "Secret";
+        private string _secretValue;
 
         public WebApiClient()
         {
             // Initialize BaseUrl and SecretValue using appSettings
-            BaseUrl = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiURL ?? "";
-            SecretValue = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret ?? "";
+            _baseUrl = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUrl ?? "";
+            _secretValue = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret ?? "";
         }
         public class User
         {
@@ -29,31 +29,26 @@ namespace MLM2PRO_BT_APP.connections
             public User? User { get; set; }
         }
 
-        public async Task<ApiResponse> SendRequestAsync(int userId)
+        public async Task<ApiResponse?> SendRequestAsync(int userId)
         {
             Logger.Log("Sending request to Web API...");
             using HttpClient httpClient = new();
-            httpClient.DefaultRequestHeaders.Add(SecretKey, SecretValue);
-            Logger.Log("UserId: " + userId + ", Secret Key: " + SecretKey + ", Secret Value: " + SecretValue);
-            Uri requestUri = new Uri(BaseUrl + userId);
+            httpClient.DefaultRequestHeaders.Add(_secretKey, _secretValue);
+            Logger.Log("UserId: " + userId + ", Secret Key: " + _secretKey + ", Secret Value: " + _secretValue);
+            Uri requestUri = new Uri(_baseUrl + userId);
             try
             {
-                HttpResponseMessage response = await httpClient.GetAsync(requestUri);
+                var response = await httpClient.GetAsync(requestUri);
                 response.EnsureSuccessStatusCode();
                 Logger.Log("Web API request successful.");
 
                 string content = await response.Content.ReadAsStringAsync();
-
-                // Deserialize the JSON response into the ServerResponse object
-                ApiResponse? serverResponse = JsonConvert.DeserializeObject<ApiResponse>(content);
+                var serverResponse = JsonConvert.DeserializeObject<ApiResponse>(content);
                 Logger.Log("Server Response: " + serverResponse);
                 return serverResponse;
             }
             catch (Exception ex)
             {
-                // Log or handle exceptions as needed
-                // This is a basic example to return null indicating an error
-                // In practice, you might want to return a custom error object or handle differently
                 Logger.Log($"Error: {ex.Message}");
                 return null;
             }

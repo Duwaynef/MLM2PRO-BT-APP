@@ -6,8 +6,7 @@ namespace MLM2PRO_BT_APP.connections;
 
 public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.BluetoothDevice>
 {
-    BluetoothDevice? _bluetoothdevice;
-    GattService? _primaryService;
+    private GattService? _primaryService;
     private GattCharacteristic? _gaTTeventsCharacteristicUuid;
     private GattCharacteristic? _gaTTheartbeatCharacteristicUuid;
     private GattCharacteristic? _gaTTwriteResponseCharacteristicUuid;
@@ -34,7 +33,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
 
     private async void DeviceDiscoveryTimerSignal(object? state)
     {
-        if (_bluetoothDevice != null)
+        if (BluetoothDevice != null)
         {
             if (_deviceDiscoveryTimer != null) await _deviceDiscoveryTimer.DisposeAsync();
             return;
@@ -43,7 +42,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         {
             return;
         }
-        else if (_bluetoothDevice == null && !_currentlySearching)
+        else if (BluetoothDevice == null && !_currentlySearching)
         {
             await DiscoverDevicesAsync();
         }
@@ -51,7 +50,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     public override async Task TriggerDeviceDiscovery()
     {
         _cleaningUp = false;
-        if (App.SharedVm != null) App.SharedVm.LMStatus = "TRIGGERING DISCOVERY";
+        if (App.SharedVm != null) App.SharedVm.LmStatus = "TRIGGERING DISCOVERY";
         await DiscoverDevicesAsync();
     }
 
@@ -59,21 +58,21 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     {
         try
         {
-            if (App.SharedVm != null) App.SharedVm.LMStatus = "LOOKING FOR DEVICES";
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "LOOKING FOR DEVICES";
             Logger.Log("BACKUP BLUETOOTH MANAGER LOOKING FOR DEVICES");
             _currentlySearching = true;
             foreach (BluetoothDevice pairedDevice in Bluetooth.GetPairedDevicesAsync().Result)
             {
                 if (pairedDevice.Name.Contains("MLM2-") || pairedDevice.Name.Contains("BlueZ "))
                 {
-                    if (App.SharedVm != null) App.SharedVm.LMStatus = "FOUND PAIRED DEVICE: " + pairedDevice.Name;
+                    if (App.SharedVm != null) App.SharedVm.LmStatus = "FOUND PAIRED DEVICE: " + pairedDevice.Name;
                     Logger.Log("BACKUP BLUETOOTH MANAGER FOUND PAIRED DEVICE IN BT CACHE ATTEMPTING TO CONNECT CONNECTING: " + pairedDevice.Name);
                     await ConnectToDeviceAsync(pairedDevice);
                     return;
                 }
                 else
                 {
-                    if (App.SharedVm != null) App.SharedVm.LMStatus = "BLUETOOTH MANAGER FOUND NO MATCHES";
+                    if (App.SharedVm != null) App.SharedVm.LmStatus = "BLUETOOTH MANAGER FOUND NO MATCHES";
                     Logger.Log("BACKUP BLUETOOTH MANAGER FOUND BUT NO MATCH: " + pairedDevice.Name);
                     Logger.Log(pairedDevice.Id);
                 }
@@ -90,18 +89,18 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         try
         {
 
-            if (App.SharedVm != null) App.SharedVm.LMStatus = "ATTEMPTING TO CONNECT: : " + device.Name;
-            device.GattServerDisconnected += Device_GattServerDisconnected;
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "ATTEMPTING TO CONNECT: : " + device.Name;
+            device.GattServerDisconnected += Device_GattServerDisconnected!; //@TODO: Sometimes this crashes, need ot figure that out
             device.Gatt.ConnectAsync().Wait();
             device.Gatt.AutoConnect = true;
-            _primaryService = await device.Gatt.GetPrimaryServiceAsync(_serviceUuid).WaitAsync(TimeSpan.FromSeconds(5));
+            _primaryService = await device.Gatt.GetPrimaryServiceAsync(ServiceUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (_primaryService == null)
             {
                 Logger.Log("Primary service not found.");
                 return;
             }
-            _bluetoothDevice = device;
-            if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTION ESTABILISHED: " + device.Name ;
+            BluetoothDevice = device;
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "CONNECTION ESTABILISHED: " + device.Name ;
             _currentlySearching = false;
             await SetupBluetoothDevice();
         }
@@ -122,7 +121,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     private async void Device_GattServerDisconnected(object sender, EventArgs e)
     {
         var device = sender as BluetoothDevice;
-        if (_bluetoothDevice != null && !_cleaningUp)
+        if (BluetoothDevice != null && !_cleaningUp)
         {
             Logger.Log("Device disconnected. Attempting to reconnect...");
             await TriggerDeviceDiscovery();
@@ -133,22 +132,22 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         try
         {
             if (_primaryService == null) return false;
-            _gaTTeventsCharacteristicUuid = await _primaryService.GetCharacteristicAsync(_eventsCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
+            _gaTTeventsCharacteristicUuid = await _primaryService.GetCharacteristicAsync(EventsCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (_gaTTeventsCharacteristicUuid == null) return false;
             _gaTTeventsCharacteristicUuid.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _gaTTeventsCharacteristicUuid.StartNotificationsAsync();
 
-            _gaTTheartbeatCharacteristicUuid = await _primaryService.GetCharacteristicAsync(_heartbeatCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
+            _gaTTheartbeatCharacteristicUuid = await _primaryService.GetCharacteristicAsync(HeartbeatCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (_gaTTheartbeatCharacteristicUuid == null) return false;
             _gaTTheartbeatCharacteristicUuid.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _gaTTheartbeatCharacteristicUuid.StartNotificationsAsync();
 
-            _gaTTwriteResponseCharacteristicUuid = await _primaryService.GetCharacteristicAsync(_writeResponseCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
+            _gaTTwriteResponseCharacteristicUuid = await _primaryService.GetCharacteristicAsync(WriteResponseCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (_gaTTwriteResponseCharacteristicUuid == null) return false;
             _gaTTwriteResponseCharacteristicUuid.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _gaTTwriteResponseCharacteristicUuid.StartNotificationsAsync();
 
-            _gaTTmeasurementCharacteristic = await _primaryService.GetCharacteristicAsync(_measurementCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
+            _gaTTmeasurementCharacteristic = await _primaryService.GetCharacteristicAsync(MeasurementCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (_gaTTmeasurementCharacteristic == null) return false;
             _gaTTmeasurementCharacteristic.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _gaTTmeasurementCharacteristic.StartNotificationsAsync();
@@ -178,27 +177,22 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
                 return false;
             }
 
-            if (_bluetoothDevice == null)
+            if (BluetoothDevice == null)
             {
                 Logger.Log("Bluetooth device not connected.");
                 return false;
             }
 
-            var service = await _bluetoothDevice.Gatt.GetPrimaryServiceAsync(_serviceUuid).WaitAsync(TimeSpan.FromSeconds(5));
+            var service = await BluetoothDevice.Gatt.GetPrimaryServiceAsync(ServiceUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (service == null)
             {
                 Logger.Log("Service not found.");
                 return false;
             }
 
-            var characteristic = await _primaryService.GetCharacteristicAsync(characteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
-            if (characteristic == null)
+            if (_primaryService != null)
             {
-                Logger.Log("Characteristic not found.");
-                return false;
-            }
-            else
-            {
+                var characteristic = await _primaryService.GetCharacteristicAsync(characteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
                 try
                 {
                     await characteristic.WriteValueWithoutResponseAsync(data);
@@ -210,6 +204,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
                     return false;
                 }
             }
+            return false;
         }
         catch (Exception ex)
         {
@@ -229,12 +224,12 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     }
     protected override void ChildDisconnectAndCleanupSecond()
     {
-        _bluetoothDevice?.Gatt.Disconnect();
-        _bluetoothDevice = null;
+        BluetoothDevice?.Gatt.Disconnect();
+        BluetoothDevice = null;
     }
     protected override async Task UnsubscribeFromAllNotifications()
     {
-        if (_bluetoothDevice != null)
+        if (BluetoothDevice != null)
         {
             try
             {
@@ -268,7 +263,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     public override async Task<bool> VerifyDeviceConnection(object device)
     {
 
-        var characteristic = await ((BluetoothDevice)device).Gatt.GetPrimaryServiceAsync(_serviceUuid);
+        var characteristic = await ((BluetoothDevice)device).Gatt.GetPrimaryServiceAsync(ServiceUuid);
         if (characteristic != null)
         {
             Logger.Log("verify device connection: got GATT services");

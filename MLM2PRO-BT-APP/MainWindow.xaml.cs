@@ -62,7 +62,7 @@ namespace MLM2PRO_BT_APP
             setAppTheme();
 
             pressHoldTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            pressHoldTimer.Tick += PressHoldTimer_Tick;
+            pressHoldTimer.Tick += PressHoldTimer_Tick!;
             CheckForGitHubUpdates();
         }
 
@@ -82,18 +82,20 @@ namespace MLM2PRO_BT_APP
                 var currentVersion = System.Reflection.Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
                 Logger.Log($"Current version: {currentVersion}");
                 var releaseChecker = new GitHubReleaseChecker("DuwayneF", "MLM2PRO-BT-APP");
-                GitHubRelease? currentRelease = await releaseChecker.CheckForUpdateAsync(currentVersion);
-                if(currentRelease != null)
+                if (currentVersion != null)
                 {
-                    updateUrl = currentRelease.HtmlUrl ?? "";
-                    UpdateAvailableBadge.Visibility = Visibility.Visible;
-                    UpdateAvailableSeperator.Visibility = Visibility.Visible;
-                } 
-                else
-                {
-                    Logger.Log("No updates found.");
+                    GitHubRelease? currentRelease = await releaseChecker.CheckForUpdateAsync(currentVersion);
+                    if(currentRelease != null)
+                    {
+                        updateUrl = currentRelease.HtmlUrl ?? "";
+                        UpdateAvailableBadge.Visibility = Visibility.Visible;
+                        UpdateAvailableSeperator.Visibility = Visibility.Visible;
+                    } 
+                    else
+                    {
+                        Logger.Log("No updates found.");
+                    }
                 }
-
             }
             catch (Exception ex)
             {

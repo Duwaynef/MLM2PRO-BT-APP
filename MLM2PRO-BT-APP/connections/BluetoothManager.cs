@@ -13,14 +13,14 @@ namespace MLM2PRO_BT_APP.connections;
 public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.BluetoothLEDevice>
 {
     private DeviceWatcher? _deviceWatcher;
-    protected readonly Dictionary<string, DeviceInformation?> _foundDevices = [];
+    protected readonly Dictionary<string, DeviceInformation?> FoundDevices = [];
     public BluetoothManager() : base()
     {
         InitializeDeviceWatcher();
     }
     private void InitializeDeviceWatcher()
     {
-        var serviceSelector = GattDeviceService.GetDeviceSelectorFromUuid(_serviceUuid);
+        var serviceSelector = GattDeviceService.GetDeviceSelectorFromUuid(ServiceUuid);
         _deviceWatcher = DeviceInformation.CreateWatcher(serviceSelector);
 
         _deviceWatcher.Added += DeviceWatcher_Added;
@@ -33,7 +33,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     }
     private void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
     {
-        if (!_foundDevices.TryAdd(deviceInfo.Id, deviceInfo))
+        if (!FoundDevices.TryAdd(deviceInfo.Id, deviceInfo))
         {
             Logger.Log("Device Already in found devices list: " + deviceInfo.Name);
             return;
@@ -44,10 +44,10 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
 
     private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
     {
-        if (!_foundDevices.TryGetValue(deviceInfoUpdate.Id, out var deviceInfo)) return;
+        if (!FoundDevices.TryGetValue(deviceInfoUpdate.Id, out var deviceInfo)) return;
         deviceInfo?.Update(deviceInfoUpdate);
         Logger.Log("Device Watcher updated " + deviceInfo?.Name);
-        var isConnected = _bluetoothDevice != null && await VerifyDeviceConnection(_bluetoothDevice);
+        var isConnected = BluetoothDevice != null && await VerifyDeviceConnection(BluetoothDevice);
         if (!isConnected)
         {
             if (deviceInfo != null) DeviceWatcher_StartDeviceConnection(deviceInfo);
@@ -78,7 +78,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             if (isConnected)
             {
                 Logger.Log("Device Watcher verified device connection " + deviceInfo.Name);
-                _bluetoothDevice = device;
+                BluetoothDevice = device;
                 await SetupBluetoothDevice();
             } else
             {
@@ -87,7 +87,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         } else
         {
             Logger.Log("Device Watcher stopped device connection " + deviceInfo.Name + " web api token is blank or incorrect");
-            if (App.SharedVm != null) App.SharedVm.LMStatus = "WEB API TOKEN MISSING OR INCORRECT";
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "WEB API TOKEN MISSING OR INCORRECT";
         }
     }
     public override async Task RestartDeviceWatcher()
@@ -96,7 +96,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         {
             Logger.Log("Restarting device watcher");
             _deviceWatcher.Stop();
-            _foundDevices.Clear();
+            FoundDevices.Clear();
 
             while (_deviceWatcher.Status != DeviceWatcherStatus.Created && _deviceWatcher.Status != DeviceWatcherStatus.Stopped && _deviceWatcher.Status != DeviceWatcherStatus.Aborted)
             {
@@ -109,7 +109,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     }
     protected override async Task<bool> SubscribeToCharacteristicsAsync()
     {
-        var serviceResult = await _bluetoothDevice?.GetGattServicesForUuidAsync(_serviceUuid);
+        var serviceResult = await BluetoothDevice?.GetGattServicesForUuidAsync(ServiceUuid);
         if (serviceResult.Status != GattCommunicationStatus.Success)
         {
             return false;
@@ -117,7 +117,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
 
         foreach (var service in serviceResult.Services)
         {
-            foreach (var charUuid in _notifyUuiDs)
+            foreach (var charUuid in NotifyUuiDs)
             {
                 var charResult = await service.GetCharacteristicsForUuidAsync(charUuid);
                 if (charResult.Status == GattCommunicationStatus.Success)
@@ -137,7 +137,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
                         }
                         catch
                         {
-                            DeviceManager.Instance.DeviceStatus = "NOT CONNECTED";
+                            if (DeviceManager.Instance != null) DeviceManager.Instance.DeviceStatus = "NOT CONNECTED";
                             Logger.Log("Characteristic Error: in SetupDeviceAsync");
                             await RetryBtConnection();
                             return false;
@@ -158,7 +158,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     }
     private async Task<GattDeviceService?> GetGattServiceAsync(Guid serviceUuid)
     {
-        var services = await _bluetoothDevice?.GetGattServicesAsync();
+        var services = await BluetoothDevice?.GetGattServicesAsync();
         return services.Services.FirstOrDefault(s => s.Uuid == serviceUuid);
     }
     private async Task<GattCharacteristic?> GetCharacteristicAsync(GattDeviceService service, Guid characteristicUuid)
@@ -179,7 +179,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             return false;
         }
 
-        if (_bluetoothDevice == null)
+        if (BluetoothDevice == null)
         {
             Logger.Log("Bluetooth device not connected.");
             return false;
@@ -216,10 +216,10 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     {
         try
         {
-            var readResult = await ReadCharacteristicValueAsync(_serviceUuid, _measurementCharacteristicUuid);
+            var readResult = await ReadCharacteristicValueAsync(ServiceUuid, MeasurementCharacteristicUuid);
             if (readResult == null || readResult.Length == 0)
             {
-                if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTION MIGHT BE LOST, RECONNECTING";
+                if (App.SharedVm != null) App.SharedVm.LmStatus = "CONNECTION MIGHT BE LOST, RECONNECTING";
                 Logger.Log("Connection might be lost. Re-subscribing...");
                 await RetryBtConnection();
             }
@@ -241,20 +241,20 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     {
         if (_deviceWatcher != null && (_deviceWatcher.Status == DeviceWatcherStatus.Started || _deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted))
         _deviceWatcher?.Stop();
-        _foundDevices.Clear();
+        FoundDevices.Clear();
     }
     protected override void ChildDisconnectAndCleanupSecond()
     {
-        _bluetoothDevice?.Dispose();
-        _bluetoothDevice = null;
+        BluetoothDevice?.Dispose();
+        BluetoothDevice = null;
     }
     protected override async Task UnsubscribeFromAllNotifications()
     {
-        if (_bluetoothDevice != null)
+        if (BluetoothDevice != null)
         {
             try
             {
-                var services = await _bluetoothDevice.GetGattServicesForUuidAsync(_serviceUuid);
+                var services = await BluetoothDevice.GetGattServicesForUuidAsync(ServiceUuid);
                 foreach (var service in services.Services)
                 {
                     var characteristics = await service.GetCharacteristicsAsync();
@@ -278,7 +278,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     }
     public override async Task<bool> VerifyDeviceConnection(object device)
     {
-        var servicesResult = await ((BluetoothLEDevice)device).GetGattServicesForUuidAsync(_serviceUuid, BluetoothCacheMode.Uncached);
+        var servicesResult = await ((BluetoothLEDevice)device).GetGattServicesForUuidAsync(ServiceUuid, BluetoothCacheMode.Uncached);
 
         if (servicesResult.Status == GattCommunicationStatus.Success && servicesResult.Services.Count > 0)
         {
@@ -296,13 +296,13 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         try
         {
             // Ensure the device is connected
-            if (_bluetoothDevice == null)
+            if (BluetoothDevice == null)
             {
                 Logger.Log("Not connected to a device.");
             }
 
             // Get the GATT service
-            var serviceResult = await _bluetoothDevice?.GetGattServicesForUuidAsync(serviceUuid);
+            var serviceResult = await BluetoothDevice?.GetGattServicesForUuidAsync(serviceUuid);
             if (serviceResult.Status != GattCommunicationStatus.Success)
             {
                 Logger.Log("Service not found." + serviceUuid.ToString());
@@ -324,10 +324,10 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             if (readResult.Status == GattCommunicationStatus.Success)
             {
                 Logger.Log("Data Stream: from UUID:" + characteristic.Uuid);
-                Logger.Log(_byteConversionUtils.ByteArrayToHexString(_byteConversionUtils.ConvertIBufferToBytes(readResult.Value)));
+                Logger.Log(ByteConversionUtils.ByteArrayToHexString(ByteConversionUtils.ConvertIBufferToBytes(readResult.Value)));
                 Logger.Log("Decrypted Stream: from UUID:" + characteristic.Uuid);
-                byte[]? decrypted = _btEncryption.Decrypt(_byteConversionUtils.ConvertIBufferToBytes(readResult.Value));
-                Logger.Log(_byteConversionUtils.ByteArrayToHexString(decrypted));
+                byte[]? decrypted = BtEncryption.Decrypt(ByteConversionUtils.ConvertIBufferToBytes(readResult.Value));
+                Logger.Log(ByteConversionUtils.ByteArrayToHexString(decrypted));
                 Logger.Log("");
                 return readResult.Value; // This is the raw data buffer
             }

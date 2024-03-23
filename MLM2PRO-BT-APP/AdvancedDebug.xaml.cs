@@ -22,7 +22,7 @@ namespace MLM2PRO_BT_APP
     public partial class AdvancedDebug : Window
     {
 
-        ByteConversionUtils byteConversionUtils = new ByteConversionUtils();
+        ByteConversionUtils _byteConversionUtils = new ByteConversionUtils();
         Encryption _btEncryption = new Encryption();
         public AdvancedDebug()
         {
@@ -34,23 +34,23 @@ namespace MLM2PRO_BT_APP
             String keyTextBoxInput = AdvancedDebugKey.Text;
             if (AdvancedDebugGetKeyCheckbox.IsChecked == true)
             {
-                if (String.IsNullOrWhiteSpace(keyTextBoxInput)) return;
-                Byte[]? outputByteArr = (Application.Current as App)?.GetEncryptedKeyFromHex(byteConversionUtils?.StringToByteArray(keyTextBoxInput));
-                AdvancedDebugOutput.Text += "Key: " + byteConversionUtils.ByteArrayToHexString(outputByteArr);
+                if (string.IsNullOrWhiteSpace(keyTextBoxInput)) return;
+                byte[]? outputByteArr = (Application.Current as App)?.GetEncryptedKeyFromHex(_byteConversionUtils?.StringToByteArray(keyTextBoxInput));
+                AdvancedDebugOutput.Text += "Key: " + _byteConversionUtils?.ByteArrayToHexString(outputByteArr);
                 AdvancedDebugOutput.Text += "\n";
             }
             else
             {
-                String[] lines = AdvancedDebugInput.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-                foreach (String line in lines)
+                string[] lines = AdvancedDebugInput.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                foreach (string line in lines)
                 {
                     try
                     {
-                        byte[] byteArray = byteConversionUtils.StringToByteArray(line);
-                        byte[] byteArray2 = byteConversionUtils.StringToByteArray(keyTextBoxInput);
+                        byte[] byteArray = _byteConversionUtils.StringToByteArray(line);
+                        byte[] byteArray2 = _byteConversionUtils.StringToByteArray(keyTextBoxInput);
                         byte[] outputByteArr = _btEncryption.DecryptKnownKey(byteArray, byteArray2);
-                        Logger.Log("Decrypted Bytes: " + byteConversionUtils.ByteArrayToHexString(outputByteArr));
-                        AdvancedDebugOutput.Text += byteConversionUtils.ByteArrayToHexString(outputByteArr);
+                        Logger.Log("Decrypted Bytes: " + _byteConversionUtils.ByteArrayToHexString(outputByteArr));
+                        AdvancedDebugOutput.Text += _byteConversionUtils.ByteArrayToHexString(outputByteArr);
                         AdvancedDebugOutput.Text += "\n";
                     }
                     catch (Exception ex) when (ex.Message == "Error decrypting data: Padding is invalid and cannot be removed.")

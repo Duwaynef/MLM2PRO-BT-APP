@@ -27,31 +27,31 @@
                     <TextBlock Text="GSPro Settings" FontSize="24" Margin="5" HorizontalAlignment="Center" FontWeight="Bold"/>
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="Auto Launch GSPro" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <CheckBox IsChecked="{Binding Settings.OpenConnect.AutoStartGSPro, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding Settings.OpenConnect.AutoStartGsPro, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="Skip Launcher" FontSize="16"/>
-                        <CheckBox IsChecked="{Binding Settings.OpenConnect.SkipGSProLauncher, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right"/>
+                        <CheckBox IsChecked="{Binding Settings.OpenConnect.SkipGsProLauncher, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="GSPro IP" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                        <TextBox Text="{Binding Settings.OpenConnect.GSProIp, Mode=TwoWay}" ToolTip="Enter GSPro IP" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                        <TextBox Text="{Binding Settings.OpenConnect.GsProIp, Mode=TwoWay}" ToolTip="Enter GSPro IP" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="GSPro Port" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.OpenConnect.GSProPort, Mode=TwoWay}" ToolTip="Enter GSPro Port" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                        <TextBox Text="{Binding Settings.OpenConnect.GsProPort, Mode=TwoWay}" ToolTip="Enter GSPro Port" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="Executable" FontSize="16" HorizontalAlignment="Left"/>
-                        <TextBox Text="{Binding Settings.OpenConnect.GSProEXE, Mode=TwoWay}" ToolTip="Enter GSPro exe path" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                        <TextBox Text="{Binding Settings.OpenConnect.GsProExe, Mode=TwoWay}" ToolTip="Enter GSPro exe path" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="Enable API Relay" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <CheckBox IsChecked="{Binding Settings.OpenConnect.EnableAPIRelay, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding Settings.OpenConnect.EnableApiRelay, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="API Relay Port" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.OpenConnect.APIRelayPort, Mode=TwoWay}" ToolTip="Enter GSPro exe path" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="240"/>
+                        <TextBox Text="{Binding Settings.OpenConnect.ApiRelayPort, Mode=TwoWay}" ToolTip="Enter GSPro exe path" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="240"/>
                     </DockPanel>
                 </StackPanel>
             </materialDesign:Card>
@@ -98,7 +98,7 @@
                     <TextBlock Text="WebApi Settings" FontSize="24" Margin="5" HorizontalAlignment="Center" FontWeight="Bold"/>
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="URL" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.WebApiSettings.WebApiURL, Mode=OneWay}" FontSize="14" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
+                        <TextBox Text="{Binding Settings.WebApiSettings.WebApiUrl, Mode=OneWay}" FontSize="14" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="Secret" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>

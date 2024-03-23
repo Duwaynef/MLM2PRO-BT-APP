@@ -37,10 +37,10 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="GSPro" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding GSProClub, Mode=OneWay}" FontSize="40"
+                    <TextBlock Text="{Binding GsProClub, Mode=OneWay}" FontSize="40"
                            Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     <TextBox x:Name="GsProStatusBox" Width="auto" Height="40" TextWrapping="Wrap" 
-                     Text="{Binding GSProStatus, Mode=OneWay}" Background="{Binding GSProStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
+                     Text="{Binding GsProStatus, Mode=OneWay}" Background="{Binding GsProStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
                      Grid.Column="0" Grid.Row="1"/>
                 </Grid>
                 <Grid VerticalAlignment="Top" Height="135">
@@ -83,11 +83,11 @@
                       VerticalAlignment="Center"
                       Visibility="Visible"
                      >
-                        <TextBlock materialDesign:BadgedAssist.Badge="Battery"  Text="{Binding LmBatteryLife, Mode=OneWay}" Background="{Binding LMBattLifeBackground, Mode=OneWay}" FontSize="40"
+                        <TextBlock materialDesign:BadgedAssist.Badge="Battery"  Text="{Binding LmBatteryLife, Mode=OneWay}" Background="{Binding LmBattLifeBackground, Mode=OneWay}" FontSize="40"
                            Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     </materialDesign:Badged>
                     <TextBox x:Name="LmStatus" Width="auto" Height="40" 
-         Text="{Binding LMStatus, Mode=OneWay}" Background="{Binding LMStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="20" Grid.ColumnSpan="2"
+         Text="{Binding LmStatus, Mode=OneWay}" Background="{Binding LmStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="20" Grid.ColumnSpan="2"
          Grid.Column="0" Grid.Row="1"/>
                 </Grid>
                 <Grid Height="135">
@@ -105,7 +105,7 @@
                     <Button Grid.Row="2" Grid.Column="0" x:Name="LmWebApiTest" Content="Test WebApi" Padding="50,0,50,0" Margin="0,5,0,5" Click="LM_WebApiTest_Click" HorizontalAlignment="Center" Width="190"/>
                     <Button Grid.Row="1" Grid.Column="0" x:Name="LmArmDevice" Content="ARM" Padding="50,0,50,0" Margin="0,5,0,5" Click="LM_ARMButton_Click" HorizontalAlignment="Center" Width="190"/>
                     <Button Grid.Row="1" Grid.Column="1" x:Name="LmDisarmButton" Content="DISARM" Padding="50,0,50,0" Margin="0,5,0,5" Click="LM_DISARMButton_Click" HorizontalAlignment="Center" Width="190"/>
-                    <Button Grid.Row="2" Grid.Column="1" x:Name="LmReSubButton" Content="ReSub" Padding="50,0,50,0" Margin="0,5,0,5" Click="LM_Resub_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="2" Grid.Column="1" x:Name="LmReSubButton" Content="ReSub" Padding="50,0,50,0" Margin="0,5,0,5" Click="LM_ReSub_Click" HorizontalAlignment="Center" Width="190"/>
                 </Grid>
             </StackPanel>
         </materialDesign:Card>
@@ -158,7 +158,8 @@
                         <materialDesign:PackIcon x:Name="ExportIcon" Kind="TableArrowRight" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                 </Grid>
-                <DataGrid x:Name="ShotDataDataGrid" Margin="10,0,10,10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="300" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="300" MinWidth="1200">
+                <DataGrid x:Name="ShotDataDataGrid" Margin="10,0,10,10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="300" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="300" MinWidth="1200"
+                          d:DataContext="{d:DesignInstance }">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="Auto" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="Auto" IsReadOnly="True"/>
@@ -168,8 +169,8 @@
                         <DataGridTextColumn Header="Ball Speed" Binding="{Binding BallSpeed}" Width="*" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Spin Axis" Binding="{Binding SpinAxis}" Width="*" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Spin Rate" Binding="{Binding SpinRate}" Width="*" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="HLaunch" Binding="{Binding HLA}" Width="*" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="VLaunch" Binding="{Binding VLA}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="HLaunch" Binding="{Binding Hla}" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="VLaunch" Binding="{Binding Vla}" Width="*" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Back Spin" Binding="{Binding BackSpin}" Width="*" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Side Spin" Binding="{Binding SideSpin}" Width="*" IsReadOnly="True"/>
                         <!-- <DataGridTextColumn Header="Club Path" Binding="{Binding ClubPath}" Width="*" IsReadOnly="True"/>

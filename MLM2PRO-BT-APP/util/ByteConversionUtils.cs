@@ -5,9 +5,9 @@ namespace MLM2PRO_BT_APP.util
 {
     public enum WriteType
     {
-        WITH_RESPONSE = 2,
-        WITHOUT_RESPONSE = 1,
-        SIGNED = 4
+        WithResponse = 2,
+        WithoutResponse = 1,
+        Signed = 4
     }
 
     public class WriteTypeProperties
@@ -123,7 +123,7 @@ namespace MLM2PRO_BT_APP.util
 
             return result;
         }
-        public byte[]? StringToByteArray(string hex)
+        public byte[] StringToByteArray(string hex)
         {
             try
             {

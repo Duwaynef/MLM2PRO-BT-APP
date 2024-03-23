@@ -14,7 +14,7 @@ namespace MLM2PRO_BT_APP.connections
         private long _howRecentlyTakenShot = DateTimeOffset.Now.ToUnixTimeSeconds();
         private bool _isPutting;
         private bool _isDeviceArmed = false;
-        public OpenConnectTcpClient() : base(SettingsManager.Instance?.Settings?.OpenConnect?.GSProIp ?? "127.0.0.1", SettingsManager.Instance?.Settings?.OpenConnect?.GSProPort ?? 931) 
+        public OpenConnectTcpClient() : base(SettingsManager.Instance?.Settings?.OpenConnect?.GsProIp ?? "127.0.0.1", SettingsManager.Instance?.Settings?.OpenConnect?.GsProPort ?? 931) 
         {
             
         }
@@ -30,7 +30,7 @@ namespace MLM2PRO_BT_APP.connections
             // Update shared view model status
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (App.SharedVm != null) App.SharedVm.GSProStatus = "CONNECTED";
+                if (App.SharedVm != null) App.SharedVm.GsProStatus = "CONNECTED";
             });
         }
         protected override void OnDisconnected()
@@ -39,7 +39,7 @@ namespace MLM2PRO_BT_APP.connections
             // Update shared view model status
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (App.SharedVm != null) App.SharedVm.GSProStatus = "DISCONNECTED";
+                if (App.SharedVm != null) App.SharedVm.GsProStatus = "DISCONNECTED";
             });
 
         }
@@ -150,7 +150,7 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log($"OpenConnectTCPClient: Socket error: {error}");
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if(App.SharedVm != null) App.SharedVm.GSProStatus = "SERVER ERROR";
+                if(App.SharedVm != null) App.SharedVm.GsProStatus = "SERVER ERROR";
             });
         }
         // Implement your logic for processing the response
@@ -165,8 +165,8 @@ namespace MLM2PRO_BT_APP.connections
                     if (playerClub == Club.Pt)
                     {
                         Logger.Log("OpenConnectTCPClient: Club selection is a putter");
-                        DeviceManager.Instance.ClubSelection = "PT";
-                        if (App.SharedVm != null) App.SharedVm.GSProClub = "PT";
+                        if (DeviceManager.Instance != null) DeviceManager.Instance.ClubSelection = "PT";
+                        if (App.SharedVm != null) App.SharedVm.GsProClub = "PT";
                         if (_isPutting == false)
                         {
                             _isPutting = true;
@@ -180,8 +180,8 @@ namespace MLM2PRO_BT_APP.connections
                     else
                     {
                         Logger.Log($"OpenConnectTCPClient: Club selection is NOT a putter, it is {playerClub.Value}");
-                        DeviceManager.Instance.ClubSelection = playerClub.Value.ToString();
-                        if (App.SharedVm != null) App.SharedVm.GSProClub = playerClub.Value.ToString();
+                        if (DeviceManager.Instance != null) DeviceManager.Instance.ClubSelection = playerClub.Value.ToString();
+                        if (App.SharedVm != null) App.SharedVm.GsProClub = playerClub.Value.ToString();
                         if (_isPutting == true)
                         {
                             _isPutting = false; 
@@ -197,13 +197,13 @@ namespace MLM2PRO_BT_APP.connections
                 else
                 {
                     Logger.Log("OpenConnectTCPClient: No club information available");
-                    DeviceManager.Instance.ClubSelection = "";
+                    if (DeviceManager.Instance != null) DeviceManager.Instance.ClubSelection = "";
                 }
             }
             else
             {
                 Logger.Log("OpenConnectTCPClient: Invalid response or no player information");
-                DeviceManager.Instance.ClubSelection = "";
+                if (DeviceManager.Instance != null) DeviceManager.Instance.ClubSelection = "";
             }
         }
 
@@ -257,8 +257,8 @@ namespace MLM2PRO_BT_APP.connections
                     TotalSpin = input.BallData?.TotalSpin ?? 0,
                     BackSpin = input.BallData?.BackSpin ?? 0,
                     SideSpin = input.BallData?.SideSpin ?? 0,
-                    HLA = input.BallData?.HLA ?? 0,
-                    VLA = input.BallData?.VLA ?? 0
+                    Hla = input.BallData?.Hla ?? 0,
+                    Vla = input.BallData?.Vla ?? 0
                 },
                 ClubData = new ClubData()
                 {
@@ -297,8 +297,8 @@ namespace MLM2PRO_BT_APP.connections
             double speed = Math.Round(random.NextDouble() * (160 - 30) + 30, 1);
             double spinAxis = Math.Round(random.NextDouble() * (20 - -20) + 0, 1);
             double totalSpin = Math.Round(random.NextDouble() * (13000 - 2000) + 2000, 0);
-            double BackSpin = CalculateBackSpin(totalSpin, spinAxis);
-            double SideSpin = CalculateSideSpin(totalSpin, spinAxis);
+            double backSpin = CalculateBackSpin(totalSpin, spinAxis);
+            double sideSpin = CalculateSideSpin(totalSpin, spinAxis);
             double hla = Math.Round(random.NextDouble() * (5.0 - -5.0) + 0.0, 1);
             double vla = Math.Round(random.NextDouble() * (40 - 10) + 10, 1);
             double clubspeed = Math.Round(random.NextDouble() * (160 - 30) + 30, 1);
@@ -311,10 +311,10 @@ namespace MLM2PRO_BT_APP.connections
                     Speed = speed,
                     SpinAxis = spinAxis,
                     TotalSpin = totalSpin,
-                    BackSpin = BackSpin,
-                    SideSpin = SideSpin,
-                    HLA = hla,
-                    VLA = vla
+                    BackSpin = backSpin,
+                    SideSpin = sideSpin,
+                    Hla = hla,
+                    Vla = vla
                 },
                 ClubData = new ClubData()
                 {
@@ -346,8 +346,8 @@ namespace MLM2PRO_BT_APP.connections
         public double TotalSpin { get; set; }
         public double BackSpin { get; set; }
         public double SideSpin { get; set; }
-        public double HLA { get; set; }
-        public double VLA { get; set; }
+        public double Hla { get; set; }
+        public double Vla { get; set; }
         // public double CarryDistance { get; set; }
 
     }

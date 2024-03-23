@@ -35,7 +35,7 @@ namespace MLM2PRO_BT_APP.util
                 foreach (var release in releases)
                 {
                     if (release.TagName == "debug") continue;
-                    if (!IsNewerVersion(currentVersion, release.TagName)) return null;
+                    if (release.TagName != null && !IsNewerVersion(currentVersion, release.TagName)) return null;
                     Logger.Log($"Update available: {release.TagName}");
                     Logger.Log($"Release notes: \n{release.Body}");
                     return release;

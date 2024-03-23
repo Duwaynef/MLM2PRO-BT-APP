@@ -118,21 +118,21 @@ namespace MLM2PRO_BT_APP.util
 
         public class OpenConnectSettings
         {
-            public bool AutoStartGSPro { get; set; } = false;
-            public bool SkipGSProLauncher { get; set; } = true;
-            public string GSProIp { get; set; } = "127.0.0.1";
-            public int GSProPort { get; set; } = 921;
-            public string GSProEXE { get; set; } = "C:\\GSProV1\\Core\\GSP\\GSPro.exe";
-            public bool EnableAPIRelay { get; set; } = false;
-            public int APIRelayPort { get; set; } = 951;
+            public bool AutoStartGsPro { get; set; } = false;
+            public bool SkipGsProLauncher { get; set; } = true;
+            public string GsProIp { get; set; } = "127.0.0.1";
+            public int GsProPort { get; set; } = 921;
+            public string GsProExe { get; set; } = "C:\\GSProV1\\Core\\GSP\\GSPro.exe";
+            public bool EnableApiRelay { get; set; } = false;
+            public int ApiRelayPort { get; set; } = 951;
         }
         
 
         public class WebApiSettings
         {
-            public string WebApiURL { get; set; } = "https://mlm.rapsodo.com/api/simulator/user/";
+            public string WebApiUrl { get; set; } = "https://mlm.rapsodo.com/api/simulator/user/";
             public string WebApiSecret { get; set; } = "";
-            public string WebApiToken { get; set; } = "";
+            public string? WebApiToken { get; set; } = "";
             public int WebApiUserId { get; set; } = 0;
             public long WebApiExpireDate { get; set; } = 0;
             public int WebApiDeviceId { get; set; } = 0;

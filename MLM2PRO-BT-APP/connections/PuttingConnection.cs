@@ -42,7 +42,7 @@ namespace MLM2PRO_BT_APP.connections
                     if (message != null)
                     {
                         if (App.SharedVm != null) App.SharedVm.PuttingStatus = "INCOMING MESSAGE";
-                        if (PuttingServer.PuttingEnabled && DeviceManager.Instance.ClubSelection == "PT")
+                        if (PuttingServer.PuttingEnabled && DeviceManager.Instance?.ClubSelection == "PT")
                         {
                             OpenConnectApiMessage? messageToSend = BallDataFromPuttingBallData(message?.BallData);
                             if (messageToSend != null)
@@ -94,8 +94,8 @@ namespace MLM2PRO_BT_APP.connections
                     Speed = puttBallData.BallSpeed,
                     SpinAxis = 0,
                     TotalSpin = puttBallData.TotalSpin,
-                    HLA = puttBallData.LaunchDirection,
-                    VLA = 0,
+                    Hla = puttBallData.LaunchDirection,
+                    Vla = 0,
                 },
                 ShotDataOptions = new ShotDataOptions()
                 {
@@ -116,13 +116,13 @@ namespace MLM2PRO_BT_APP.connections
         private static extern bool BringWindowToTop(nint handle);
         [DllImport("User32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-        private static readonly nint HWND_TOPMOST = new nint(-1);
-        private const uint SWP_NOSIZE = 0x0001;
-        private const uint SWP_NOMOVE = 0x0002;
-        private const uint TOPMOST_FLAGS = SWP_NOMOVE | SWP_NOSIZE;
+        public static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+        private static readonly nint HwndTopmost = new nint(-1);
+        private const uint SwpNosize = 0x0001;
+        private const uint SwpNomove = 0x0002;
+        private const uint TopmostFlags = SwpNomove | SwpNosize;
         public bool PuttingEnabled = false;
-        private bool mDisposing;
+        private bool _mDisposing;
 
         public Process? PuttingProcess { get; private set; }
         public bool OnlyLaunchWhenPutting { get; }
@@ -261,7 +261,7 @@ namespace MLM2PRO_BT_APP.connections
         private void OnPuttingProcessClosed(object? _, EventArgs? args)
         {
             PuttingProcess = null;
-            if ((PuttingEnabled || !OnlyLaunchWhenPutting) && !mDisposing)
+            if ((PuttingEnabled || !OnlyLaunchWhenPutting) && !_mDisposing)
             {
                 Logger.Log($"{ExecutableName} closed unexpectedly. Reopening...");
                 StartPutting();
@@ -279,7 +279,7 @@ namespace MLM2PRO_BT_APP.connections
                 nint handle = PuttingProcess.MainWindowHandle;
                 if (handle != nint.Zero)
                 {
-                    SetWindowPos(handle, HWND_TOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
+                    SetWindowPos(handle, HwndTopmost, 0, 0, 0, 0, TopmostFlags);
                     BringWindowToTop(handle);
                     SetForegroundWindow(handle);
                 }
@@ -302,7 +302,7 @@ namespace MLM2PRO_BT_APP.connections
             {
                 if (disposing)
                 {
-                    mDisposing = true;
+                    _mDisposing = true;
                     StopPutting(force: true);
                     base.Dispose(disposing);
                 }
