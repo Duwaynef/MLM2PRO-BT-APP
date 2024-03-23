@@ -8,16 +8,12 @@ using TcpClient = NetCoreServer.TcpClient;
 
 namespace MLM2PRO_BT_APP.connections
 {
-    internal class OpenConnectTcpClient : TcpClient
+    internal class OpenConnectTcpClient() : TcpClient(SettingsManager.Instance?.Settings?.OpenConnect?.GsProIp ?? "127.0.0.1", SettingsManager.Instance?.Settings?.OpenConnect?.GsProPort ?? 931)
     {
         private long _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
         private long _howRecentlyTakenShot = DateTimeOffset.Now.ToUnixTimeSeconds();
         private bool _isPutting;
-        private bool _isDeviceArmed = false;
-        public OpenConnectTcpClient() : base(SettingsManager.Instance?.Settings?.OpenConnect?.GsProIp ?? "127.0.0.1", SettingsManager.Instance?.Settings?.OpenConnect?.GsProPort ?? 931) 
-        {
-            
-        }
+        private bool _isDeviceArmed;
         public void DisconnectAndStop()
         {
             DisconnectAsync();
@@ -156,7 +152,7 @@ namespace MLM2PRO_BT_APP.connections
         // Implement your logic for processing the response
         private void ProcessResponse(OpenConnectApiResponse response)
         {
-            if (response?.Player != null)
+            if (response.Player != null)
             {
                 var playerClub = response.Player.Club;
                 if (playerClub.HasValue)
@@ -182,7 +178,7 @@ namespace MLM2PRO_BT_APP.connections
                         Logger.Log($"OpenConnectTCPClient: Club selection is NOT a putter, it is {playerClub.Value}");
                         if (DeviceManager.Instance != null) DeviceManager.Instance.ClubSelection = playerClub.Value.ToString();
                         if (App.SharedVm != null) App.SharedVm.GsProClub = playerClub.Value.ToString();
-                        if (_isPutting == true)
+                        if (_isPutting)
                         {
                             _isPutting = false; 
                             Task.Run(() =>
@@ -216,20 +212,16 @@ namespace MLM2PRO_BT_APP.connections
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new OpenConnectApiMessage();
-                }
-                return _instance;
+                return _instance ??= new OpenConnectApiMessage();
             }
         }
 
-        public string DeviceId { get { return "GSPRO-MLM2PRO"; } }
-        public string Units { get { return "Yards"; } }
+        public string DeviceId { get => "GSPRO-MLM2PRO"; }
+        public string Units { get => "Yards"; }
         public int ShotNumber { get; set; }
-        public string ApiVersion { get { return "1"; } }
-        public BallData? BallData { get; set; }
-        public ClubData? ClubData { get; set; }
+        public string ApiVersion { get => "1"; }
+        public BallData? BallData { get; init; }
+        public ClubData? ClubData { get; init; }
         public ShotDataOptions? ShotDataOptions { get; set; }
         public static OpenConnectApiMessage CreateHeartbeat(bool launchMonitorReady = false)
         {
@@ -273,17 +265,17 @@ namespace MLM2PRO_BT_APP.connections
                 }
             };
         }
-        public int CalculateBackSpin(double totalSpin, double spinAxis)
+        private int CalculateBackSpin(double totalSpin, double spinAxis)
         {
             return (int)Math.Round(totalSpin * Math.Cos(DegreesToRadians(spinAxis)));
         }
 
-        public int CalculateSideSpin(double totalSpin, double spinAxis)
+        private int CalculateSideSpin(double totalSpin, double spinAxis)
         {
             return (int)Math.Round(totalSpin * Math.Sin(DegreesToRadians(spinAxis)));
         }
 
-        private double DegreesToRadians(double degrees)
+        private static double DegreesToRadians(double degrees)
         {
             return (Math.PI / 180) * degrees;
         }
@@ -291,7 +283,7 @@ namespace MLM2PRO_BT_APP.connections
         {
             Instance.ShotNumber++;
             // Create a Random instance
-            Random random = new Random();
+            var random = new Random();
 
             // Generate random values within the desired range
             double speed = Math.Round(random.NextDouble() * (160 - 30) + 30, 1);
@@ -301,7 +293,7 @@ namespace MLM2PRO_BT_APP.connections
             double sideSpin = CalculateSideSpin(totalSpin, spinAxis);
             double hla = Math.Round(random.NextDouble() * (5.0 - -5.0) + 0.0, 1);
             double vla = Math.Round(random.NextDouble() * (40 - 10) + 10, 1);
-            double clubspeed = Math.Round(random.NextDouble() * (160 - 30) + 30, 1);
+            double clubSpeed = Math.Round(random.NextDouble() * (160 - 30) + 30, 1);
 
             return new OpenConnectApiMessage()
             {
@@ -318,7 +310,7 @@ namespace MLM2PRO_BT_APP.connections
                 },
                 ClubData = new ClubData()
                 {
-                    Speed = clubspeed
+                    Speed = clubSpeed
                 },
                 ShotDataOptions = new ShotDataOptions()
                 {
@@ -341,19 +333,19 @@ namespace MLM2PRO_BT_APP.connections
     }
     public class BallData
     {
-        public double Speed { get; set; }
-        public double SpinAxis { get; set; }
-        public double TotalSpin { get; set; }
-        public double BackSpin { get; set; }
-        public double SideSpin { get; set; }
-        public double Hla { get; set; }
-        public double Vla { get; set; }
+        public double Speed { get; init; }
+        public double SpinAxis { get; init; }
+        public double TotalSpin { get; init; }
+        public double BackSpin { get; init; }
+        public double SideSpin { get; init; }
+        public double Hla { get; init; }
+        public double Vla { get; init; }
         // public double CarryDistance { get; set; }
 
     }
     public class ClubData
     {
-        public double Speed { get; set; }
+        public double Speed { get; init; }
         // public double AngleOfAttack { get; set; }
         // public double FaceToTarget { get; set; }
         // public double Lie { get; set; }
@@ -375,7 +367,7 @@ namespace MLM2PRO_BT_APP.connections
         public int Code { get; }
         public PlayerInfo? Player { get; set; }
     }
-    public class PlayerInfo
+    public abstract class PlayerInfo
     {
         [JsonConverter(typeof(StringEnumConverter))]
         public Handed? Handed { get; set; }

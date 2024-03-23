@@ -1,29 +1,15 @@
 ﻿using MLM2PRO_BT_APP.util;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace MLM2PRO_BT_APP
 {
     /// <summary>
     /// Interaction logic for AdvancedDebug.xaml
     /// </summary>
-    public partial class AdvancedDebug : Window
+    public partial class AdvancedDebug
     {
-
-        ByteConversionUtils _byteConversionUtils = new ByteConversionUtils();
-        Encryption _btEncryption = new Encryption();
+        private readonly ByteConversionUtils _byteConversionUtils = new();
+        private readonly Encryption _btEncryption = new();
         public AdvancedDebug()
         {
             InitializeComponent();
@@ -31,12 +17,12 @@ namespace MLM2PRO_BT_APP
 
         private void AdvancedDebug_Decrypt_Button_Click(object sender, RoutedEventArgs e)
         {
-            String keyTextBoxInput = AdvancedDebugKey.Text;
+            string keyTextBoxInput = AdvancedDebugKey.Text;
             if (AdvancedDebugGetKeyCheckbox.IsChecked == true)
             {
                 if (string.IsNullOrWhiteSpace(keyTextBoxInput)) return;
-                byte[]? outputByteArr = (Application.Current as App)?.GetEncryptedKeyFromHex(_byteConversionUtils?.StringToByteArray(keyTextBoxInput));
-                AdvancedDebugOutput.Text += "Key: " + _byteConversionUtils?.ByteArrayToHexString(outputByteArr);
+                byte[]? outputByteArr = (Application.Current as App)?.GetEncryptedKeyFromHex(_byteConversionUtils.StringToByteArray(keyTextBoxInput));
+                AdvancedDebugOutput.Text += "Key: " + ByteConversionUtils.ByteArrayToHexString(outputByteArr);
                 AdvancedDebugOutput.Text += "\n";
             }
             else
@@ -49,8 +35,8 @@ namespace MLM2PRO_BT_APP
                         byte[] byteArray = _byteConversionUtils.StringToByteArray(line);
                         byte[] byteArray2 = _byteConversionUtils.StringToByteArray(keyTextBoxInput);
                         byte[] outputByteArr = _btEncryption.DecryptKnownKey(byteArray, byteArray2);
-                        Logger.Log("Decrypted Bytes: " + _byteConversionUtils.ByteArrayToHexString(outputByteArr));
-                        AdvancedDebugOutput.Text += _byteConversionUtils.ByteArrayToHexString(outputByteArr);
+                        Logger.Log("Decrypted Bytes: " + ByteConversionUtils.ByteArrayToHexString(outputByteArr));
+                        AdvancedDebugOutput.Text += ByteConversionUtils.ByteArrayToHexString(outputByteArr);
                         AdvancedDebugOutput.Text += "\n";
                     }
                     catch (Exception ex) when (ex.Message == "Error decrypting data: Padding is invalid and cannot be removed.")

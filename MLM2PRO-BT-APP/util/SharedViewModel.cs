@@ -5,23 +5,18 @@ using System.Windows;
 using System.Windows.Media;
 using static MLM2PRO_BT_APP.HomeMenu;
 using MaterialDesignColors;
-using MaterialDesignThemes.Wpf;
-using static MaterialDesignThemes.Wpf.Theme.ToolBar;
-using MaterialDesignColors.Recommended;
 using System.Text.RegularExpressions;
 
 namespace MLM2PRO_BT_APP.util
 {
-    public class SharedViewModel : INotifyPropertyChanged
+    public sealed partial class SharedViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<ShotData> ShotDataCollection { get; private set; } = new ObservableCollection<ShotData>();
+        public ObservableCollection<ShotData> ShotDataCollection { get; private set; } = [];
 
         private static SharedViewModel? _instance;
-        public static SharedViewModel? Instance => _instance ??= new SharedViewModel();
-
-        public SharedViewModel()
+        public static SharedViewModel Instance
         {
-
+            get => _instance ??= new SharedViewModel();
         }
 
         private string? _gsProStatus;
@@ -87,7 +82,7 @@ namespace MLM2PRO_BT_APP.util
             set => SetProperty(ref _gsProStatusBackground, value, nameof(GsProStatusBackground));
         }
 
-        private static SolidColorBrush? GetStatusColor(string status)
+        private static SolidColorBrush GetStatusColor(string status)
         {
             // Normalize the status string to lower case for case-insensitive comparison
             var lowerCaseStatus = status.ToLower();
@@ -130,12 +125,12 @@ namespace MLM2PRO_BT_APP.util
             }
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
+        private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        private bool SetProperty<T>(ref T storage, T value, string? propertyName)
+        private void SetProperty<T>(ref T storage, T value, string? propertyName)
         {
-            if (Equals(storage, value)) return false;
+            if (Equals(storage, value)) return;
 
             storage = value;
             // Dispatch the property change event to the UI thread
@@ -154,7 +149,7 @@ namespace MLM2PRO_BT_APP.util
                 }
                 else if (propertyName == nameof(LmBatteryLife) && value is string lmBattLifeValue)
                 {
-                    var matches = string.Concat(Regex.Matches(lmBattLifeValue, @"\d+").Cast<Match>().Select(m => m.Value));
+                    string matches = string.Concat(MyRegex().Matches(lmBattLifeValue).Select(m => m.Value));
                     LmBattLifeBackground = GetStatusColor(matches);
                 }
                 else if (propertyName == nameof(PuttingStatus) && value is string puttingStatusValue)
@@ -162,10 +157,12 @@ namespace MLM2PRO_BT_APP.util
                     PuttingStatusBackground = GetStatusColor(puttingStatusValue);
                 }
             });
-            return true;
         }
 
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        [GeneratedRegex(@"\d+")]
+        private static partial Regex MyRegex();
     }
 }

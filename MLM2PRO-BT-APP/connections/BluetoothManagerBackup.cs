@@ -1,10 +1,9 @@
 ﻿using MLM2PRO_BT_APP.util;
-using Newtonsoft.Json;
 using InTheHand.Bluetooth;
 
 namespace MLM2PRO_BT_APP.connections;
 
-public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.BluetoothDevice>
+public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
 {
     private GattService? _primaryService;
     private GattCharacteristic? _gaTTeventsCharacteristicUuid;
@@ -12,9 +11,9 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     private GattCharacteristic? _gaTTwriteResponseCharacteristicUuid;
     private GattCharacteristic? _gaTTmeasurementCharacteristic;
     private Timer? _deviceDiscoveryTimer;
-    private bool _currentlySearching = false;
-    private bool _cleaningUp = false;
-    public BluetoothManagerBackup() : base()
+    private bool _currentlySearching;
+    private bool _cleaningUp;
+    public BluetoothManagerBackup()
     {
         Logger.Log("BackupBluetooth: Running");
         if (!(SettingsManager.Instance?.Settings?.LaunchMonitor?.AutoStartLaunchMonitor ?? true)) return;
@@ -33,28 +32,24 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
 
     private async void DeviceDiscoveryTimerSignal(object? state)
     {
+        if (_currentlySearching) return;
         if (BluetoothDevice != null)
         {
             if (_deviceDiscoveryTimer != null) await _deviceDiscoveryTimer.DisposeAsync();
-            return;
-        }
-        else if (_currentlySearching)
-        {
-            return;
         }
         else if (BluetoothDevice == null && !_currentlySearching)
         {
             await DiscoverDevicesAsync();
         }
     }
-    public override async Task TriggerDeviceDiscovery()
+    protected override async Task TriggerDeviceDiscovery()
     {
         _cleaningUp = false;
         if (App.SharedVm != null) App.SharedVm.LmStatus = "TRIGGERING DISCOVERY";
         await DiscoverDevicesAsync();
     }
 
-    public async Task DiscoverDevicesAsync()
+    private async Task DiscoverDevicesAsync()
     {
         try
         {
@@ -84,7 +79,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
         }
         _currentlySearching = false;
     }
-    public async Task ConnectToDeviceAsync(BluetoothDevice device)
+    private async Task ConnectToDeviceAsync(BluetoothDevice device)
     {
         try
         {
@@ -100,7 +95,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
                 return;
             }
             BluetoothDevice = device;
-            if (App.SharedVm != null) App.SharedVm.LmStatus = "CONNECTION ESTABILISHED: " + device.Name ;
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "CONNECTION ESTABLISHED: " + device.Name ;
             _currentlySearching = false;
             await SetupBluetoothDevice();
         }
@@ -109,23 +104,11 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             Logger.Log($"Error connecting to device: {ex.Message}");
         }
     }
-    private async void Bluetooth_AvailabilityChanged(object sender, EventArgs e)
-    {
-        var current = await Bluetooth.GetAvailabilityAsync();
-        System.Diagnostics.Debug.Write($"Availability: {current}");
-    }
-    private void Bluetooth_AdvertisementReceived(object sender, BluetoothAdvertisingEvent e)
-    {
-        Logger.Log($"Name:{e.Name} Rssi:{e.Rssi}");
-    }
     private async void Device_GattServerDisconnected(object sender, EventArgs e)
     {
-        var device = sender as BluetoothDevice;
-        if (BluetoothDevice != null && !_cleaningUp)
-        {
-            Logger.Log("Device disconnected. Attempting to reconnect...");
-            await TriggerDeviceDiscovery();
-        }
+        if (sender is not BluetoothDevice _ || _cleaningUp) return;
+        Logger.Log("Device disconnected. Attempting to reconnect...");
+        await TriggerDeviceDiscovery();
     }
     protected override async Task<bool> SubscribeToCharacteristicsAsync()
     {
@@ -161,7 +144,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
     }
     protected override byte[] GetCharacteristicValueAsync(object args)
     {
-        return (args as GattCharacteristicValueChangedEventArgs)?.Value?.ToArray() ?? new byte[0];
+        return (args as GattCharacteristicValueChangedEventArgs)?.Value?.ToArray() ?? Array.Empty<byte>();
     }
     protected override Guid GetSenderUuidAsync(object sender)
     {
@@ -183,12 +166,7 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
                 return false;
             }
 
-            var service = await BluetoothDevice.Gatt.GetPrimaryServiceAsync(ServiceUuid).WaitAsync(TimeSpan.FromSeconds(5));
-            if (service == null)
-            {
-                Logger.Log("Service not found.");
-                return false;
-            }
+            _ = await BluetoothDevice.Gatt.GetPrimaryServiceAsync(ServiceUuid).WaitAsync(TimeSpan.FromSeconds(5));
 
             if (_primaryService != null)
             {
@@ -204,6 +182,11 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
                     return false;
                 }
             }
+            return false;
+        }
+        catch (TimeoutException)
+        {
+            Logger.Log("Operation timed out.");
             return false;
         }
         catch (Exception ex)
@@ -260,18 +243,21 @@ public class BluetoothManagerBackup : BluetoothBase<InTheHand.Bluetooth.Bluetoot
             }
         }
     }
-    public override async Task<bool> VerifyDeviceConnection(object device)
+    protected override async Task<bool> VerifyDeviceConnection(object device)
     {
-
-        var characteristic = await ((BluetoothDevice)device).Gatt.GetPrimaryServiceAsync(ServiceUuid);
-        if (characteristic != null)
+        try
         {
-            Logger.Log("verify device connection: got GATT services");
+            _ = await ((BluetoothDevice)device).Gatt.GetPrimaryServiceAsync(ServiceUuid).WaitAsync(TimeSpan.FromSeconds(5));
             return true;
         }
-        else
+        catch (TimeoutException)
         {
-            Logger.Log("verify device connection: failed to get GATT services");
+            Logger.Log("Operation timed out.");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log($"An error occurred: {ex.Message}");
             return false;
         }
     }

@@ -1,20 +1,18 @@
 ﻿using System.Runtime.InteropServices.WindowsRuntime;
-using System.Windows;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
 using Windows.Storage.Streams;
 using MLM2PRO_BT_APP.devices;
 using MLM2PRO_BT_APP.util;
-using Newtonsoft.Json;
 
 namespace MLM2PRO_BT_APP.connections;
 
-public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.BluetoothLEDevice>
+public class BluetoothManager : BluetoothBase<BluetoothLEDevice>
 {
     private DeviceWatcher? _deviceWatcher;
-    protected readonly Dictionary<string, DeviceInformation?> FoundDevices = [];
-    public BluetoothManager() : base()
+    private readonly Dictionary<string, DeviceInformation?> _foundDevices = [];
+    public BluetoothManager()
     {
         InitializeDeviceWatcher();
     }
@@ -33,7 +31,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     }
     private void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
     {
-        if (!FoundDevices.TryAdd(deviceInfo.Id, deviceInfo))
+        if (!_foundDevices.TryAdd(deviceInfo.Id, deviceInfo))
         {
             Logger.Log("Device Already in found devices list: " + deviceInfo.Name);
             return;
@@ -44,7 +42,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
 
     private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
     {
-        if (!FoundDevices.TryGetValue(deviceInfoUpdate.Id, out var deviceInfo)) return;
+        if (!_foundDevices.TryGetValue(deviceInfoUpdate.Id, out var deviceInfo)) return;
         deviceInfo?.Update(deviceInfoUpdate);
         Logger.Log("Device Watcher updated " + deviceInfo?.Name);
         var isConnected = BluetoothDevice != null && await VerifyDeviceConnection(BluetoothDevice);
@@ -96,7 +94,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         {
             Logger.Log("Restarting device watcher");
             _deviceWatcher.Stop();
-            FoundDevices.Clear();
+            _foundDevices.Clear();
 
             while (_deviceWatcher.Status != DeviceWatcherStatus.Created && _deviceWatcher.Status != DeviceWatcherStatus.Stopped && _deviceWatcher.Status != DeviceWatcherStatus.Aborted)
             {
@@ -150,7 +148,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     }
     protected override byte[] GetCharacteristicValueAsync(object args)
     {
-        return (args as GattValueChangedEventArgs)?.CharacteristicValue.ToArray() ?? new byte[0];
+        return (args as GattValueChangedEventArgs)?.CharacteristicValue.ToArray() ?? Array.Empty<byte>();
     }
     protected override Guid GetSenderUuidAsync(object sender)
     {
@@ -233,15 +231,15 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             Logger.Log($"Error verifying connection: {ex.Message}");
         }
     }
-    public override async Task TriggerDeviceDiscovery()
+    protected override async Task TriggerDeviceDiscovery()
     {
         await RestartDeviceWatcher();
     }
     protected override void ChildDisconnectAndCleanupFirst()
     {
         if (_deviceWatcher != null && (_deviceWatcher.Status == DeviceWatcherStatus.Started || _deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted))
-        _deviceWatcher?.Stop();
-        FoundDevices.Clear();
+            _deviceWatcher?.Stop();
+        _foundDevices.Clear();
     }
     protected override void ChildDisconnectAndCleanupSecond()
     {
@@ -276,7 +274,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             }
         }
     }
-    public override async Task<bool> VerifyDeviceConnection(object device)
+    protected override async Task<bool> VerifyDeviceConnection(object device)
     {
         var servicesResult = await ((BluetoothLEDevice)device).GetGattServicesForUuidAsync(ServiceUuid, BluetoothCacheMode.Uncached);
 

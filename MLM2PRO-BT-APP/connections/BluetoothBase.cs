@@ -2,7 +2,6 @@
 using MLM2PRO_BT_APP.util;
 using Newtonsoft.Json;
 using System.Windows;
-using Windows.Devices.Enumeration;
 
 namespace MLM2PRO_BT_APP.connections
 {
@@ -10,14 +9,11 @@ namespace MLM2PRO_BT_APP.connections
     {
         protected TBluetoothDeviceType? BluetoothDevice;
         private Timer? _heartbeatTimer;
-        private Timer? _subscriptionVerificationTimer;
         protected readonly ByteConversionUtils ByteConversionUtils = new();
         protected readonly Encryption BtEncryption = new();
         private bool _settingUpConnection;
         private long _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
         private int _connectionAttempts;
-        // ReSharper disable once NotAccessedField.Local
-        protected byte[]? StoreConfigureBytes;
         private bool _isDeviceArmed;
 
         protected readonly Guid ServiceUuid = new("DAF9B2A4-E4DB-4BE4-816D-298A050F25CD");
@@ -38,7 +34,7 @@ namespace MLM2PRO_BT_APP.connections
             NotifyUuiDs.Add(WriteResponseCharacteristicUuid);
             if (App.SharedVm != null)
             {
-                if (SettingsManager.Instance?.Settings?.LaunchMonitor?.AutoStartLaunchMonitor ?? true) App.SharedVm.LmStatus = "Watching for bluetooth devices...";
+                if (SettingsManager.Instance.Settings?.LaunchMonitor?.AutoStartLaunchMonitor ?? true) App.SharedVm.LmStatus = "Watching for bluetooth devices...";
             }
         }
 
@@ -50,9 +46,9 @@ namespace MLM2PRO_BT_APP.connections
         protected abstract void ChildDisconnectAndCleanupFirst();
         protected abstract void ChildDisconnectAndCleanupSecond();
         protected abstract Task UnsubscribeFromAllNotifications();
-        public abstract Task<bool> VerifyDeviceConnection(object input);
+        protected abstract Task<bool> VerifyDeviceConnection(object input);
         public abstract Task RestartDeviceWatcher();
-        public abstract Task TriggerDeviceDiscovery();
+        protected abstract Task TriggerDeviceDiscovery();
 
         protected async Task SetupBluetoothDevice()
         {
@@ -70,7 +66,7 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log("Bluetooth Manager: Starting");
 
             //Check last used token?
-            var tokenExpiryDate = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiExpireDate;
+            var tokenExpiryDate = SettingsManager.Instance.Settings?.WebApiSettings?.WebApiExpireDate;
             if (tokenExpiryDate > 0 && tokenExpiryDate < DateTimeOffset.Now.ToUnixTimeSeconds())
             {
                 if (App.SharedVm != null) App.SharedVm.LmStatus = "SEARCHING, 3RD PARTY TOKEN EXPIRED?";
@@ -176,7 +172,7 @@ namespace MLM2PRO_BT_APP.connections
 
             if (senderUuid == WriteResponseCharacteristicUuid)
             {
-                Logger.Log($"### WRITE RESPONSE = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(value) ?? Array.Empty<int>())}");
+                Logger.Log($"### WRITE RESPONSE = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(value))}");
 
                 if (value.Length >= 2)
                 {
@@ -206,19 +202,19 @@ namespace MLM2PRO_BT_APP.connections
                             byte[] byteArr3 = new byte[4];
                             Array.Copy(byteArray, 0, byteArr3, 0, 4);
                             int byteArrayToInt = ByteConversionUtils.ByteArrayToInt(byteArr3, true);
-                            if (SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId != null)
+                            if (SettingsManager.Instance.Settings?.WebApiSettings?.WebApiUserId != null)
                             {
                                 SettingsManager.Instance.Settings.WebApiSettings.WebApiUserId = byteArrayToInt;
                             }
                             Logger.Log("UserId Generated from device: " + byteArrayToInt.ToString());
-                            SettingsManager.Instance?.SaveSettings();
+                            SettingsManager.Instance.SaveSettings();
 
                             WebApiClient client = new();
                             WebApiClient.ApiResponse? response = await client.SendRequestAsync(byteArrayToInt);
 
                             if (response is { Success: true, User.Token: not null })
                             {
-                                if (SettingsManager.Instance?.Settings?.WebApiSettings != null)
+                                if (SettingsManager.Instance.Settings?.WebApiSettings != null)
                                 {
                                     SettingsManager.Instance.Settings.WebApiSettings.WebApiDeviceId = response.User.Id;
                                     SettingsManager.Instance.Settings.WebApiSettings.WebApiToken = response.User.Token;
@@ -227,7 +223,6 @@ namespace MLM2PRO_BT_APP.connections
                                 }
                                 Logger.Log($"User ID: {response.User.Id}, Token: {response.User.Token}, Expire Date: {response.User.ExpireDate}");
                                 byte[]? bytes = DeviceManager.Instance?.GetInitialParameters(response.User.Token);
-                                StoreConfigureBytes = bytes;
                                 Logger.Log("InitialParameters returned ByteArray: " + ByteConversionUtils.ByteArrayToHexString(bytes));
                                 await WriteConfig(bytes);
                                 // I'm really not sure why sending this TWICE makes any difference.
@@ -282,7 +277,7 @@ namespace MLM2PRO_BT_APP.connections
                     }
                     else
                     {
-                        Logger.Log($"### EVENT = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(decrypted) ?? Array.Empty<int>())}");
+                        Logger.Log($"### EVENT = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(decrypted))}");
 
                         switch (decrypted[0])
                         {
@@ -345,12 +340,12 @@ namespace MLM2PRO_BT_APP.connections
                     {
                         Logger.Log("");
                         Logger.Log($"### MEASUREMENT = {string.Join(", ", ByteConversionUtils.ByteArrayToHexString(decrypted))}");
-                        Logger.Log($"### MEASUREMENT = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(decrypted) ?? Array.Empty<int>())}");
+                        Logger.Log($"### MEASUREMENT = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(decrypted))}");
                         Logger.Log("");
 
                         if (MeasurementData.Instance != null)
                         {
-                            OpenConnectApiMessage messageToSend = MeasurementData.Instance.ConvertHexToMeasurementData(ByteConversionUtils.ByteArrayToHexString(decrypted));
+                            var messageToSend = MeasurementData.Instance.ConvertHexToMeasurementData(ByteConversionUtils.ByteArrayToHexString(decrypted));
                             Logger.Log("Measurement: " + JsonConvert.SerializeObject(messageToSend));
                             await Task.Run(() =>
                             {
@@ -367,7 +362,7 @@ namespace MLM2PRO_BT_APP.connections
         }
         // protected abstract Task<object> GetGattServiceAsync(Guid serviceUuid);
         // protected abstract Task<object?> GetCharacteristicAsync(object service, Guid characteristicUuid);
-        protected async Task<bool> WriteValue(Guid uuid, Guid uuid2, byte[]? byteArray)
+        private async Task<bool> WriteValue(Guid uuid, Guid uuid2, byte[]? byteArray)
         {
             if (BluetoothDevice != null)
             {
@@ -389,11 +384,11 @@ namespace MLM2PRO_BT_APP.connections
 
             Logger.Log(success ? "Configuration write successful!" : "Configuration write failed.");
         }
-        protected async Task WriteCommand(byte[]? data)
+        private async Task WriteCommand(byte[]? data)
         {
             try
             {
-                Logger.Log($"### BluetoothManager: Writing COMMAND = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(data) ?? Array.Empty<int>())}");
+                Logger.Log($"### BluetoothManager: Writing COMMAND = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(data))}");
                 await WriteValue(ServiceUuid, _commandCharacteristicUuid, BtEncryption.Encrypt(data));
             }
             catch (Exception)
@@ -401,7 +396,7 @@ namespace MLM2PRO_BT_APP.connections
                 Logger.Log("### BluetoothManager: Encryption exception when writing to command");
             }
         }
-        protected async Task<bool> WriteConfig(byte[]? data)
+        private async Task<bool> WriteConfig(byte[]? data)
         {
             try
             {
@@ -415,7 +410,7 @@ namespace MLM2PRO_BT_APP.connections
                 return false;
             }
         }
-        protected void StartHeartbeat()
+        private void StartHeartbeat()
         {
             // Stop the timer if it's already running
             _heartbeatTimer?.Dispose();
@@ -424,7 +419,7 @@ namespace MLM2PRO_BT_APP.connections
             _heartbeatTimer = new Timer(SendHeartbeatSignal, null, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(2));
             _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
         }
-        protected async void SendHeartbeatSignal(object? state)
+        private async void SendHeartbeatSignal(object? state)
         {
             if (BluetoothDevice == null) return;
             if (_lastHeartbeatReceived < DateTimeOffset.Now.ToUnixTimeSeconds() - 20)
@@ -443,7 +438,7 @@ namespace MLM2PRO_BT_APP.connections
         private async Task<bool?> SendDeviceAuthRequest()
         {
             var intToByteArray = ByteConversionUtils.IntToByteArray(1, true);
-            var encryptionTypeBytes = BtEncryption.GetEncryptionTypeBytes();
+            var encryptionTypeBytes = Encryption.GetEncryptionTypeBytes();
             var keyBytes = BtEncryption.GetKeyBytes();
             if (keyBytes == null) return null;
             if (intToByteArray != null)
@@ -467,8 +462,8 @@ namespace MLM2PRO_BT_APP.connections
             if (input != null)
             {
                 int keyBytesLength = input.Length - intToByteArrayLength - encryptionTypeBytesLength;
-                byte[]? keyBytes = new byte[keyBytesLength];
-                System.Buffer.BlockCopy(input, intToByteArrayLength + encryptionTypeBytesLength, keyBytes, 0, keyBytesLength);
+                byte[] keyBytes = new byte[keyBytesLength];
+                Buffer.BlockCopy(input, intToByteArrayLength + encryptionTypeBytesLength, keyBytes, 0, keyBytesLength);
 
                 // Outputting keyBytes to console
                 Logger.Log("KeyBytes: " + ByteConversionUtils.ByteArrayToHexString(keyBytes));
@@ -476,19 +471,9 @@ namespace MLM2PRO_BT_APP.connections
             }
             return null;
         }
-        public void StartSubscriptionVerificationTimer()
-        {
-            // Stop the timer if it's already running
-            _subscriptionVerificationTimer?.Dispose();
-
-            // Set the timer to check every 60 seconds
-            _subscriptionVerificationTimer = new Timer(VerifyConnection, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(30));
-        }
         public async Task DisconnectAndCleanup()
         {
             await Task.Delay(TimeSpan.FromSeconds(2));
-
-            if (_subscriptionVerificationTimer != null) await _subscriptionVerificationTimer.DisposeAsync();
             _heartbeatTimer?.Dispose();
             ChildDisconnectAndCleanupFirst();
 

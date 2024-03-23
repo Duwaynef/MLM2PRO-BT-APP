@@ -6,17 +6,10 @@ namespace MLM2PRO_BT_APP.connections
 {
     public class WebApiClient
     {
-        private string _baseUrl;
-        private string _secretKey = "Secret";
-        private string _secretValue;
-
-        public WebApiClient()
-        {
-            // Initialize BaseUrl and SecretValue using appSettings
-            _baseUrl = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUrl ?? "";
-            _secretValue = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret ?? "";
-        }
-        public class User
+        private readonly string _baseUrl = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUrl ?? "";
+        private const string SecretKey = "Secret";
+        private readonly string _secretValue = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret ?? "";
+        public abstract class User
         {
             public int Id { get; set; }
             public string? Token { get; set; }
@@ -33,8 +26,8 @@ namespace MLM2PRO_BT_APP.connections
         {
             Logger.Log("Sending request to Web API...");
             using HttpClient httpClient = new();
-            httpClient.DefaultRequestHeaders.Add(_secretKey, _secretValue);
-            Logger.Log("UserId: " + userId + ", Secret Key: " + _secretKey + ", Secret Value: " + _secretValue);
+            httpClient.DefaultRequestHeaders.Add(SecretKey, _secretValue);
+            Logger.Log("UserId: " + userId + ", Secret Key: " + SecretKey + ", Secret Value: " + _secretValue);
             Uri requestUri = new Uri(_baseUrl + userId);
             try
             {

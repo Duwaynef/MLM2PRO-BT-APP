@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Windows;
 using MLM2PRO_BT_APP.api;
 using MLM2PRO_BT_APP.devices;
 using MLM2PRO_BT_APP.util;
@@ -13,29 +13,19 @@ using NetCoreServer;
 namespace MLM2PRO_BT_APP.connections
 {
 
-    class HttpPuttingSession : HttpSession
+    class HttpPuttingSession(HttpPuttingServer server) : HttpSession(server)
     {
-        public HttpPuttingServer PuttingServer { get; private set; }
-
-        public HttpPuttingSession(HttpPuttingServer server) : base(server)
-        {
-            PuttingServer = server;
-            var options = new JsonSerializerOptions
-            {
-                NumberHandling = JsonNumberHandling.AllowReadingFromString
-            };
-        }
+        private HttpPuttingServer PuttingServer { get; } = server;
 
         protected override async void OnReceivedRequest(HttpRequest request)
         {
             try
             {  
-                if (request.Method == "POST" || request.Method == "PUT")
+                if (request.Method is "POST" or "PUT")
                 {
-                    string key = request.Url;
                     string value = request.Body;
                     Logger.Log("Received Putting request: " + value);
-                    PuttingDataMessage? message = JsonSerializer.Deserialize<PuttingDataMessage>(value);
+                    var message = JsonSerializer.Deserialize<PuttingDataMessage>(value);
                     Logger.Log("Putting request converted");
                     Logger.Log(request.Body);
 
@@ -44,10 +34,10 @@ namespace MLM2PRO_BT_APP.connections
                         if (App.SharedVm != null) App.SharedVm.PuttingStatus = "INCOMING MESSAGE";
                         if (PuttingServer.PuttingEnabled && DeviceManager.Instance?.ClubSelection == "PT")
                         {
-                            OpenConnectApiMessage? messageToSend = BallDataFromPuttingBallData(message?.BallData);
+                            var messageToSend = BallDataFromPuttingBallData(message.BallData);
                             if (messageToSend != null)
                             {
-                                (App.Current as App)?.SendShotData(messageToSend);
+                                (Application.Current as App)?.SendShotData(messageToSend);
                                 if (App.SharedVm != null) App.SharedVm.PuttingStatus = "SHOT SENT";
                             }
                         }
@@ -82,7 +72,7 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log($"HTTP session caught an error: {error}");
         }
 
-        public static OpenConnectApiMessage? BallDataFromPuttingBallData(api.BallData? puttBallData)
+        private static OpenConnectApiMessage? BallDataFromPuttingBallData(api.BallData? puttBallData)
         {
             if (puttBallData == null) return null;
             OpenConnectApiMessage.Instance.ShotNumber++;
@@ -116,25 +106,25 @@ namespace MLM2PRO_BT_APP.connections
         private static extern bool BringWindowToTop(nint handle);
         [DllImport("User32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+        private static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
         private static readonly nint HwndTopmost = new nint(-1);
         private const uint SwpNosize = 0x0001;
         private const uint SwpNomove = 0x0002;
         private const uint TopmostFlags = SwpNomove | SwpNosize;
-        public bool PuttingEnabled = false;
+        public bool PuttingEnabled;
         private bool _mDisposing;
 
-        public Process? PuttingProcess { get; private set; }
-        public bool OnlyLaunchWhenPutting { get; }
-        public bool KeepPuttingCamOnTop { get; }
+        private Process? PuttingProcess { get; set; }
+        private bool OnlyLaunchWhenPutting { get; }
+        private bool KeepPuttingCamOnTop { get; }
         public bool LaunchBallTracker { get; set; }
-        public int WebcamIndex { get; }
-        public string BallColor { get; }
-        public int CamPreviewWidth { get; }
-        public string ExecutablePath { get; }
-        public string ExecutableName { get; }
-        public string AdditionalExeArgs { get; }
-        public bool HideExeLogs { get; }
+        private int WebcamIndex { get; }
+        private string BallColor { get; }
+        private int CamPreviewWidth { get; }
+        private string ExecutablePath { get; }
+        private string ExecutableName { get; }
+        private string AdditionalExeArgs { get; }
+        private bool HideExeLogs { get; }
         protected override TcpSession CreateSession() => new HttpPuttingSession(this);
         protected override void OnError(SocketError error) => Logger.Log($"HTTP session caught an error: {error}");
 
@@ -194,57 +184,63 @@ namespace MLM2PRO_BT_APP.connections
             return true;
         }
 
-        public void LaunchProcess()
+        private void LaunchProcess()
         {
-            if (CheckBallTrackingExists())
+            if (!CheckBallTrackingExists()) return;
+            var startInfo = new ProcessStartInfo(ExecutablePath)
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo(ExecutablePath);
-                startInfo.Arguments = $"-w {WebcamIndex} -c {BallColor} -r {CamPreviewWidth}";
-                startInfo.WorkingDirectory = Path.GetDirectoryName(ExecutablePath);
-                startInfo.WindowStyle = ProcessWindowStyle.Normal;
-                startInfo.CreateNoWindow = SettingsManager.Instance?.Settings?.Putting?.HideConsoleWindow ?? false;
-                startInfo.UseShellExecute = false;
-                startInfo.RedirectStandardOutput = true;
-                startInfo.RedirectStandardError = true;
-                startInfo.RedirectStandardInput = true;
-                startInfo.EnvironmentVariables["PYTHONUNBUFFERED"] = "TRUE";
-                startInfo.Environment["PYTHONUNBUFFERED"] = "TRUE";
-
-                if (!string.IsNullOrWhiteSpace(AdditionalExeArgs))
+                Arguments = $"-w {WebcamIndex} -c {BallColor} -r {CamPreviewWidth}",
+                WorkingDirectory = Path.GetDirectoryName(ExecutablePath),
+                WindowStyle = ProcessWindowStyle.Normal,
+                CreateNoWindow = SettingsManager.Instance?.Settings?.Putting?.HideConsoleWindow ?? false,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = true,
+                EnvironmentVariables =
                 {
-                    startInfo.Arguments = $"{startInfo.Arguments} {AdditionalExeArgs}";
-                }
-
-                Logger.Log($"Starting putting camera: '{startInfo.FileName} {startInfo.Arguments}' ");
-                PuttingProcess = Process.Start(startInfo);
-
-                if (PuttingProcess == null)
+                    ["PYTHONUNBUFFERED"] = "TRUE"
+                },
+                Environment =
                 {
-                    Logger.Log("Error opening putting process");
-                    return;
+                    ["PYTHONUNBUFFERED"] = "TRUE"
                 }
-                Logger.Log(PuttingProcess.BasePriority.ToString());
+            };
 
-                PuttingProcess.EnableRaisingEvents = true;
-                PuttingProcess.OutputDataReceived += OnBallTrackerLogs;
-                PuttingProcess.ErrorDataReceived += OnBallTrackerErrors;
-                PuttingProcess.BeginOutputReadLine();
-                PuttingProcess.BeginErrorReadLine();
-
-                PuttingProcess.Exited += OnPuttingProcessClosed;
-
-                int attempts = 0;
-                while ((int)PuttingProcess.MainWindowHandle == 0)
-                {
-                    if (attempts % 5 == 0)
-                    {
-                        Logger.Log("Waiting for main window to launch...");
-                    }
-                    Thread.Sleep(1000);
-                    attempts += 1;
-                }
-                Logger.Log("Main Window launched");
+            if (!string.IsNullOrWhiteSpace(AdditionalExeArgs))
+            {
+                startInfo.Arguments = $"{startInfo.Arguments} {AdditionalExeArgs}";
             }
+
+            Logger.Log($"Starting putting camera: '{startInfo.FileName} {startInfo.Arguments}' ");
+            PuttingProcess = Process.Start(startInfo);
+
+            if (PuttingProcess == null)
+            {
+                Logger.Log("Error opening putting process");
+                return;
+            }
+            Logger.Log(PuttingProcess.BasePriority.ToString());
+
+            PuttingProcess.EnableRaisingEvents = true;
+            PuttingProcess.OutputDataReceived += OnBallTrackerLogs;
+            PuttingProcess.ErrorDataReceived += OnBallTrackerErrors;
+            PuttingProcess.BeginOutputReadLine();
+            PuttingProcess.BeginErrorReadLine();
+
+            PuttingProcess.Exited += OnPuttingProcessClosed;
+
+            int attempts = 0;
+            while ((int)PuttingProcess.MainWindowHandle == 0)
+            {
+                if (attempts % 5 == 0)
+                {
+                    Logger.Log("Waiting for main window to launch...");
+                }
+                Thread.Sleep(1000);
+                attempts += 1;
+            }
+            Logger.Log("Main Window launched");
         }
 
         private void OnBallTrackerLogs(object _, DataReceivedEventArgs args)
@@ -287,7 +283,7 @@ namespace MLM2PRO_BT_APP.connections
             }
         }
 
-        public void KillProcess()
+        private void KillProcess()
         {
             Logger.Log("Shutting down putting camera");
 

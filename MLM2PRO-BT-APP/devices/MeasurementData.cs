@@ -5,50 +5,43 @@ namespace MLM2PRO_BT_APP.devices
     class MeasurementData
     {
         private static MeasurementData? _instance;
-        public static MeasurementData? Instance
+        public static MeasurementData Instance
         {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new MeasurementData();
-                }
-                return _instance;
-            }
+            get => _instance ??= new MeasurementData();
         }
-        public double ClubHeadSpeed { get; set; }
-        public double BallSpeed { get; set; }
-        public double Vla { get; set; }
-        public double Hla { get; set; }
-        public double SpinAxis { get; set; }
-        public int TotalSpin { get; set; }
+        private double ClubHeadSpeed { get; set; }
+        private double BallSpeed { get; set; }
+        private double Vla { get; set; }
+        private double Hla { get; set; }
+        private double SpinAxis { get; set; }
+        private int TotalSpin { get; set; }
         public int Unknown1 { get; set; }
         public int Unknown2 { get; set; }
 
-        public int CalculateBackSpin(int totalSpin, double spinAxis)
+        private static int CalculateBackSpin(int totalSpin, double spinAxis)
         {
             return (int)Math.Round(totalSpin * Math.Cos(DegreesToRadians(spinAxis)));
         }
 
-        public int CalculateSideSpin(int totalSpin, double spinAxis)
+        private static int CalculateSideSpin(int totalSpin, double spinAxis)
         {
             return (int)Math.Round(totalSpin * Math.Sin(DegreesToRadians(spinAxis)));
         }
 
-        private double DegreesToRadians(double degrees)
+        private static double DegreesToRadians(double degrees)
         {
             return (Math.PI / 180) * degrees;
         }
 
-        public static double CalculateSmashFactor(double ballSpeed, double clubheadSpeed)
+        public static double CalculateSmashFactor(double ballSpeed, double clubHeadSpeed)
         {
-            if (clubheadSpeed == 0) return 0;
-            return Math.Round(ballSpeed / clubheadSpeed, 2);
+            if (clubHeadSpeed == 0) return 0;
+            return Math.Round(ballSpeed / clubHeadSpeed, 2);
         }
 
         public OpenConnectApiMessage ConvertHexToMeasurementData(string? hexData)
         {
-            double multiplier = 2.2375;
+            const double multiplier = 2.2375;
             byte[] bytes = Enumerable.Range(0, hexData?.Length ?? 0)
                              .Where(x => x % 2 == 0)
                              .Select(x => Convert.ToByte(hexData?.Substring(x, 2), 16))
@@ -60,7 +53,7 @@ namespace MLM2PRO_BT_APP.devices
             Vla = BitConverter.ToInt16(bytes, 6) / 10.0;
             SpinAxis = BitConverter.ToInt16(bytes, 8) / 10.0;
             TotalSpin = BitConverter.ToUInt16(bytes, 10);
-            Unknown1 = BitConverter.ToUInt16(bytes, 12); // carry disance?
+            Unknown1 = BitConverter.ToUInt16(bytes, 12); // carry distance?
             Unknown2 = BitConverter.ToUInt16(bytes, 14); // total distance? both seem lower than AG, but not crazy off...
             // Serialize MeasurementData instance to JSON string
 

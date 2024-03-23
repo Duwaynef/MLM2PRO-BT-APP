@@ -1,45 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net.Http;
+﻿using System.Net.Http;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 
 namespace MLM2PRO_BT_APP.util
 {
-    public class GitHubReleaseChecker
+    public class GitHubReleaseChecker(string repositoryOwner, string repositoryName)
     {
-        private readonly string _repositoryOwner;
-        private readonly string _repositoryName;
-
-        public GitHubReleaseChecker(string repositoryOwner, string repositoryName)
-        {
-            _repositoryOwner = repositoryOwner;
-            _repositoryName = repositoryName;
-        }
-
         public async Task<GitHubRelease?> CheckForUpdateAsync(string currentVersion)
         {
-            using (var httpClient = new HttpClient())
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "request");
+
+            string url = $"https://api.github.com/repos/{repositoryOwner}/{repositoryName}/releases";
+            string response = await httpClient.GetStringAsync(url);
+            var releases = JsonConvert.DeserializeObject<List<GitHubRelease>>(response);
+
+            if (releases == null || releases.Count == 0) return null;
+
+            foreach (var release in releases)
             {
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "request");
-
-                var url = $"https://api.github.com/repos/{_repositoryOwner}/{_repositoryName}/releases";
-                var response = await httpClient.GetStringAsync(url);
-                var releases = JsonConvert.DeserializeObject<List<GitHubRelease>>(response);
-
-                if (releases == null || releases.Count == 0) return null;
-
-                foreach (var release in releases)
-                {
-                    if (release.TagName == "debug") continue;
-                    if (release.TagName != null && !IsNewerVersion(currentVersion, release.TagName)) return null;
-                    Logger.Log($"Update available: {release.TagName}");
-                    Logger.Log($"Release notes: \n{release.Body}");
-                    return release;
-                }
+                if (release.TagName == "debug") continue;
+                if (release.TagName != null && !IsNewerVersion(currentVersion, release.TagName)) return null;
+                Logger.Log($"Update available: {release.TagName}");
+                Logger.Log($"Release notes: \n{release.Body}");
+                return release;
             }
             return null;
         }

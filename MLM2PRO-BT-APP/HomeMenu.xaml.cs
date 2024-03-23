@@ -2,21 +2,20 @@
 using System.IO;
 using System.Text;
 using System.Windows;
-using System.Windows.Controls;
 using MaterialDesignThemes.Wpf;
 using MLM2PRO_BT_APP.connections;
 using MLM2PRO_BT_APP.util;
+using static System.DateTime;
 
 namespace MLM2PRO_BT_APP;
 
-public partial class HomeMenu : Page
+public partial class HomeMenu
 {
     public HomeMenu()
     {
         InitializeComponent();
-        this.DataContext = App.SharedVm;
-        // ShotDataDataGrid.ItemsSource = App.SharedVM.ShotDataCollection;
-        ShotDataDataGrid.ItemsSource = SharedViewModel.Instance?.ShotDataCollection;
+        DataContext = App.SharedVm;
+        ShotDataDataGrid.ItemsSource = SharedViewModel.Instance.ShotDataCollection;
         DataGridSnackBar.MessageQueue = new SnackbarMessageQueue(TimeSpan.FromMilliseconds(2000));
     }
 
@@ -69,16 +68,16 @@ public partial class HomeMenu : Page
     
     public class ShotData
     {
-        public int ShotNumber { get; set; }
-        public string Result { get; set; } = "";
-        public double SmashFactor { get; set; } = 0;
-        public string Club { get; set; } = "";
-        public double ClubSpeed { get; set; }
-        public double BallSpeed { get; set; } 
-        public double SpinAxis { get; set; }
-        public double SpinRate { get; set; }
-        public double Hla { get; set; }
-        public double Vla { get; set; }
+        public int ShotNumber { get; init; }
+        public string Result { get; init; } = "";
+        public double SmashFactor { get; set; }
+        public string Club { get; init; } = "";
+        public double ClubSpeed { get; init; }
+        public double BallSpeed { get; init; } 
+        public double SpinAxis { get; init; }
+        public double SpinRate { get; init; }
+        public double Hla { get; init; }
+        public double Vla { get; init; }
         public double BackSpin { get; set; }
         public double SideSpin { get; set; }
 
@@ -86,28 +85,20 @@ public partial class HomeMenu : Page
         //public double ImpactAngle { get; set; }
     }
 
-    private (bool success, string path) ExportShotDataToCsv(ObservableCollection<ShotData> shotDataCollection)
+    private static (bool success, string path) ExportShotDataToCsv(ObservableCollection<ShotData> shotDataCollection)
     {
         try
         {
-            string folderPath = "";
-            if (String.IsNullOrWhiteSpace(SettingsManager.Instance?.Settings?.LaunchMonitor?.CustomExportPath))
-            {
-                folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Export");
-            }
-            else
-            {
-                folderPath = SettingsManager.Instance.Settings.LaunchMonitor.CustomExportPath;
-            }
+            string folderPath = string.IsNullOrWhiteSpace(SettingsManager.Instance.Settings?.LaunchMonitor?.CustomExportPath) ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Export") : SettingsManager.Instance.Settings.LaunchMonitor.CustomExportPath;
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
             }
 
-            string fileName = $"ShotData_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            string fileName = $"ShotData_{Now:yyyyMMdd_HHmmss}.csv";
             string fullPath = Path.Combine(folderPath, fileName);
 
-            StringBuilder csvContent = new StringBuilder();
+            var csvContent = new StringBuilder();
             csvContent.AppendLine("ShotNumber,Result,Club,ClubSpeed,BallSpeed,SpinAxis,SpinRate,HLA,VLA");
 
             foreach (var shotData in shotDataCollection)
@@ -131,11 +122,11 @@ public partial class HomeMenu : Page
         if (App.SharedVm != null)App.SharedVm.LmStatus = "TESTING WEBAPI";
         
         var webApiClient = new WebApiClient();
-        Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiToken);
-        Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId);
-        var response = await webApiClient.SendRequestAsync(SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId ?? 0);
+        Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance.Settings?.WebApiSettings?.WebApiToken);
+        Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance.Settings?.WebApiSettings?.WebApiUserId);
+        var response = await webApiClient.SendRequestAsync(SettingsManager.Instance.Settings?.WebApiSettings?.WebApiUserId ?? 0);
 
-        if (response is { Success: true } && SettingsManager.Instance?.Settings?.WebApiSettings != null)
+        if (response is { Success: true } && SettingsManager.Instance.Settings?.WebApiSettings != null)
         {
             if (response.User != null)
             {
@@ -185,7 +176,7 @@ public partial class HomeMenu : Page
     {
         await Task.Run(() =>
         {
-            (Application.Current as App)?.BtManagerResub();
+            (Application.Current as App)?.BtManagerReSub();
         });
     }
     private async void Putting_Connect_Click(object sender, RoutedEventArgs e)
@@ -215,40 +206,37 @@ public partial class HomeMenu : Page
     {
         try
         {
-            if (SharedViewModel.Instance != null && SharedViewModel.Instance?.ShotDataCollection != null)
+            (bool success, string path) = ExportShotDataToCsv(SharedViewModel.Instance.ShotDataCollection);
+            if (success)
             {
-                (bool success, string path) = ExportShotDataToCsv(SharedViewModel.Instance?.ShotDataCollection!);
-                if (success)
-                {
-                    ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Check;
-                    DataGridSnackBar.MessageQueue?.Enqueue(
-                        $"Saved successfully to {path}",
-                        null,
-                        null,
-                        null,
-                        false,
-                        true,
-                        TimeSpan.FromSeconds(2));
-                }
-                else
-                {
-                    ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Close;
-                    DataGridSnackBar.MessageQueue?.Enqueue(
-                        "Failed to save data.",
-                        null,
-                        null,
-                        null,
-                        false,
-                        true,
-                        TimeSpan.FromSeconds(2));
-                }
+                ExportIcon.Kind = PackIconKind.Check;
+                DataGridSnackBar.MessageQueue?.Enqueue(
+                    $"Saved successfully to {path}",
+                    null,
+                    null,
+                    null,
+                    false,
+                    true,
+                    TimeSpan.FromSeconds(2));
+            }
+            else
+            {
+                ExportIcon.Kind = PackIconKind.Close;
+                DataGridSnackBar.MessageQueue?.Enqueue(
+                    "Failed to save data.",
+                    null,
+                    null,
+                    null,
+                    false,
+                    true,
+                    TimeSpan.FromSeconds(2));
             }
 
             await Task.Delay(2000);
         }
         catch (Exception ex)
         {
-            ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Close;
+            ExportIcon.Kind = PackIconKind.Close;
             DataGridSnackBar.MessageQueue?.Enqueue(
                 $"Export failed: {ex.Message}",
                 null,
@@ -260,7 +248,7 @@ public partial class HomeMenu : Page
         }
         finally
         {
-            ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.TableArrowRight;
+            ExportIcon.Kind = PackIconKind.TableArrowRight;
         }
     }
 

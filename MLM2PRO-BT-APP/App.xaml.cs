@@ -7,9 +7,8 @@ using System.Net;
 using MLM2PRO_BT_APP.connections;
 using MLM2PRO_BT_APP.devices;
 using MLM2PRO_BT_APP.util;
-using static MLM2PRO_BT_APP.util.GitHubReleaseChecker;
 namespace MLM2PRO_BT_APP;
-public partial class App : Application
+public partial class App
 {
     public static SharedViewModel? SharedVm { get; private set; }
 
@@ -26,9 +25,9 @@ public partial class App : Application
         LoadSettings();
         PuttingConnection = new HttpPuttingServer();
         _client = new OpenConnectTcpClient();
-        if (SettingsManager.Instance != null && SettingsManager.Instance.Settings != null && SettingsManager.Instance.Settings.LaunchMonitor != null)
+        if (SettingsManager.Instance.Settings != null && SettingsManager.Instance.Settings.LaunchMonitor != null)
         {
-            if (SettingsManager.Instance?.Settings?.LaunchMonitor?.UseBackupManager ?? false)
+            if (SettingsManager.Instance.Settings?.LaunchMonitor?.UseBackupManager ?? false)
             {
                 _manager = new BluetoothManagerBackup();
             }
@@ -41,12 +40,12 @@ public partial class App : Application
 
     public byte[] GetEncryptedKeyFromHex(byte[]? input)
     {
-        return _manager?.ConvertAuthRequest(input) ?? new byte[0];
+        return _manager?.ConvertAuthRequest(input) ?? Array.Empty<byte>();
     }
 
-    private void CheckWebApiToken()
+    private static void CheckWebApiToken()
     {
-        if (string.IsNullOrWhiteSpace(SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret))
+        if (string.IsNullOrWhiteSpace(SettingsManager.Instance.Settings?.WebApiSettings?.WebApiSecret))
         {
             Logger.Log("Web api token is blank");
             if (SharedVm != null) SharedVm.LmStatus = "WEB API TOKEN NOT CONFIGURED";
@@ -62,7 +61,7 @@ public partial class App : Application
 
     public async Task StartGsPro()
     {
-        String executablePath = Path.GetFullPath(SettingsManager.Instance?.Settings?.OpenConnect?.GsProExe ?? "C:\\GSProV1\\Core\\GSP\\GSPro.exe");
+        String executablePath = Path.GetFullPath(SettingsManager.Instance.Settings?.OpenConnect?.GsProExe ?? "C:\\GSProV1\\Core\\GSP\\GSPro.exe");
         var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(executablePath));
         if (processes.Length > 0)
         {
@@ -84,7 +83,7 @@ public partial class App : Application
         {
             Process.Start(startInfo);
             Logger.Log("GSPro Started");
-            if (SettingsManager.Instance?.Settings?.OpenConnect?.SkipGsProLauncher ?? false)
+            if (SettingsManager.Instance.Settings?.OpenConnect?.SkipGsProLauncher ?? false)
             {
                 await ClickButtonWhenWindowLoads("GSPro Configuration", "Play!");
             }
@@ -94,7 +93,7 @@ public partial class App : Application
             Logger.Log($"Error starting the GSPro process with arguments: {ex.Message}");
         }
     }
-    public static async Task<bool> WaitForWindow(string windowTitle, TimeSpan timeout)
+    private static async Task<bool> WaitForWindow(string windowTitle, TimeSpan timeout)
     {
         var sw = Stopwatch.StartNew();
         while (sw.Elapsed < timeout)
@@ -108,7 +107,7 @@ public partial class App : Application
         }
         return false;
     }
-    public static async Task ClickButtonWhenWindowLoads(string windowTitle, string buttonName)
+    private static async Task ClickButtonWhenWindowLoads(string windowTitle, string buttonName)
     {
         Logger.Log("Application started, waiting for window...");
         bool windowLoaded = await WaitForWindow(windowTitle, TimeSpan.FromSeconds(120));
@@ -125,7 +124,7 @@ public partial class App : Application
             Logger.Log("Window did not appear in time.");
         }
     }
-    public async Task AutoConnectGsPro()
+    private async Task AutoConnectGsPro()
     {
         try
         {
@@ -158,7 +157,7 @@ public partial class App : Application
     {
         try
         {
-            // string? lmNotReadyJson = "{\"DeviceID\": \"GSPRO-MLM2PRO\",\"Units\": \"Yards\",\"ShotNumber\": 0,\"APIversion\": \"1\",\"ShotDataOptions\": {\"ContainsBallData\": false,\"ContainsClubData\": false,\"LaunchMonitorIsReady\": false}}";
+            // string? lmNotReadyJson = "{\"DeviceID\": \"GSPRO-MLM2PRO\",\"Units\": \"Yards\",\"ShotNumber\": 0,\"APIVersion\": \"1\",\"ShotDataOptions\": {\"ContainsBallData\": false,\"ContainsClubData\": false,\"LaunchMonitorIsReady\": false}}";
             // await _client.SendDirectJsonAsync(lmNotReadyJson);
             // await Task.Delay(2000);
             _client.DisconnectAndStop();
@@ -188,9 +187,9 @@ public partial class App : Application
         bool dataSent = messageToSend != null && await _client.SendDataAsync(messageToSend);
         try
         {
-            String result = "Fail";
+            string result;
             Logger.Log(messageToSend?.ToString());
-            string messageJson = JsonConvert.SerializeObject(messageToSend);
+            JsonConvert.SerializeObject(messageToSend);
             if (messageToSend is { BallData.Speed: 0 })
             {
                 result = "Fail";
@@ -205,7 +204,6 @@ public partial class App : Application
                 Logger.Log("message successfully sent!");
                 if (messageToSend != null) await InsertRow(messageToSend, result);
                 if (SharedVm != null) SharedVm.GsProStatus = "CONNECTED, SHOT SENT!";
-                return;
             }
             else
             {
@@ -218,14 +216,12 @@ public partial class App : Application
                     Logger.Log("Second attempt worked!");
                     if (messageToSend != null) await InsertRow(messageToSend, result);
                     if (SharedVm != null) SharedVm.GsProStatus = "CONNECTED, SHOT SENT!";
-                    return;
                 } else
                 {
                     result = "Fail";
                     Logger.Log("Second attempt failed...");
                     if (messageToSend != null) await InsertRow(messageToSend, result);
                     if (SharedVm != null) SharedVm.GsProStatus = "DISCONNECTED, FAILED TO SEND SHOT";
-                    return;
                 }
             }
         }
@@ -255,7 +251,7 @@ public partial class App : Application
         };
         Current.Dispatcher.Invoke(() =>
         {
-            SharedViewModel.Instance?.ShotDataCollection?.Insert(0, shotData);
+            SharedViewModel.Instance.ShotDataCollection.Insert(0, shotData);
         });
         return Task.CompletedTask;
     }
@@ -292,13 +288,13 @@ public partial class App : Application
     {
         return _manager?.GetEncryptionKey();
     }
-    public void BtManagerResub()
+    public void BtManagerReSub()
     {
         _ = _manager?.UnSubAndReSub();
     }
     public async Task PuttingEnable()
     {
-        var fullPath = Path.GetFullPath(SettingsManager.Instance?.Settings?.Putting?.ExePath ?? "");
+        var fullPath = Path.GetFullPath(SettingsManager.Instance.Settings?.Putting?.ExePath ?? "");
         if (File.Exists(fullPath))
         {
             Logger.Log("Putting executable exists.");
@@ -348,12 +344,12 @@ public partial class App : Application
     }
     private static void LoadSettings()
     {
-        SettingsManager.Instance?.LoadSettings();
+        SettingsManager.Instance.LoadSettings();
     }
     private void StartOpenConnectServer()
     {
-        _openConnectServerInstance = new(IPAddress.Any, SettingsManager.Instance?.Settings?.OpenConnect?.ApiRelayPort ?? 951);
-        Logger.Log("OpenConnectServer: Starting server on port: " + SettingsManager.Instance?.Settings?.OpenConnect?.ApiRelayPort);
+        _openConnectServerInstance = new(IPAddress.Any, SettingsManager.Instance.Settings?.OpenConnect?.ApiRelayPort ?? 951);
+        Logger.Log("OpenConnectServer: Starting server on port: " + SettingsManager.Instance.Settings?.OpenConnect?.ApiRelayPort);
         _openConnectServerInstance.Start();
     }
     public void StopOpenConnectServer()
@@ -387,7 +383,7 @@ public partial class App : Application
         Logger.Log("Relaying message to GSPro:");
         Logger.Log(outgoingMessage);
         Logger.Log("");
-        await (_client?.SendDirectJsonAsync(outgoingMessage) ?? Task.CompletedTask);
+        await (_client.SendDirectJsonAsync(outgoingMessage) ?? Task.CompletedTask);
     }
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -400,47 +396,42 @@ public partial class App : Application
     {
         CheckWebApiToken();
 
-        if (SettingsManager.Instance?.Settings?.Putting?.PuttingEnabled ?? false)
+        if (SettingsManager.Instance.Settings?.Putting?.PuttingEnabled ?? false)
         {
             if (SettingsManager.Instance.Settings.Putting.AutoStartPutting)
             {
-                await Task.Run(() => PuttingEnable());
+                await Task.Run(PuttingEnable);
             }
         }
 
-        if (SettingsManager.Instance?.Settings?.OpenConnect?.AutoStartGsPro ?? false)
+        if (SettingsManager.Instance.Settings?.OpenConnect?.AutoStartGsPro ?? false)
         {
             
-            await Task.Run(() => StartGsPro());
+            await Task.Run(StartGsPro);
         }
 
-        if (SettingsManager.Instance?.Settings?.OpenConnect?.EnableApiRelay ?? false)
+        if (SettingsManager.Instance.Settings?.OpenConnect?.EnableApiRelay ?? false)
         {
             StartOpenConnectServer();
         }
 
-        await Task.Run(() => AutoConnectGsPro());
+        await Task.Run(AutoConnectGsPro);
         
-        Logger.Log("Bluetooth Backup Manager is " + (SettingsManager.Instance?.Settings?.LaunchMonitor?.UseBackupManager ?? false ? "enabled" : "disabled"));
+        Logger.Log("Bluetooth Backup Manager is " + (SettingsManager.Instance.Settings?.LaunchMonitor?.UseBackupManager ?? false ? "enabled" : "disabled"));
 
     }
 
 
 
-    private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+    private static void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         e.Handled = true;
-        Logger.Log($"AppCrash: " + e.Exception.ToString());
+        Logger.Log($"AppCrash: " + e.Exception);
     }
 
-    private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    private static void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         var exception = e.ExceptionObject as Exception;
-        Logger.Log($"AppCrash: " + exception?.ToString());
-    }
-
-    private void App_Exit(object sender, ExitEventArgs e)
-    {
-        _openConnectServerInstance?.Stop();
+        Logger.Log($"AppCrash: " + exception);
     }
 }

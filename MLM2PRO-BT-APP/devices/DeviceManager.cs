@@ -6,8 +6,6 @@ namespace MLM2PRO_BT_APP.devices
     {
         public static DeviceManager? Instance { get; } = new();
         private string UserToken { get; set; } = "0";
-
-        private readonly ByteConversionUtils _byteConversionUtils = new ByteConversionUtils();
         public string DeviceStatus { get; set; } = "NOT CONNECTED";
         public string ClubSelection { get; set; } = "NONE";
         private byte? Handedness { get; set; } = 1; // Default value of right?
@@ -21,28 +19,16 @@ namespace MLM2PRO_BT_APP.devices
         // DeviceInfo fields
         private string SerialNumber { get; set; } = "";
         private string Model { get; set; } = "";
-        private int Battery { get; set; } = 0;
-        public int[]? ResponseMessage { get; set; } = null;
-        public int[]? Events { get; set; } = null;
-        public int[]? Measurement { get; set; } = null;
-        private bool _infoComplete = false;
+        private int Battery { get; set; }
+        public int[]? ResponseMessage { get; set; }
+        public int[]? Events { get; set; }
+        public int[]? Measurement { get; set; }
+        private bool _infoComplete;
 
         public bool DeviceInfoComplete()
         {
             return _infoComplete;
         }
-
-        public void ResetDeviceInfo()
-        {
-            SerialNumber = "";
-            Model = "";
-            Battery = 0;
-            ResponseMessage = null;
-            Events = null;
-            Measurement = null;
-            _infoComplete = false;
-        }
-
         private void UpdateInfoComplete()
         {
             if (!string.IsNullOrEmpty(SerialNumber) && !string.IsNullOrEmpty(Model) && Battery > 0)
@@ -100,25 +86,25 @@ namespace MLM2PRO_BT_APP.devices
             }
         }
 
-        public byte[]? GetInitialParameters(string tokenInput)
+        public byte[] GetInitialParameters(string tokenInput)
         {
             UserToken = tokenInput;
             Logger.Log("GetInitialParameters: UserToken: " + UserToken);
 
 
             // Generate required byte arrays
-            byte[] airPressureBytes = _byteConversionUtils.GetAirPressureBytes(0.0) ?? [0];
-            byte[] temperatureBytes = _byteConversionUtils.GetTemperatureBytes(15.0) ?? [0];
-            byte[] longToUintToByteArray = _byteConversionUtils.LongToUintToByteArray(long.Parse(UserToken), true) ?? [0];
+            byte[] airPressureBytes = ByteConversionUtils.GetAirPressureBytes(0.0);
+            byte[] temperatureBytes = ByteConversionUtils.GetTemperatureBytes(15.0);
+            byte[] longToUintToByteArray = ByteConversionUtils.LongToUintToByteArray(long.Parse(UserToken), true);
 
             // Concatenate all byte arrays
-            byte[]? concatenatedBytes = new byte[] { 1, 2, 0, 0 }.Concat(airPressureBytes)
+            byte[] concatenatedBytes = new byte[] { 1, 2, 0, 0 }.Concat(airPressureBytes)
              .Concat(temperatureBytes)
              .Concat(longToUintToByteArray)
              .Concat(new byte[] { 0, 0 })
              .ToArray();
 
-            Logger.Log("GetInitialParameters: ByteArrayReturned: " + _byteConversionUtils.ByteArrayToHexString(concatenatedBytes));
+            Logger.Log("GetInitialParameters: ByteArrayReturned: " + ByteConversionUtils.ByteArrayToHexString(concatenatedBytes));
             return concatenatedBytes;
         }
 
@@ -126,7 +112,7 @@ namespace MLM2PRO_BT_APP.devices
         {
             if (string.IsNullOrEmpty(UserToken))
             {
-                return new byte[0];
+                return Array.Empty<byte>();
             }
 
             double altitude = AltitudeMetres ?? 0.0;
@@ -138,8 +124,8 @@ namespace MLM2PRO_BT_APP.devices
             byte[] quitEventBytes = QuitEvent != null ? [QuitEvent.Value] : [0];
             byte[] powerModeBytes = PowerMode != null ? [PowerMode.Value] : [0];
 
-            byte[] airPressureBytes = _byteConversionUtils.GetAirPressureBytes(altitude) ?? [0];
-            byte[] temperatureBytes = _byteConversionUtils.GetTemperatureBytes(temperature) ?? [0];
+            byte[] airPressureBytes = ByteConversionUtils.GetAirPressureBytes(altitude);
+            byte[] temperatureBytes = ByteConversionUtils.GetTemperatureBytes(temperature);
             byte[] userTokenBytes = BitConverter.GetBytes(long.Parse(UserToken));
 
             byte[] concatenatedBytes = handednessBytes

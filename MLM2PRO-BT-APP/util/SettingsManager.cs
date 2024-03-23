@@ -1,15 +1,17 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using MaterialDesignThemes.Wpf;
 using Newtonsoft.Json;
 
 namespace MLM2PRO_BT_APP.util
 {
     public class SettingsManager
     {
-        private static SettingsManager? _instance = null!;
-        public static SettingsManager? Instance => _instance ??= new SettingsManager();
+        private static SettingsManager? _instance;
+        public static SettingsManager Instance
+        {
+            get => _instance ??= new SettingsManager();
+        }
         public event EventHandler? SettingsUpdated;
 
         private readonly string _settingsFilePath =
@@ -65,7 +67,7 @@ namespace MLM2PRO_BT_APP.util
             SaveSettings();
             Debug.WriteLine("All settings cleared and reset to default.");
         }
-        public void CompareDefaultSettings()
+        private void CompareDefaultSettings()
         {
             var defaultSettings = new AppSettings
             {
@@ -90,9 +92,9 @@ namespace MLM2PRO_BT_APP.util
                 {
                     propertyInfo.SetValue(currentSettings, defaultValue);
                 }
-                else if (propertyInfo.PropertyType.IsClass && !propertyInfo.PropertyType.Equals(typeof(string)))
+                else if (propertyInfo.PropertyType.IsClass && propertyInfo.PropertyType != typeof(string))
                 {
-                    MergeWithDefaultSettings((dynamic)defaultValue, (dynamic)currentValue);
+                    MergeWithDefaultSettings(defaultValue, currentValue);
                 }
             }
         }
@@ -133,9 +135,9 @@ namespace MLM2PRO_BT_APP.util
             public string WebApiUrl { get; set; } = "https://mlm.rapsodo.com/api/simulator/user/";
             public string WebApiSecret { get; set; } = "";
             public string? WebApiToken { get; set; } = "";
-            public int WebApiUserId { get; set; } = 0;
-            public long WebApiExpireDate { get; set; } = 0;
-            public int WebApiDeviceId { get; set; } = 0;
+            public int WebApiUserId { get; set; }
+            public long WebApiExpireDate { get; set; }
+            public int WebApiDeviceId { get; set; }
         }
 
         public class LaunchMonitorSettings
