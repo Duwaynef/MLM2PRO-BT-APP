@@ -11,6 +11,7 @@ using MaterialDesignThemes.Wpf;
 using static MaterialDesignThemes.Wpf.Theme.ToolBar;
 using System.Windows.Threading;
 using System.Windows.Input;
+using static MLM2PRO_BT_APP.util.GitHubReleaseChecker;
 
 namespace MLM2PRO_BT_APP
 {
@@ -23,6 +24,7 @@ namespace MLM2PRO_BT_APP
         private Theme _theme;
         private DispatcherTimer pressHoldTimer;
         private bool isPressAndHold = false;
+        private string updateUrl = "";
 
         public MainWindow()
         {
@@ -61,6 +63,7 @@ namespace MLM2PRO_BT_APP
 
             pressHoldTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             pressHoldTimer.Tick += PressHoldTimer_Tick;
+            CheckForGitHubUpdates();
         }
 
         private async void Button_Toggle_DebugConsole(object sender, RoutedEventArgs e)
@@ -71,6 +74,30 @@ namespace MLM2PRO_BT_APP
             }
             isPressAndHold = false;
 
+        }
+        public async Task CheckForGitHubUpdates()
+        {
+            try
+            {
+                var currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                Logger.Log($"Current version: {currentVersion}");
+                var releaseChecker = new GitHubReleaseChecker("DuwayneF", "MLM2PRO-BT-APP");
+                GitHubRelease? currentRelease = await releaseChecker.CheckForUpdateAsync(currentVersion);
+                if(currentRelease != null)
+                {
+                    UpdateAvailableBadge.Visibility = Visibility.Visible;
+                    updateUrl = currentRelease.HtmlUrl;
+                } 
+                else
+                {
+                    Logger.Log("No updates found.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Error checking for updates: {ex.Message}");
+            }
         }
         private async static void ToggleDebugConsole()
         {
@@ -123,6 +150,14 @@ namespace MLM2PRO_BT_APP
                 UseShellExecute = true
             });
         }
+        private async void Button_UpdatesAvailable_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = updateUrl,
+                UseShellExecute = true
+            });
+        }
         private async static void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             if (DebugConsolePopup is { IsOpen: true })
@@ -130,7 +165,6 @@ namespace MLM2PRO_BT_APP
                 DebugConsolePopup.IsOpen = false;
             }
         }
-
         public async void setAppTheme()
         {
             if (SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme)

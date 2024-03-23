@@ -7,6 +7,7 @@ using System.Net;
 using MLM2PRO_BT_APP.connections;
 using MLM2PRO_BT_APP.devices;
 using MLM2PRO_BT_APP.util;
+using static MLM2PRO_BT_APP.util.GitHubReleaseChecker;
 namespace MLM2PRO_BT_APP;
 public partial class App : Application
 {
@@ -15,8 +16,7 @@ public partial class App : Application
     private readonly BluetoothBaseInterface _manager;
     private HttpPuttingServer? PuttingConnection { get; }
     private readonly OpenConnectTcpClient _client;
-    private readonly OpenConnectServer _openConnectServerInstance = new(IPAddress.Any, 951);
-    private String currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+    private OpenConnectServer _openConnectServerInstance;
     private string? _lastMessage = "";
     public App()
     {
@@ -351,6 +351,8 @@ public partial class App : Application
     }
     private async Task StartOpenConnectServer()
     {
+        _openConnectServerInstance = new(IPAddress.Any, SettingsManager.Instance.Settings.OpenConnect.APIRelayPort);
+        Logger.Log("OpenConnectServer: Starting server on port: " + SettingsManager.Instance.Settings.OpenConnect.APIRelayPort);
         _openConnectServerInstance.Start();
     }
     public async Task StopOpenConnectServer()
@@ -416,11 +418,12 @@ public partial class App : Application
         }
 
         AutoConnectGsPro();
-
         Logger.Log("Bluetooth Backup Manager is " + (SettingsManager.Instance.Settings.LaunchMonitor.UseBackupManager ? "enabled" : "disabled"));
 
-
     }
+
+
+
     private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         e.Handled = true;

@@ -7,21 +7,96 @@
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Background="{DynamicResource MaterialDesign.Brush.Background}"
         TextElement.FontWeight="Medium"
-        TextElement.FontSize="12"
+        TextElement.FontSize="14"
         FontFamily="{materialDesign:MaterialDesignFont}">
     <DockPanel>
-        <Menu DockPanel.Dock="Top" Height="48" VerticalAlignment="Top">
-            <MenuItem Header="Exit" Click="Exit_Click" Margin="10,0,5,0"/>
-            <MenuItem Header="Home" Click="Home_Click" Margin="5,0,5,0"/>
-            <MenuItem Header="Settings" Click="Settings_Click" Margin="5,0,5,0"/>
-            <MenuItem Header="Help" Click="About_Click" Margin="5,0,5,0"/>
-            <MenuItem Header="Buy me a coffee" Click="Coffee_Click" HorizontalAlignment="Right" Margin="5,0,5,0"/>
-            <MenuItem Header="Debug Console" Click="Button_Toggle_DebugConsole" PreviewMouseDown="Button_DebugConsole_PreviewMouseDown" PreviewMouseUp="Button_DebugConsole_PreviewMouseUp" Margin="5,0,5,0"/>
-            <MenuItem Header="Report Bug" Click="ReportBug_Click" HorizontalAlignment="Right" Margin="5,0,5,0"/>
-            <MenuItem Header="Toggle Dark Mode" Click="Button_Toggle_ToggleDarkMode" Margin="5,0,5,0"/>
-        </Menu>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="56"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <ToolBar
+                Height="56"
+                Grid.Row="0"
+                ClipToBounds="False"
+                ToolBarTray.IsLocked="True"
+                ToolBar.OverflowMode="Never"
+                Style="{StaticResource MaterialDesignToolBar}">
+            <Button
+                  Margin="20,0,20,0"
+                  Click="Exit_Click"
+                  Content="Exit"
+                  ToolTip="Exit" />
+                <Separator />
 
+                <Button
+                  Margin="20,0,20,0"
+                  Click="Home_Click"
+                  Content="Home"
+                  ToolTip="Home" />
 
-        <Frame x:Name="MainContentFrame" NavigationUIVisibility="Hidden"/>
+                <Separator />
+
+                <Button
+                  Margin="20,0,20,0"
+                  Click="Settings_Click"
+                  Content="Settings"
+                  ToolTip="Settings" />
+
+                <Separator />
+
+                <Button
+                  Margin="20,0,20,0"
+                  Click="About_Click"
+                  Content="Help"
+                  ToolTip="Help" />
+
+                <Separator />
+
+                <Button
+                  Margin="20,0,20,0"
+                  Click="Button_Toggle_DebugConsole"
+                  Content="Debug Console"
+                  ToolTip="Debug Console" />
+
+                <Separator />
+
+                <Button
+                  Margin="20,0,20,0"
+                  Click="ReportBug_Click"
+                  Content="Report Bug"
+                  ToolTip="Report Bug" />
+
+                <Separator />
+
+                <Button
+                  Margin="20,0,20,0"
+                  Click="Button_Toggle_ToggleDarkMode"
+                  Content="Toggle Dark Mode"
+                  ToolTip="Toggle Dark Mode" />
+
+                
+                <Separator />
+            <materialDesign:Badged
+                  x:Name="UpdateAvailableBadge"
+                  Badge="{materialDesign:PackIcon Alert}"
+                  CornerRadius="5"
+                  Margin="20,0,20,0"
+                  materialDesign:BadgedAssist.IsMiniBadge="True"
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center" 
+                  Visibility="Collapsed"
+                 >
+                <Button
+                    Click="Button_UpdatesAvailable_Click"
+                    Content="Update Available"
+                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                    ToolTip="Updates Available" />
+            </materialDesign:Badged>
+                
+            <Separator x:Name="UpdateAvailableSeperator" Visibility="Collapsed" />
+        </ToolBar>
+        <Frame Grid.Row="1" x:Name="MainContentFrame" NavigationUIVisibility="Hidden"/>
+        </Grid>
     </DockPanel>
 </Window>
