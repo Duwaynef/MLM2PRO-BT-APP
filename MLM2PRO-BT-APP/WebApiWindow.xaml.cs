@@ -41,15 +41,18 @@ namespace MLM2PRO_BT_APP
                 } 
                 else
                 {
-                    SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret = WebAPITextBox.Text;
-                    SettingsManager.Instance.SaveSettings();
-                    Logger.Log("API Token saved");
-                    Task.Run(() =>
+                    if (SettingsManager.Instance?.Settings?.WebApiSettings != null)
                     {
-                        (Application.Current as App)?.ConnectGsProButton();
-                    });
-                    
-                    Close();
+                        SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret = WebAPITextBox.Text;
+                        SettingsManager.Instance?.SaveSettings();
+                        Logger.Log("API Token saved");
+                        Task.Run(() =>
+                        {
+                            (Application.Current as App)?.ConnectGsProButton();
+                        });
+                        Close();
+
+                    }
                 }
             }
         }

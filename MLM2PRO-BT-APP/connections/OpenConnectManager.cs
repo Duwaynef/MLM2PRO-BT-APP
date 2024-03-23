@@ -14,7 +14,7 @@ namespace MLM2PRO_BT_APP.connections
         private long _howRecentlyTakenShot = DateTimeOffset.Now.ToUnixTimeSeconds();
         private bool _isPutting;
         private bool _isDeviceArmed = false;
-        public OpenConnectTcpClient() : base(SettingsManager.Instance.Settings.OpenConnect.GSProIp, SettingsManager.Instance.Settings.OpenConnect.GSProPort) 
+        public OpenConnectTcpClient() : base(SettingsManager.Instance?.Settings?.OpenConnect?.GSProIp ?? "127.0.0.1", SettingsManager.Instance?.Settings?.OpenConnect?.GSProPort ?? 931) 
         {
             
         }
@@ -67,7 +67,7 @@ namespace MLM2PRO_BT_APP.connections
                     Logger.Log(message);
                     var fiveSecondsAgo = DateTimeOffset.Now.ToUnixTimeSeconds() - 5;
                     var delayAfterShotForDisarm = DateTimeOffset.Now.ToUnixTimeSeconds() - 20;
-                    bool autoDisarmEnabled = SettingsManager.Instance.Settings.LaunchMonitor.AutoDisarm;
+                    bool autoDisarmEnabled = SettingsManager.Instance?.Settings?.LaunchMonitor?.AutoDisarm ?? false;
                     (Application.Current as App)?.SendOpenConnectServerMessage(message);
                     switch (response.Code)
                     {
@@ -150,7 +150,7 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log($"OpenConnectTCPClient: Socket error: {error}");
             Application.Current.Dispatcher.Invoke(() =>
             {
-                App.SharedVm.GSProStatus = "SERVER ERROR";
+                if(App.SharedVm != null) App.SharedVm.GSProStatus = "SERVER ERROR";
             });
         }
         // Implement your logic for processing the response
@@ -166,7 +166,7 @@ namespace MLM2PRO_BT_APP.connections
                     {
                         Logger.Log("OpenConnectTCPClient: Club selection is a putter");
                         DeviceManager.Instance.ClubSelection = "PT";
-                        App.SharedVm.GSProClub = "PT";
+                        if (App.SharedVm != null) App.SharedVm.GSProClub = "PT";
                         if (_isPutting == false)
                         {
                             _isPutting = true;
@@ -181,14 +181,14 @@ namespace MLM2PRO_BT_APP.connections
                     {
                         Logger.Log($"OpenConnectTCPClient: Club selection is NOT a putter, it is {playerClub.Value}");
                         DeviceManager.Instance.ClubSelection = playerClub.Value.ToString();
-                        App.SharedVm.GSProClub = playerClub.Value.ToString();
+                        if (App.SharedVm != null) App.SharedVm.GSProClub = playerClub.Value.ToString();
                         if (_isPutting == true)
                         {
                             _isPutting = false; 
                             Task.Run(() =>
                             {
                                 (Application.Current as App)?.StopPutting();
-                                App.SharedVm.PuttingStatus = "CONNECTED, PUTTER NOT SELECTED";
+                                if (App.SharedVm != null) App.SharedVm.PuttingStatus = "CONNECTED, PUTTER NOT SELECTED";
                             });
                             
                         }
@@ -211,7 +211,7 @@ namespace MLM2PRO_BT_APP.connections
 
     public class OpenConnectApiMessage
     {
-        private static OpenConnectApiMessage _instance;
+        private static OpenConnectApiMessage? _instance;
         public static OpenConnectApiMessage Instance
         {
             get
@@ -228,9 +228,9 @@ namespace MLM2PRO_BT_APP.connections
         public string Units { get { return "Yards"; } }
         public int ShotNumber { get; set; }
         public string ApiVersion { get { return "1"; } }
-        public BallData BallData { get; set; }
-        public ClubData ClubData { get; set; }
-        public ShotDataOptions ShotDataOptions { get; set; }
+        public BallData? BallData { get; set; }
+        public ClubData? ClubData { get; set; }
+        public ShotDataOptions? ShotDataOptions { get; set; }
         public static OpenConnectApiMessage CreateHeartbeat(bool launchMonitorReady = false)
         {
             return new OpenConnectApiMessage()
@@ -252,17 +252,17 @@ namespace MLM2PRO_BT_APP.connections
                 ShotNumber = ShotNumber,
                 BallData = new BallData()
                 {
-                    Speed = input.BallData.Speed,
-                    SpinAxis = input.BallData.SpinAxis,
-                    TotalSpin = input.BallData.TotalSpin,
-                    BackSpin = input.BallData.BackSpin,
-                    SideSpin = input.BallData.SideSpin,
-                    HLA = input.BallData.HLA,
-                    VLA = input.BallData.VLA
+                    Speed = input.BallData?.Speed ?? 0,
+                    SpinAxis = input.BallData?.SpinAxis ?? 0,
+                    TotalSpin = input.BallData?.TotalSpin ?? 0,
+                    BackSpin = input.BallData?.BackSpin ?? 0,
+                    SideSpin = input.BallData?.SideSpin ?? 0,
+                    HLA = input.BallData?.HLA ?? 0,
+                    VLA = input.BallData?.VLA ?? 0
                 },
                 ClubData = new ClubData()
                 {
-                    Speed = input.ClubData.Speed
+                    Speed = input.ClubData?.Speed ?? 0
                 },
                 ShotDataOptions = new ShotDataOptions()
                 {

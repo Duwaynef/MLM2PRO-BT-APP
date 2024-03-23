@@ -16,7 +16,7 @@ public partial class HomeMenu : Page
         InitializeComponent();
         this.DataContext = App.SharedVm;
         // ShotDataDataGrid.ItemsSource = App.SharedVM.ShotDataCollection;
-        ShotDataDataGrid.ItemsSource = SharedViewModel.Instance.ShotDataCollection;
+        ShotDataDataGrid.ItemsSource = SharedViewModel.Instance?.ShotDataCollection;
         DataGridSnackBar.MessageQueue = new SnackbarMessageQueue(TimeSpan.FromMilliseconds(2000));
     }
 
@@ -91,7 +91,7 @@ public partial class HomeMenu : Page
         try
         {
             string folderPath = "";
-            if (String.IsNullOrWhiteSpace(SettingsManager.Instance.Settings.LaunchMonitor.CustomExportPath))
+            if (String.IsNullOrWhiteSpace(SettingsManager.Instance?.Settings?.LaunchMonitor?.CustomExportPath))
             {
                 folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Export");
             }
@@ -131,11 +131,11 @@ public partial class HomeMenu : Page
         App.SharedVm.LMStatus = "TESTING WEBAPI";
         
         WebApiClient webApiClient = new WebApiClient();
-        Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance.Settings.WebApiSettings.WebApiToken);
-        Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance.Settings.WebApiSettings.WebApiUserId);
-        WebApiClient.ApiResponse response = await webApiClient.SendRequestAsync(SettingsManager.Instance.Settings.WebApiSettings.WebApiUserId);
+        Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiToken);
+        Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId);
+        WebApiClient.ApiResponse response = await webApiClient.SendRequestAsync(SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId ?? 0);
 
-        if (response.Success)
+        if (response.Success && SettingsManager.Instance?.Settings?.WebApiSettings != null)
         {
             SettingsManager.Instance.Settings.WebApiSettings.WebApiDeviceId = response.User.Id;
             SettingsManager.Instance.Settings.WebApiSettings.WebApiToken = response.User.Token;
@@ -213,31 +213,35 @@ public partial class HomeMenu : Page
     {
         try
         {
-            var (success, path) = ExportShotDataToCsv(SharedViewModel.Instance.ShotDataCollection);
-            if (success)
+            if (SharedViewModel.Instance != null && SharedViewModel.Instance.ShotDataCollection != null)
             {
-                ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Check;
-                DataGridSnackBar.MessageQueue?.Enqueue(
-                    $"Saved successfully to {path}",
-                    null,
-                    null,
-                    null,
-                    false,
-                    true,
-                    TimeSpan.FromSeconds(2));
+                var (success, path) = ExportShotDataToCsv(SharedViewModel.Instance?.ShotDataCollection);
+                if (success)
+                {
+                    ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Check;
+                    DataGridSnackBar.MessageQueue?.Enqueue(
+                        $"Saved successfully to {path}",
+                        null,
+                        null,
+                        null,
+                        false,
+                        true,
+                        TimeSpan.FromSeconds(2));
+                }
+                else
+                {
+                    ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Close;
+                    DataGridSnackBar.MessageQueue?.Enqueue(
+                        "Failed to save data.",
+                        null,
+                        null,
+                        null,
+                        false,
+                        true,
+                        TimeSpan.FromSeconds(2));
+                }
             }
-            else
-            {
-                ExportIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.Close;
-                DataGridSnackBar.MessageQueue?.Enqueue(
-                    "Failed to save data.",
-                    null,
-                    null,
-                    null,
-                    false,
-                    true,
-                    TimeSpan.FromSeconds(2));
-            }
+
             await Task.Delay(2000);
         }
         catch (Exception ex)

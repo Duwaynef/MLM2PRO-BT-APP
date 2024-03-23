@@ -63,22 +63,22 @@ namespace MLM2PRO_BT_APP.util
         public class GitHubRelease
         {
             [JsonProperty("html_url")]
-            public string HtmlUrl { get; set; }
+            public string? HtmlUrl { get; set; }
 
             [JsonProperty("tag_name")]
-            public string TagName { get; set; }
+            public string? TagName { get; set; }
 
             [JsonProperty("target_commitish")]
-            public string TargetCommitish { get; set; }
+            public string? TargetCommitish { get; set; }
 
             [JsonProperty("name")]
-            public string Name { get; set; }
+            public string? Name { get; set; }
 
             [JsonProperty("body")]
-            public string Body { get; set; }
+            public string? Body { get; set; }
 
             [JsonProperty("published_at")]
-            public string PublishedAt { get; set; }
+            public string? PublishedAt { get; set; }
         }
     }
 

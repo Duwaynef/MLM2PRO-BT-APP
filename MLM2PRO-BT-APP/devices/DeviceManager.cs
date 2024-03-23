@@ -119,9 +119,9 @@ namespace MLM2PRO_BT_APP.devices
 
 
             // Generate required byte arrays
-            byte[] airPressureBytes = byteConversionUtils.GetAirPressureBytes(0.0);
-            byte[] temperatureBytes = byteConversionUtils.GetTemperatureBytes(15.0);
-            byte[] longToUintToByteArray = byteConversionUtils.LongToUintToByteArray(long.Parse(UserToken), true);
+            byte[] airPressureBytes = byteConversionUtils.GetAirPressureBytes(0.0) ?? [0];
+            byte[] temperatureBytes = byteConversionUtils.GetTemperatureBytes(15.0) ?? [0];
+            byte[] longToUintToByteArray = byteConversionUtils.LongToUintToByteArray(long.Parse(UserToken), true) ?? [0];
 
             // Concatenate all byte arrays
             byte[]? concatenatedBytes = new byte[] { 1, 2, 0, 0 }.Concat(airPressureBytes)
@@ -138,20 +138,20 @@ namespace MLM2PRO_BT_APP.devices
         {
             if (string.IsNullOrEmpty(UserToken))
             {
-                return null;
+                return new byte[0];
             }
 
             double altitude = AltitudeMetres ?? 0.0;
             double temperature = TemperatureCelcius ?? 15.0;
 
-            byte[] handednessBytes = Handedness != null ? new byte[] { Handedness.Value } : new byte[] { 1 };
-            byte[] ballTypeBytes = BallType != null ? new byte[] { BallType.Value } : new byte[] { 2 };
-            byte[] environmentBytes = Environment != null ? new byte[] { Environment.Value } : new byte[] { 0 };
-            byte[] quitEventBytes = QuitEvent != null ? new byte[] { QuitEvent.Value } : new byte[] { 0 };
-            byte[] powerModeBytes = PowerMode != null ? new byte[] { PowerMode.Value } : new byte[] { 0 };
+            byte[] handednessBytes = Handedness != null ? [Handedness.Value] : [1];
+            byte[] ballTypeBytes = BallType != null ? [BallType.Value] : [2];
+            byte[] environmentBytes = Environment != null ? [Environment.Value] : [0];
+            byte[] quitEventBytes = QuitEvent != null ? [QuitEvent.Value] : [0];
+            byte[] powerModeBytes = PowerMode != null ? [PowerMode.Value] : [0];
 
-            byte[] airPressureBytes = byteConversionUtils.GetAirPressureBytes(altitude);
-            byte[] temperatureBytes = byteConversionUtils.GetTemperatureBytes(temperature);
+            byte[] airPressureBytes = byteConversionUtils.GetAirPressureBytes(altitude) ?? [0];
+            byte[] temperatureBytes = byteConversionUtils.GetTemperatureBytes(temperature) ?? [0];
             byte[] userTokenBytes = BitConverter.GetBytes(long.Parse(UserToken));
 
             byte[] concatenatedBytes = handednessBytes

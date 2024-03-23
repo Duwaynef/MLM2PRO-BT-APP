@@ -23,14 +23,14 @@
                 ToolBar.OverflowMode="Never"
                 Style="{StaticResource MaterialDesignToolBar}">
             <Button
-                  Margin="20,0,20,0"
+                  Margin="10,0,10,0"
                   Click="Exit_Click"
                   Content="Exit"
                   ToolTip="Exit" />
                 <Separator />
 
                 <Button
-                  Margin="20,0,20,0"
+                  Margin="10,0,10,0"
                   Click="Home_Click"
                   Content="Home"
                   ToolTip="Home" />
@@ -38,7 +38,7 @@
                 <Separator />
 
                 <Button
-                  Margin="20,0,20,0"
+                  Margin="10,0,10,0"
                   Click="Settings_Click"
                   Content="Settings"
                   ToolTip="Settings" />
@@ -46,7 +46,7 @@
                 <Separator />
 
                 <Button
-                  Margin="20,0,20,0"
+                  Margin="10,0,10,0"
                   Click="About_Click"
                   Content="Help"
                   ToolTip="Help" />
@@ -54,7 +54,7 @@
                 <Separator />
 
                 <Button
-                  Margin="20,0,20,0"
+                  Margin="10,0,10,0"
                   Click="Button_Toggle_DebugConsole"
                   PreviewMouseDown="Button_DebugConsole_PreviewMouseDown"
                   PreviewMouseUp="Button_DebugConsole_PreviewMouseUp"
@@ -64,7 +64,7 @@
                 <Separator />
 
                 <Button
-                  Margin="20,0,20,0"
+                  Margin="10,0,10,0"
                   Click="ReportBug_Click"
                   Content="Report Bug"
                   ToolTip="Report Bug" />
@@ -72,7 +72,15 @@
                 <Separator />
 
                 <Button
-                  Margin="20,0,20,0"
+                  Margin="10,0,10,0"
+                  Click="Coffee_Click"
+                  Content="Buy me a coffee"
+                  ToolTip="Buy me a coffee" />
+
+                <Separator />
+
+                <Button
+                  Margin="10,0,10,0"
                   Click="Button_Toggle_ToggleDarkMode"
                   Content="Toggle Dark Mode"
                   ToolTip="Toggle Dark Mode" />
@@ -83,7 +91,7 @@
                   x:Name="UpdateAvailableBadge"
                   Badge="{materialDesign:PackIcon Alert}"
                   CornerRadius="5"
-                  Margin="20,0,20,0"
+                  Margin="10,0,10,0"
                   materialDesign:BadgedAssist.IsMiniBadge="True"
                   HorizontalAlignment="Center" 
                   VerticalAlignment="Center" 

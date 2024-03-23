@@ -66,7 +66,7 @@ namespace MLM2PRO_BT_APP
             CheckForGitHubUpdates();
         }
 
-        private async void Button_Toggle_DebugConsole(object sender, RoutedEventArgs e)
+        private void Button_Toggle_DebugConsole(object sender, RoutedEventArgs e)
         {
             if (!isPressAndHold)
             {
@@ -75,17 +75,17 @@ namespace MLM2PRO_BT_APP
             isPressAndHold = false;
 
         }
-        public async Task CheckForGitHubUpdates()
+        public async void CheckForGitHubUpdates()
         {
             try
             {
-                var currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                var currentVersion = System.Reflection.Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
                 Logger.Log($"Current version: {currentVersion}");
                 var releaseChecker = new GitHubReleaseChecker("DuwayneF", "MLM2PRO-BT-APP");
                 GitHubRelease? currentRelease = await releaseChecker.CheckForUpdateAsync(currentVersion);
                 if(currentRelease != null)
                 {
-                    updateUrl = currentRelease.HtmlUrl;
+                    updateUrl = currentRelease.HtmlUrl ?? "";
                     UpdateAvailableBadge.Visibility = Visibility.Visible;
                     UpdateAvailableSeperator.Visibility = Visibility.Visible;
                 } 
@@ -100,7 +100,7 @@ namespace MLM2PRO_BT_APP
                 Logger.Log($"Error checking for updates: {ex.Message}");
             }
         }
-        private async static void ToggleDebugConsole()
+        private static void ToggleDebugConsole()
         {
             if (DebugConsolePopup != null) DebugConsolePopup.IsOpen = !DebugConsolePopup.IsOpen;
         }
@@ -127,23 +127,23 @@ namespace MLM2PRO_BT_APP
         {
             pressHoldTimer.Stop();
         }
-        private async void Settings_Click(object sender, RoutedEventArgs e)
+        private void Settings_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new SettingsPage());
         }
-        private async void About_Click(object sender, RoutedEventArgs e)
+        private void About_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new AboutPage());
         }
-        private async void Exit_Click(object sender, RoutedEventArgs e)
+        private void Exit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
         }
-        private async void Home_Click(object sender, RoutedEventArgs e)
+        private void Home_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new HomeMenu());
         }
-        private async void Coffee_Click(object sender, RoutedEventArgs e)
+        private void Coffee_Click(object sender, RoutedEventArgs e)
         {
             Process.Start(new ProcessStartInfo
             {
@@ -151,7 +151,7 @@ namespace MLM2PRO_BT_APP
                 UseShellExecute = true
             });
         }
-        private async void Button_UpdatesAvailable_Click(object sender, RoutedEventArgs e)
+        private void Button_UpdatesAvailable_Click(object sender, RoutedEventArgs e)
         {
             Process.Start(new ProcessStartInfo
             {
@@ -159,16 +159,16 @@ namespace MLM2PRO_BT_APP
                 UseShellExecute = true
             });
         }
-        private async static void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        private static void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             if (DebugConsolePopup is { IsOpen: true })
             {
                 DebugConsolePopup.IsOpen = false;
             }
         }
-        public async void setAppTheme()
+        public void setAppTheme()
         {
-            if (SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme)
+            if (SettingsManager.Instance?.Settings?.ApplicationSettings?.DarkTheme ?? true)
             {
                 _theme.SetBaseTheme(BaseTheme.Dark);
             }
@@ -179,15 +179,16 @@ namespace MLM2PRO_BT_APP
             paletteHelper.SetTheme(_theme);
         }
 
-        public async void changeAppTheme()
+        public void changeAppTheme()
         {
-            _theme.SetBaseTheme(!SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme ? BaseTheme.Dark : BaseTheme.Light);
+            _theme.SetBaseTheme(!SettingsManager.Instance?.Settings?.ApplicationSettings?.DarkTheme ?? true ? BaseTheme.Dark : BaseTheme.Light);
             paletteHelper.SetTheme(_theme);
-            SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme = !SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme;
-            SettingsManager.Instance.SaveSettings();
+            if (SettingsManager.Instance?.Settings?.ApplicationSettings != null)
+                SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme = !SettingsManager.Instance.Settings.ApplicationSettings.DarkTheme;
+            SettingsManager.Instance?.SaveSettings();
         }
 
-        private async void Button_Toggle_ToggleDarkMode(object sender, RoutedEventArgs e)
+        private void Button_Toggle_ToggleDarkMode(object sender, RoutedEventArgs e)
         {
             changeAppTheme();
         }

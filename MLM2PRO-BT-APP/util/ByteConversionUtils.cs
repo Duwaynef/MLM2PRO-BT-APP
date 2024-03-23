@@ -42,7 +42,7 @@ namespace MLM2PRO_BT_APP.util
 
     public class ByteConversionUtils
     {
-        private static byte[] ShortToByteArray(short s, bool littleEndian)
+        private static byte[]? ShortToByteArray(short s, bool littleEndian)
         {
             return littleEndian ? new byte[] { (byte)s, (byte)(s >> 8) } : new byte[] { (byte)(s >> 8), (byte)s };
         }
@@ -63,17 +63,17 @@ namespace MLM2PRO_BT_APP.util
             }
             return intArray;
         }
-        public byte[] GetAirPressureBytes(double d)
+        public byte[]? GetAirPressureBytes(double d)
         {
             double d2 = d * 0.0065;
             return ShortToByteArray((short)((int)((((Math.Pow(1.0 - (d2 / ((15.0 + d2) + 273.15)), 5.257) * 1013.25) * 0.1) - 50.0) * 1000.0)), true);
 
         }
-        public byte[] GetTemperatureBytes(double d)
+        public byte[]? GetTemperatureBytes(double d)
         {
             return ShortToByteArray((short)((int)(d * 100.0d)), true);
         }
-        public byte[] LongToUintToByteArray(long j, bool littleEndian)
+        public byte[]? LongToUintToByteArray(long j, bool littleEndian)
         {
             if (littleEndian)
             {
@@ -81,7 +81,7 @@ namespace MLM2PRO_BT_APP.util
             }
             return BitConverter.GetBytes(j);
         }
-        public byte[] IntToByteArray(int i, bool littleEndian)
+        public byte[]? IntToByteArray(int i, bool littleEndian)
         {
             if (littleEndian)
             {
@@ -104,9 +104,10 @@ namespace MLM2PRO_BT_APP.util
         }
         public int ByteArrayToInt(byte[] byteArray, bool isLittleEndian)
         {
-            if (byteArray == null || byteArray.Length != 4)
+            if (byteArray == null)
             {
                 Logger.Log("byteArray must be exactly 4 bytes long");
+                return 0;
             }
 
             int result;
@@ -122,7 +123,7 @@ namespace MLM2PRO_BT_APP.util
 
             return result;
         }
-        public byte[] StringToByteArray(string hex)
+        public byte[]? StringToByteArray(string hex)
         {
             try
             {
@@ -169,11 +170,11 @@ namespace MLM2PRO_BT_APP.util
             }
             return bytes;
         }
-        public string IntArrayToString(int[] intArray)
+        public string? IntArrayToString(int[] intArray)
         {
             return string.Join(", ", intArray);
         }
-        public string ByteArrayToString(byte[] byteArray)
+        public string? ByteArrayToString(byte[] byteArray)
         {
             return string.Join(", ", byteArray);
         }

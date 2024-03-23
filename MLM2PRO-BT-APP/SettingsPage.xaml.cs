@@ -15,9 +15,9 @@ namespace MLM2PRO_BT_APP
         {
             InitializeComponent();
             DataContext = SettingsManager.Instance;
-            SettingsManager.Instance.SettingsUpdated += (s, e) => RefreshDataContext();
+            if (SettingsManager.Instance != null) SettingsManager.Instance.SettingsUpdated += (s, e) => RefreshDataContext();
         }
-        private async void RefreshDataContext()
+        private void RefreshDataContext()
         {
             Dispatcher.Invoke(() =>
             {
@@ -25,13 +25,13 @@ namespace MLM2PRO_BT_APP
                 DataContext = SettingsManager.Instance;
             });
         }
-        private async void Settings_ClearSettings_Button(object sender, RoutedEventArgs e)
+        private void Settings_ClearSettings_Button(object sender, RoutedEventArgs e)
         {
-            SettingsManager.Instance.ClearSettings();
+            SettingsManager.Instance?.ClearSettings();
         }
-        private async void Settings_SaveSettings_Button(object sender, RoutedEventArgs e)
+        private void Settings_SaveSettings_Button(object sender, RoutedEventArgs e)
         {
-            SettingsManager.Instance.SaveSettings();
+            SettingsManager.Instance?.SaveSettings();
         }
     }
 }

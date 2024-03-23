@@ -4,8 +4,8 @@ namespace MLM2PRO_BT_APP.devices
 {
     class MeasurementData
     {
-        private static MeasurementData instance;
-        public static MeasurementData Instance
+        private static MeasurementData? instance;
+        public static MeasurementData? Instance
         {
             get
             {
@@ -49,9 +49,9 @@ namespace MLM2PRO_BT_APP.devices
         public OpenConnectApiMessage ConvertHexToMeasurementData(string? hexData)
         {
             double multiplier = 2.2375;
-            byte[] bytes = Enumerable.Range(0, hexData.Length)
+            byte[] bytes = Enumerable.Range(0, hexData?.Length ?? 0)
                              .Where(x => x % 2 == 0)
-                             .Select(x => Convert.ToByte(hexData.Substring(x, 2), 16))
+                             .Select(x => Convert.ToByte(hexData?.Substring(x, 2), 16))
                              .ToArray();
 
             ClubHeadSpeed = Math.Round(BitConverter.ToInt16(bytes, 0) / 10.0 * multiplier, 2); // Round to 2 decimal places

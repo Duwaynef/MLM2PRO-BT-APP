@@ -13,7 +13,7 @@ namespace MLM2PRO_BT_APP.connections;
 public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.BluetoothLEDevice>
 {
     private DeviceWatcher? _deviceWatcher;
-    protected readonly Dictionary<string, DeviceInformation?> _foundDevices = new Dictionary<string, DeviceInformation?>();
+    protected readonly Dictionary<string, DeviceInformation?> _foundDevices = [];
     public BluetoothManager() : base()
     {
         InitializeDeviceWatcher();
@@ -26,12 +26,12 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         _deviceWatcher.Added += DeviceWatcher_Added;
         _deviceWatcher.Updated += DeviceWatcher_Updated;
         // _deviceWatcher.Removed += DeviceWatcher_Removed;
-        if (SettingsManager.Instance.Settings.LaunchMonitor.AutoStartLaunchMonitor)
+        if (SettingsManager.Instance?.Settings?.LaunchMonitor?.AutoStartLaunchMonitor ?? true)
         {
             _deviceWatcher.Start();
         }
     }
-    private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
+    private void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation deviceInfo)
     {
         if (!_foundDevices.TryAdd(deviceInfo.Id, deviceInfo))
         {
@@ -41,6 +41,7 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         Logger.Log("Device Watcher found: " + deviceInfo.Name);
         DeviceWatcher_StartDeviceConnection(deviceInfo);
     }
+
     private async void DeviceWatcher_Updated(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
     {
         if (!_foundDevices.TryGetValue(deviceInfoUpdate.Id, out var deviceInfo)) return;
@@ -52,8 +53,10 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
             if (deviceInfo != null) DeviceWatcher_StartDeviceConnection(deviceInfo);
         }
     }
-    private async void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
-    {
+
+    /* unused for now
+    private void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate deviceInfoUpdate)
+     {
         // Remove the device from the internal dictionary.
         if (!_foundDevices.TryGetValue(deviceInfoUpdate.Id, out var deviceInfo)) return;
         //deviceInfo?.Update(deviceInfoUpdate);
@@ -61,10 +64,12 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         Logger.Log("Device Watcher removed " + deviceInfo?.Name);
         //await DisconnectAndCleanup();
     }
+    */
+
     private async void DeviceWatcher_StartDeviceConnection(DeviceInformation deviceInfo)
     {
         Logger.Log("Device Watcher start device connection " + deviceInfo.Name);
-        if (SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret != "")
+        if (SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret != "")
         {
             Logger.Log("Device Watcher connecting to device " + deviceInfo.Name);
             var device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
@@ -143,11 +148,11 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
         }
         return true;
     }
-    protected override async Task<byte[]> GetCharacteristicValueAsync(object args)
+    protected override byte[] GetCharacteristicValueAsync(object args)
     {
         return (args as GattValueChangedEventArgs)?.CharacteristicValue.ToArray() ?? new byte[0];
     }
-    protected override async Task<Guid> GetSenderUuidAsync(object sender)
+    protected override Guid GetSenderUuidAsync(object sender)
     {
         return (sender as GattCharacteristic)?.Uuid ?? Guid.Empty;
     }
@@ -230,15 +235,15 @@ public class BluetoothManager : BluetoothBase<Windows.Devices.Bluetooth.Bluetoot
     }
     public override async Task TriggerDeviceDiscovery()
     {
-        RestartDeviceWatcher();
+        await RestartDeviceWatcher();
     }
-    protected override async Task ChildDisconnectAndCleanupFirst()
+    protected override void ChildDisconnectAndCleanupFirst()
     {
         if (_deviceWatcher != null && (_deviceWatcher.Status == DeviceWatcherStatus.Started || _deviceWatcher.Status == DeviceWatcherStatus.EnumerationCompleted))
         _deviceWatcher?.Stop();
         _foundDevices.Clear();
     }
-    protected override async Task ChildDisconnectAndCleanupSecond()
+    protected override void ChildDisconnectAndCleanupSecond()
     {
         _bluetoothDevice?.Dispose();
         _bluetoothDevice = null;

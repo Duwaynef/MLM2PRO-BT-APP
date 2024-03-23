@@ -8,6 +8,7 @@ using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using static MaterialDesignThemes.Wpf.Theme.ToolBar;
 using MaterialDesignColors.Recommended;
+using System.Text.RegularExpressions;
 
 namespace MLM2PRO_BT_APP.util
 {
@@ -15,78 +16,78 @@ namespace MLM2PRO_BT_APP.util
     {
         public ObservableCollection<ShotData> ShotDataCollection { get; private set; } = new ObservableCollection<ShotData>();
 
-        private static SharedViewModel _instance;
-        public static SharedViewModel Instance => _instance ??= new SharedViewModel();
+        private static SharedViewModel? _instance;
+        public static SharedViewModel? Instance => _instance ??= new SharedViewModel();
 
         public SharedViewModel()
         {
 
         }
 
-        private string _gsProStatus;
-        public string GSProStatus
+        private string? _gsProStatus;
+        public string? GSProStatus
         {
             get => _gsProStatus;
             set => SetProperty(ref _gsProStatus, value, nameof(GSProStatus));
         }
 
-        private string _gsProClub;
-        public string GSProClub
+        private string? _gsProClub;
+        public string? GSProClub
         {
             get => _gsProClub;
             set => SetProperty(ref _gsProClub, value, nameof(GSProClub));
         }
 
-        private string _lmStatus;
-        public string LMStatus
+        private string? _lmStatus;
+        public string? LMStatus
         {
             get => _lmStatus;
             set => SetProperty(ref _lmStatus, value, nameof(LMStatus));
         }
 
-        private string _puttingStatus;
-        public string PuttingStatus
+        private string? _puttingStatus;
+        public string? PuttingStatus
         {
             get => _puttingStatus;
             set => SetProperty(ref _puttingStatus, value, nameof(PuttingStatus));
         }
 
-        private string _LmBatteryLife;
-        public string LmBatteryLife
+        private string? _LmBatteryLife;
+        public string? LmBatteryLife
         {
             get => _LmBatteryLife;
-            set => SetProperty(ref _LmBatteryLife, value, nameof(LmBatteryLife));
+            set => SetProperty(ref _LmBatteryLife, value + "%", nameof(LmBatteryLife));
         }
 
-        private SolidColorBrush _PuttingStatusBackground;
-        public SolidColorBrush PuttingStatusBackground
+        private SolidColorBrush? _PuttingStatusBackground;
+        public SolidColorBrush? PuttingStatusBackground
         {
             get => _PuttingStatusBackground;
             set => SetProperty(ref _PuttingStatusBackground, value, nameof(PuttingStatusBackground));
         }
 
-        private SolidColorBrush _lmStatusBackground;
-        public SolidColorBrush LMStatusBackground
+        private SolidColorBrush? _lmStatusBackground;
+        public SolidColorBrush? LMStatusBackground
         {
             get => _lmStatusBackground;
             set => SetProperty(ref _lmStatusBackground, value, nameof(LMStatusBackground));
         }
 
-        private SolidColorBrush _lmBattLifeBackground;
-        public SolidColorBrush LMBattLifeBackground
+        private SolidColorBrush? _lmBattLifeBackground;
+        public SolidColorBrush? LMBattLifeBackground
         {
             get => _lmBattLifeBackground;
             set => SetProperty(ref _lmBattLifeBackground, value, nameof(LMBattLifeBackground));
         }
 
-        private SolidColorBrush _gsProStatusBackground;
-        public SolidColorBrush GSProStatusBackground
+        private SolidColorBrush? _gsProStatusBackground;
+        public SolidColorBrush? GSProStatusBackground
         {
             get => _gsProStatusBackground;
             set => SetProperty(ref _gsProStatusBackground, value, nameof(GSProStatusBackground));
         }
 
-        private static SolidColorBrush GetStatusColor(string status)
+        private static SolidColorBrush? GetStatusColor(string status)
         {
             // Normalize the status string to lower case for case-insensitive comparison
             var lowerCaseStatus = status.ToLower();
@@ -153,7 +154,8 @@ namespace MLM2PRO_BT_APP.util
                 }
                 else if (propertyName == nameof(LmBatteryLife) && value is string lmBattLifeValue)
                 {
-                    LMBattLifeBackground = GetStatusColor(lmBattLifeValue);
+                    var matches = string.Concat(Regex.Matches(lmBattLifeValue, @"\d+").Cast<Match>().Select(m => m.Value));
+                    LMBattLifeBackground = GetStatusColor(matches);
                 }
                 else if (propertyName == nameof(PuttingStatus) && value is string puttingStatusValue)
                 {

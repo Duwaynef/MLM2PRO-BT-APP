@@ -41,23 +41,23 @@ namespace MLM2PRO_BT_APP.connections
 
                     if (message != null)
                     {
-                        App.SharedVm.PuttingStatus = "INCOMING MESSAGE";
+                        if (App.SharedVm != null) App.SharedVm.PuttingStatus = "INCOMING MESSAGE";
                         if (PuttingServer.PuttingEnabled && DeviceManager.Instance.ClubSelection == "PT")
                         {
                             OpenConnectApiMessage? messageToSend = BallDataFromPuttingBallData(message?.BallData);
                             if (messageToSend != null)
                             {
                                 (App.Current as App)?.SendShotData(messageToSend);
-                                App.SharedVm.PuttingStatus = "SHOT SENT";
+                                if (App.SharedVm != null) App.SharedVm.PuttingStatus = "SHOT SENT";
                             }
                         }
                         else
                         {
-                            App.SharedVm.PuttingStatus = "CONNECTED";
+                            if (App.SharedVm != null) App.SharedVm.PuttingStatus = "CONNECTED";
                             Logger.Log("Not sending Putt because selected club is not putter");
                         }
                         await Task.Delay(2000);
-                        App.SharedVm.PuttingStatus = "CONNECTED, READY";
+                        if (App.SharedVm != null) App.SharedVm.PuttingStatus = "CONNECTED, READY";
                     }
 
                 }
@@ -139,20 +139,20 @@ namespace MLM2PRO_BT_APP.connections
         protected override void OnError(SocketError error) => Logger.Log($"HTTP session caught an error: {error}");
 
         public HttpPuttingServer()
-          : base(IPAddress.Any, SettingsManager.Instance.Settings.Putting.PuttingPort)
+          : base(IPAddress.Any, SettingsManager.Instance?.Settings?.Putting?.PuttingPort ?? 8888)
         {
             Logger.Log($"Starting putting receiver on port {Port}");
 
-            OnlyLaunchWhenPutting = SettingsManager.Instance.Settings.Putting.OnlyLaunchWhenPutting;
-            KeepPuttingCamOnTop = SettingsManager.Instance.Settings.Putting.KeepPuttingCamOnTop;
-            LaunchBallTracker = SettingsManager.Instance.Settings.Putting.PuttingEnabled;
-            WebcamIndex = SettingsManager.Instance.Settings.Putting.WebcamIndex;
-            BallColor = SettingsManager.Instance.Settings.Putting.BallColor;
-            CamPreviewWidth = SettingsManager.Instance.Settings.Putting.CamPreviewWidth;
-            ExecutablePath = SettingsManager.Instance.Settings.Putting.ExePath;
+            OnlyLaunchWhenPutting = SettingsManager.Instance?.Settings?.Putting?.OnlyLaunchWhenPutting ?? true;
+            KeepPuttingCamOnTop = SettingsManager.Instance?.Settings?.Putting?.KeepPuttingCamOnTop ?? true;
+            LaunchBallTracker = SettingsManager.Instance?.Settings?.Putting?.PuttingEnabled ?? true;
+            WebcamIndex = SettingsManager.Instance?.Settings?.Putting?.WebcamIndex ?? 0;
+            BallColor = SettingsManager.Instance?.Settings?.Putting?.BallColor ?? "white";
+            CamPreviewWidth = SettingsManager.Instance?.Settings?.Putting?.CamPreviewWidth ?? 450;
+            ExecutablePath = SettingsManager.Instance?.Settings?.Putting?.ExePath ?? "./ball_tracking/ball_tracking.exe";
             ExecutableName = Path.GetFileName(ExecutablePath);
-            AdditionalExeArgs = SettingsManager.Instance.Settings.Putting.AdditionalExeArgs;
-            HideExeLogs = SettingsManager.Instance.Settings.Putting.HideExeLogs;
+            AdditionalExeArgs = SettingsManager.Instance?.Settings?.Putting?.AdditionalExeArgs ?? "";
+            HideExeLogs = SettingsManager.Instance?.Settings?.Putting?.HideExeLogs ?? true;
 
             if (LaunchBallTracker && CheckBallTrackingExists() && !OnlyLaunchWhenPutting)
             {
@@ -179,7 +179,7 @@ namespace MLM2PRO_BT_APP.connections
             PuttingEnabled = false;
             if (LaunchBallTracker && OnlyLaunchWhenPutting || force)
                 KillProcess();
-                App.SharedVm.PuttingStatus = "DISCONNECTED";
+            if (App.SharedVm != null) App.SharedVm.PuttingStatus = "DISCONNECTED";
         }
 
 
@@ -283,7 +283,7 @@ namespace MLM2PRO_BT_APP.connections
                     BringWindowToTop(handle);
                     SetForegroundWindow(handle);
                 }
-                App.SharedVm.PuttingStatus = "CONNECTED, READY";
+                if (App.SharedVm != null) App.SharedVm.PuttingStatus = "CONNECTED, READY";
             }
         }
 

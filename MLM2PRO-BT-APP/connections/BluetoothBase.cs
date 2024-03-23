@@ -11,8 +11,8 @@ namespace MLM2PRO_BT_APP.connections
         public bluetoothDeviceType? _bluetoothDevice;
         protected Timer? _heartbeatTimer;
         protected Timer? _subscriptionVerificationTimer;
-        protected readonly ByteConversionUtils _byteConversionUtils = new ByteConversionUtils();
-        protected readonly Encryption _btEncryption = new Encryption();
+        protected readonly ByteConversionUtils _byteConversionUtils = new();
+        protected readonly Encryption _btEncryption = new();
         protected bool _settingUpConnection;
         protected long _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
         protected int _connectionAttempts;
@@ -20,14 +20,14 @@ namespace MLM2PRO_BT_APP.connections
         protected byte[]? _storeConfigureBytes;
         protected bool _isDeviceArmed;
 
-        protected readonly Guid _serviceUuid = new Guid("DAF9B2A4-E4DB-4BE4-816D-298A050F25CD");
-        protected readonly Guid _authRequestCharacteristicUuid = new Guid("B1E9CE5B-48C8-4A28-89DD-12FFD779F5E1"); // Write Only
-        protected readonly Guid _commandCharacteristicUuid = new Guid("1EA0FA51-1649-4603-9C5F-59C940323471"); // Write Only
-        protected readonly Guid _configureCharacteristicUuid = new Guid("DF5990CF-47FB-4115-8FDD-40061D40AF84"); // Write Only
-        protected readonly Guid _eventsCharacteristicUuid = new Guid("02E525FD-7960-4EF0-BFB7-DE0F514518FF");
-        protected readonly Guid _heartbeatCharacteristicUuid = new Guid("EF6A028E-F78B-47A4-B56C-DDA6DAE85CBF");
-        protected readonly Guid _measurementCharacteristicUuid = new Guid("76830BCE-B9A7-4F69-AEAA-FD5B9F6B0965");
-        protected readonly Guid _writeResponseCharacteristicUuid = new Guid("CFBBCB0D-7121-4BC2-BF54-8284166D61F0");
+        protected readonly Guid _serviceUuid = new("DAF9B2A4-E4DB-4BE4-816D-298A050F25CD");
+        protected readonly Guid _authRequestCharacteristicUuid = new("B1E9CE5B-48C8-4A28-89DD-12FFD779F5E1"); // Write Only
+        protected readonly Guid _commandCharacteristicUuid = new("1EA0FA51-1649-4603-9C5F-59C940323471"); // Write Only
+        protected readonly Guid _configureCharacteristicUuid = new("DF5990CF-47FB-4115-8FDD-40061D40AF84"); // Write Only
+        protected readonly Guid _eventsCharacteristicUuid = new("02E525FD-7960-4EF0-BFB7-DE0F514518FF");
+        protected readonly Guid _heartbeatCharacteristicUuid = new("EF6A028E-F78B-47A4-B56C-DDA6DAE85CBF");
+        protected readonly Guid _measurementCharacteristicUuid = new("76830BCE-B9A7-4F69-AEAA-FD5B9F6B0965");
+        protected readonly Guid _writeResponseCharacteristicUuid = new("CFBBCB0D-7121-4BC2-BF54-8284166D61F0");
         protected readonly List<Guid> _notifyUuiDs = [];
 
         public BluetoothBase()
@@ -36,8 +36,23 @@ namespace MLM2PRO_BT_APP.connections
             _notifyUuiDs.Add(_heartbeatCharacteristicUuid);
             _notifyUuiDs.Add(_measurementCharacteristicUuid);
             _notifyUuiDs.Add(_writeResponseCharacteristicUuid);
-            if (App.SharedVm != null && SettingsManager.Instance.Settings.LaunchMonitor.AutoStartLaunchMonitor) App.SharedVm.LMStatus = "Watching for bluetooth devices...";
+            if (App.SharedVm != null)
+            {
+                if (SettingsManager.Instance?.Settings?.LaunchMonitor?.AutoStartLaunchMonitor ?? true) App.SharedVm.LMStatus = "Watching for bluetooth devices...";
+            }
         }
+
+        protected abstract Task<bool> SubscribeToCharacteristicsAsync();
+        protected abstract byte[] GetCharacteristicValueAsync(object args);
+        protected abstract Guid GetSenderUuidAsync(object sender);
+        protected abstract Task<bool> WriteCharacteristic(Guid serviceUuid, Guid characteristicUuid, byte[]? data);
+        protected abstract void VerifyConnection(object? state);
+        protected abstract void ChildDisconnectAndCleanupFirst();
+        protected abstract void ChildDisconnectAndCleanupSecond();
+        protected abstract Task UnsubscribeFromAllNotifications();
+        public abstract Task<bool> VerifyDeviceConnection(object input);
+        public abstract Task RestartDeviceWatcher();
+        public abstract Task TriggerDeviceDiscovery();
 
         protected async Task SetupBluetoothDevice()
         {
@@ -55,7 +70,7 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log("Bluetooth Manager: Starting");
 
             //Check last used token?
-            var tokenExpiryDate = SettingsManager.Instance.Settings.WebApiSettings.WebApiExpireDate;
+            var tokenExpiryDate = SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiExpireDate;
             if (tokenExpiryDate > 0 && tokenExpiryDate < DateTimeOffset.Now.ToUnixTimeSeconds())
             {
                 if (App.SharedVm != null) App.SharedVm.LMStatus = "SEARCHING, 3RD PARTY TOKEN EXPIRED?";
@@ -67,7 +82,8 @@ namespace MLM2PRO_BT_APP.connections
             }
 
             var isConnected = false;
-            isConnected = await VerifyDeviceConnection(_bluetoothDevice);
+            if (_bluetoothDevice != null)
+                isConnected = await VerifyDeviceConnection(_bluetoothDevice);
 
             // Only proceed with setup if the connection is successful
             if (App.SharedVm != null)
@@ -123,7 +139,7 @@ namespace MLM2PRO_BT_APP.connections
         public async Task ArmDevice()
         {
             var data = _byteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
-            _ = WriteCommand(data);
+            await WriteCommand(data);
             _isDeviceArmed = true;
         }
         public bool isBluetoothDeviceValid()
@@ -140,16 +156,14 @@ namespace MLM2PRO_BT_APP.connections
         public async Task DisarmDevice()
         {
             var data = _byteConversionUtils.HexStringToByteArray("010D0000000000"); //01180000000000 also found 010D0000000000 == disarm device???
-            _ = WriteCommand(data);
+            await WriteCommand(data);
             _isDeviceArmed = false;
         }
-        protected abstract Task<bool> SubscribeToCharacteristicsAsync();
-        protected abstract Task<byte[]> GetCharacteristicValueAsync(object args);
-        protected abstract Task<Guid> GetSenderUuidAsync(object sender);
         protected async void Characteristic_ValueChanged(object? sender, object? args)
         {
-            byte[] value = await GetCharacteristicValueAsync(args);
-            Guid senderUuid = await GetSenderUuidAsync(sender);
+            if (args == null || sender == null) return;
+            byte[] value = GetCharacteristicValueAsync(args);
+            Guid senderUuid = GetSenderUuidAsync(sender);
             if (_heartbeatCharacteristicUuid == senderUuid)
             {
                 _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds();
@@ -192,19 +206,25 @@ namespace MLM2PRO_BT_APP.connections
                             byte[] byteArr3 = new byte[4];
                             Array.Copy(byteArray, 0, byteArr3, 0, 4);
                             int byteArrayToInt = _byteConversionUtils.ByteArrayToInt(byteArr3, true);
-                            SettingsManager.Instance.Settings.WebApiSettings.WebApiUserId = byteArrayToInt;
+                            if (SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId != null)
+                            {
+                                SettingsManager.Instance.Settings.WebApiSettings.WebApiUserId = byteArrayToInt;
+                            }
                             Logger.Log("UserId Generated from device: " + byteArrayToInt.ToString());
-                            SettingsManager.Instance.SaveSettings();
+                            SettingsManager.Instance?.SaveSettings();
 
-                            WebApiClient client = new WebApiClient();
+                            WebApiClient client = new();
                             WebApiClient.ApiResponse response = await client.SendRequestAsync(byteArrayToInt);
 
                             if (response is { Success: true, User.Token: not null })
                             {
-                                SettingsManager.Instance.Settings.WebApiSettings.WebApiDeviceId = response.User.Id;
-                                SettingsManager.Instance.Settings.WebApiSettings.WebApiToken = response.User.Token;
-                                SettingsManager.Instance.Settings.WebApiSettings.WebApiExpireDate = response.User.ExpireDate;
-                                SettingsManager.Instance.SaveSettings();
+                                if (SettingsManager.Instance?.Settings?.WebApiSettings != null)
+                                {
+                                    SettingsManager.Instance.Settings.WebApiSettings.WebApiDeviceId = response.User.Id;
+                                    SettingsManager.Instance.Settings.WebApiSettings.WebApiToken = response.User.Token;
+                                    SettingsManager.Instance.Settings.WebApiSettings.WebApiExpireDate = response.User.ExpireDate;
+                                    SettingsManager.Instance.SaveSettings();
+                                }
                                 Logger.Log($"User ID: {response.User.Id}, Token: {response.User.Token}, Expire Date: {response.User.ExpireDate}");
                                 byte[]? bytes = DeviceManager.Instance.GetInitialParameters(response.User.Token);
                                 _storeConfigureBytes = bytes;
@@ -214,6 +234,7 @@ namespace MLM2PRO_BT_APP.connections
                                 await Task.Delay(200);
                                 await WriteConfig(bytes);
                                 await Task.Delay(500);
+
                             }
                             else
                             {
@@ -327,13 +348,15 @@ namespace MLM2PRO_BT_APP.connections
                         Logger.Log($"### MEASUREMENT = {string.Join(", ", ByteConversionUtils.ArrayByteToInt(decrypted))}");
                         Logger.Log("");
 
-                        OpenConnectApiMessage messageToSend = MeasurementData.Instance.ConvertHexToMeasurementData(_byteConversionUtils.ByteArrayToHexString(decrypted));
-                        Logger.Log("Measurement: " + JsonConvert.SerializeObject(messageToSend));
-                        Task.Run(() =>
+                        if (MeasurementData.Instance != null)
                         {
-                            (Application.Current as App)?.SendShotData(messageToSend);
-                        });
-                        
+                            OpenConnectApiMessage messageToSend = MeasurementData.Instance.ConvertHexToMeasurementData(_byteConversionUtils.ByteArrayToHexString(decrypted));
+                            Logger.Log("Measurement: " + JsonConvert.SerializeObject(messageToSend));
+                            await Task.Run(() =>
+                            {
+                                (Application.Current as App)?.SendShotData(messageToSend);
+                            });
+                        }
                     }
                 }
                 catch (Exception)
@@ -344,7 +367,6 @@ namespace MLM2PRO_BT_APP.connections
         }
         // protected abstract Task<object> GetGattServiceAsync(Guid serviceUuid);
         // protected abstract Task<object?> GetCharacteristicAsync(object service, Guid characteristicUuid);
-        protected abstract Task<bool> WriteCharacteristic(Guid serviceUuid, Guid characteristicUuid, byte[]? data);
         protected async Task<bool> WriteValue(Guid uuid, Guid uuid2, byte[]? byteArray)
         {
             if (_bluetoothDevice != null)
@@ -393,7 +415,7 @@ namespace MLM2PRO_BT_APP.connections
                 return false;
             }
         }
-        protected async Task StartHeartbeat()
+        protected void StartHeartbeat()
         {
             // Stop the timer if it's already running
             _heartbeatTimer?.Dispose();
@@ -447,7 +469,7 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log("KeyBytes: " + _byteConversionUtils.ByteArrayToHexString(keyBytes));
             return keyBytes;
         }
-        public async Task StartSubscriptionVerificationTimer()
+        public void StartSubscriptionVerificationTimer()
         {
             // Stop the timer if it's already running
             _subscriptionVerificationTimer?.Dispose();
@@ -455,17 +477,13 @@ namespace MLM2PRO_BT_APP.connections
             // Set the timer to check every 60 seconds
             _subscriptionVerificationTimer = new Timer(VerifyConnection, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(30));
         }
-        protected abstract void VerifyConnection(object? state);
-        protected abstract Task ChildDisconnectAndCleanupFirst();
-        protected abstract Task ChildDisconnectAndCleanupSecond();
         public async Task DisconnectAndCleanup()
         {
-            _heartbeatTimer.Dispose();
             await Task.Delay(TimeSpan.FromSeconds(2));
-            ChildDisconnectAndCleanupFirst();
 
             if (_subscriptionVerificationTimer != null) await _subscriptionVerificationTimer.DisposeAsync();
-            if (_heartbeatTimer != null) await _heartbeatTimer.DisposeAsync();
+            _heartbeatTimer?.Dispose();
+            ChildDisconnectAndCleanupFirst();
 
             await Task.Delay(1000);
             if (App.SharedVm != null) App.SharedVm.LMStatus = "DISCONNECTING...";
@@ -487,25 +505,21 @@ namespace MLM2PRO_BT_APP.connections
             if (App.SharedVm != null) App.SharedVm.LMStatus = "DISCONNECTED";
             Logger.Log("Disconnected and cleaned up resources.");
         }
-        public abstract Task TriggerDeviceDiscovery();
         protected async Task RetryBtConnection()
         {
             // await DisconnectAndCleanup();
-            TriggerDeviceDiscovery();
+            await TriggerDeviceDiscovery();
         }
         public async Task UnSubAndReSub()
         {
             if (App.SharedVm != null) App.SharedVm.LMStatus = "CONNECTED, NOT READY";
             await UnsubscribeFromAllNotifications();
             await SubscribeToCharacteristicsAsync();
-        }
-        protected abstract Task UnsubscribeFromAllNotifications();        
+        }   
         public byte[]? GetEncryptionKey()
         {
             return _btEncryption.GetKeyBytes();
         }
-        public abstract Task<bool> VerifyDeviceConnection(object input);
-        public abstract Task RestartDeviceWatcher();
 
     }
 }

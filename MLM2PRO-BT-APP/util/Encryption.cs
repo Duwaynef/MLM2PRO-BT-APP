@@ -39,7 +39,7 @@ namespace MLM2PRO_BT_APP.util
 
             using (Aes aes = Aes.Create())
             {
-                aes.Key = encryptionKey;
+                aes.Key = encryptionKey ?? aes.Key;
                 aes.IV = IvParameter;
                 aes.Mode = CipherMode.CBC;
                 aes.Padding = PaddingMode.PKCS7;
@@ -58,14 +58,14 @@ namespace MLM2PRO_BT_APP.util
             {
                 using (Aes aes = Aes.Create())
                 {
-                    aes.Key = encryptionKey;
+                    aes.Key = encryptionKey ?? aes.Key;
                     aes.IV = IvParameter;
                     aes.Mode = CipherMode.CBC;
                     aes.Padding = PaddingMode.PKCS7;
 
                     using (ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
                     {
-                        return decryptor.TransformFinalBlock(input, 0, input.Length);
+                        return decryptor.TransformFinalBlock(input ?? new byte[0], 0, input.Length);
                     }
                 }
             }
@@ -96,7 +96,7 @@ namespace MLM2PRO_BT_APP.util
             catch (Exception ex)
             {
                 Logger.Log($"Error decrypting data: {ex.Message}");
-                return null; // Or any other appropriate action like returning an empty array
+                return new byte[0];
             }
         }
 

@@ -35,7 +35,7 @@ namespace MLM2PRO_BT_APP
             if (AdvancedDebugGetKeyCheckbox.IsChecked == true)
             {
                 if (String.IsNullOrWhiteSpace(keyTextBoxInput)) return;
-                Byte[] outputByteArr = (Application.Current as App)?.GetEncryptedKeyFromHex(byteConversionUtils?.StringToByteArray(keyTextBoxInput));
+                Byte[]? outputByteArr = (Application.Current as App)?.GetEncryptedKeyFromHex(byteConversionUtils?.StringToByteArray(keyTextBoxInput));
                 AdvancedDebugOutput.Text += "Key: " + byteConversionUtils.ByteArrayToHexString(outputByteArr);
                 AdvancedDebugOutput.Text += "\n";
             }

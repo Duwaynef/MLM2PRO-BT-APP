@@ -8,8 +8,8 @@ namespace MLM2PRO_BT_APP.util
 {
     public class SettingsManager
     {
-        private static SettingsManager _instance = null!;
-        public static SettingsManager Instance => _instance ??= new SettingsManager();
+        private static SettingsManager? _instance = null!;
+        public static SettingsManager? Instance => _instance ??= new SettingsManager();
         public event EventHandler? SettingsUpdated;
 
         private readonly string _settingsFilePath =
@@ -166,7 +166,7 @@ namespace MLM2PRO_BT_APP.util
             //public int[] ResponseMessage { get; set; } = null;
             //public int[] Events { get; set; } = null;
             //public int[] Measurement { get; set; } = null;
-            private bool infoComplete = false;
+            // private bool infoComplete = false;
         }
 
         public class PuttingSettings

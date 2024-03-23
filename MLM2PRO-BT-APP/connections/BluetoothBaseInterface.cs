@@ -14,7 +14,7 @@ namespace MLM2PRO_BT_APP.connections
         public abstract Task DisarmDevice();
         public abstract Task RestartDeviceWatcher();
         public abstract Task DisconnectAndCleanup();
-        public abstract byte[] GetEncryptionKey();
+        public abstract byte[]? GetEncryptionKey();
         public abstract Task UnSubAndReSub();
     }
 }
