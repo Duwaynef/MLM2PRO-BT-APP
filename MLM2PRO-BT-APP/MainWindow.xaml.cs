@@ -85,8 +85,9 @@ namespace MLM2PRO_BT_APP
                 GitHubRelease? currentRelease = await releaseChecker.CheckForUpdateAsync(currentVersion);
                 if(currentRelease != null)
                 {
-                    UpdateAvailableBadge.Visibility = Visibility.Visible;
                     updateUrl = currentRelease.HtmlUrl;
+                    UpdateAvailableBadge.Visibility = Visibility.Visible;
+                    UpdateAvailableSeperator.Visibility = Visibility.Visible;
                 } 
                 else
                 {
