@@ -85,6 +85,10 @@ namespace MLM2PRO_BT_APP
                         _updateUrl = currentRelease.HtmlUrl ?? "";
                         UpdateAvailableBadge.Visibility = Visibility.Visible;
                         UpdateAvailableSeperator.Visibility = Visibility.Visible;
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            EventAggregator.Instance.PublishSnackBarMessage("Application update available, click button on menu bar", 5);
+                        });
                     } 
                     else
                     {
