@@ -66,14 +66,15 @@
             <StackPanel>
                 <Grid Margin="5">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="280" />
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="60" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Column="0" Text="Launch Monitor" FontSize="38" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="0" Text="MLM2PRO" FontSize="38" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <materialDesign:Badged
                       Grid.Column="1"
                       Badge="{materialDesign:PackIcon Kind=Battery}"
@@ -86,8 +87,20 @@
                         <TextBlock materialDesign:BadgedAssist.Badge="Battery"  Text="{Binding LmBatteryLife, Mode=OneWay}" Background="{Binding LmBattLifeBackground, Mode=OneWay}" FontSize="40"
                            Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     </materialDesign:Badged>
+                    <materialDesign:Badged
+                          Grid.Column="2"
+                          Badge="{materialDesign:PackIcon Kind=Bluetooth}"
+                          BadgeBackground="WhiteSmoke"
+                          CornerRadius="5"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Visibility="Visible"
+                         >
+                        <TextBlock materialDesign:BadgedAssist.Badge="Bluetooth"  Text="{Binding LmRSSI, Mode=OneWay}" Background="{Binding LmRSSIBackground, Mode=OneWay}" FontSize="40"
+                        Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </materialDesign:Badged>
                     <TextBox x:Name="LmStatus" Width="auto" Height="40" 
-         Text="{Binding LmStatus, Mode=OneWay}" Background="{Binding LmStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="20" Grid.ColumnSpan="2"
+         Text="{Binding LmStatus, Mode=OneWay}" Background="{Binding LmStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="20" Grid.ColumnSpan="3"
          Grid.Column="0" Grid.Row="1"/>
                 </Grid>
                 <Grid Height="135">
@@ -159,7 +172,7 @@
                     </Button>
                 </Grid>
                 <DataGrid x:Name="ShotDataDataGrid" Margin="10,0,10,10" AutoGenerateColumns="False" IsReadOnly="True" FontSize="16" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" MaxHeight="300" ScrollViewer.VerticalScrollBarVisibility="Visible" MinHeight="300" MinWidth="1200"
-                          d:DataContext="{d:DesignInstance }">
+                          >
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Shot" Binding="{Binding ShotNumber}" Width="Auto" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="Auto" IsReadOnly="True"/>

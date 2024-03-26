@@ -39,6 +39,13 @@ namespace MLM2PRO_BT_APP.util
             get => _lmStatus;
             set => SetProperty(ref _lmStatus, value, nameof(LmStatus));
         }
+        
+        private string? _lmRSSI;
+        public string? LmRSSI
+        {
+            get => _lmRSSI;
+            set => SetProperty(ref _lmRSSI, value, nameof(LmRSSI));
+        }
 
         private string? _puttingStatus;
         public string? PuttingStatus
@@ -61,6 +68,13 @@ namespace MLM2PRO_BT_APP.util
             set => SetProperty(ref _puttingStatusBackground, value, nameof(PuttingStatusBackground));
         }
 
+        private SolidColorBrush? _lmRSSIBackground;
+        public SolidColorBrush? LmRSSIBackground
+        {
+            get => _lmRSSIBackground;
+            set => SetProperty(ref _lmRSSIBackground, value, nameof(LmRSSIBackground));
+        }
+        
         private SolidColorBrush? _lmStatusBackground;
         public SolidColorBrush? LmStatusBackground
         {
@@ -91,9 +105,21 @@ namespace MLM2PRO_BT_APP.util
             Color red = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Red];
             Color green = SwatchHelper.Lookup[(MaterialDesignColor)PrimaryColor.Green];
 
-            if (int.TryParse(status, out var batteryLevel))
+            if (int.TryParse(status, out int batteryLevel))
             {
-                if (batteryLevel < 15)
+                if (batteryLevel is <= -60 and > -100)
+                {
+                    return new SolidColorBrush(red);
+                }
+                else if (batteryLevel is <= -40 and > -60)
+                {
+                    return new SolidColorBrush(cyan);
+                }
+                else if (batteryLevel is <= 0 and > -40)
+                {
+                    return new SolidColorBrush(green);
+                }
+                else if (batteryLevel < 15)
                 {
                     return new SolidColorBrush(red);
                 }
@@ -151,6 +177,11 @@ namespace MLM2PRO_BT_APP.util
                 {
                     string matches = string.Concat(MyRegex().Matches(lmBattLifeValue).Select(m => m.Value));
                     LmBattLifeBackground = GetStatusColor(matches);
+                }
+                else if (propertyName == nameof(LmRSSI) && value is string LmRSSIValue)
+                {
+                    string matches = string.Concat(Regex.Match(LmRSSIValue, @"-?\d+").Value);
+                    LmRSSIBackground = GetStatusColor(matches);
                 }
                 else if (propertyName == nameof(PuttingStatus) && value is string puttingStatusValue)
                 {

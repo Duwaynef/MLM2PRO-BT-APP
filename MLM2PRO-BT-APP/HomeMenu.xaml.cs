@@ -194,7 +194,6 @@ public partial class HomeMenu
     }
     private async void Putting_Disconnect_Click(object sender, RoutedEventArgs e)
     {
-        HomeMenuSnackBarMessage("Test Message");
         await Task.Run(() =>
         {
             (Application.Current as App)?.PuttingDisable();

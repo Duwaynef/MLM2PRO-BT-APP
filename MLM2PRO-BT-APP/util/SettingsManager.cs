@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using Newtonsoft.Json;
@@ -84,14 +85,27 @@ namespace MLM2PRO_BT_APP.util
             Settings = Settings ?? defaultSettings;
             MergeWithDefaultSettings(defaultSettings, Settings);
         }
-        private void MergeWithDefaultSettings(dynamic defaultSettings, dynamic currentSettings)
+        private static void MergeWithDefaultSettings(dynamic defaultSettings, dynamic currentSettings)
         {
             Type currentType = currentSettings.GetType();
-            foreach (PropertyInfo propertyInfo in currentType.GetProperties())
-            {
-                var defaultValue = propertyInfo.GetValue(defaultSettings);
-                var currentValue = propertyInfo.GetValue(currentSettings);
+            foreach (var propertyInfo in currentType.GetProperties()) {
+                dynamic? defaultValue = propertyInfo.GetValue(defaultSettings);
+                dynamic? currentValue = propertyInfo.GetValue(currentSettings);
                 if (defaultValue == currentValue) continue;
+                if (propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    if (currentValue is IList currentList && defaultValue is IList defaultList)
+                    {
+                        foreach (object? item in defaultList)
+                        {
+                            if (!currentList.Contains(item))
+                            {
+                                currentList.Add(item);
+                            }
+                        }
+                        continue;
+                    }
+                }
                 if (currentValue == null)
                 {
                     propertyInfo.SetValue(currentSettings, defaultValue);
@@ -102,6 +116,7 @@ namespace MLM2PRO_BT_APP.util
                 }
             }
         }
+
 
         private void InitializeDefaultSettings()
         {
@@ -153,7 +168,8 @@ namespace MLM2PRO_BT_APP.util
             public bool AutoWake { get; set; } = true;
             public bool AutoDisarm { get; set; } = false;
             public string CustomExportPath { get; set; } = "Export";
-
+            public List<string> KnownBluetoothIDs { get; set; } = new List<string>();
+            
             //public bool DebugLogging { get; set; } = false;
             //public int Altitude { get; set; } = 0;
             //public double Humidity { get; set; } = 0.5;

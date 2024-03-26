@@ -7,7 +7,7 @@ public class PuttingDataMessage
     [JsonPropertyName("ballData")]
     public BallData? BallData { get; init; }
 }
-public abstract class BallData
+public class BallData
 {
     [JsonPropertyName("BallSpeed")]
     [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]

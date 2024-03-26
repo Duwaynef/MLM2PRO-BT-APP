@@ -13,23 +13,23 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
     private Timer? _deviceDiscoveryTimer;
     private bool _currentlySearching;
     private bool _cleaningUp;
+
     public BluetoothManagerBackup()
     {
+
         Logger.Log("BackupBluetooth: Running");
-        if (!(SettingsManager.Instance?.Settings?.LaunchMonitor?.AutoStartLaunchMonitor ?? true)) return;
+        if (!(SettingsManager.Instance.Settings?.LaunchMonitor?.AutoStartLaunchMonitor ?? true)) return;
         Logger.Log("BackupBluetooth: initialized");
-        if (!String.IsNullOrEmpty(SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret))
+        if (!string.IsNullOrEmpty(SettingsManager.Instance.Settings?.WebApiSettings?.WebApiSecret))
         {
             StartDeviceDiscoveryTimer();
         }
+
     }
 
     private void StartDeviceDiscoveryTimer()
     {
-        // Stop the timer if it's already running
         _deviceDiscoveryTimer?.Dispose();
-
-        // Start the timer to call the SendHeartbeatSignal method every 2 seconds (2000 milliseconds)
         _deviceDiscoveryTimer = new Timer(DeviceDiscoveryTimerSignal, null, 0, 10000);
     }
 
@@ -49,7 +49,9 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
     protected override async Task TriggerDeviceDiscovery()
     {
         _cleaningUp = false;
+        if (_currentlySearching) return;
         if (App.SharedVm != null) App.SharedVm.LmStatus = "TRIGGERING DISCOVERY";
+        Logger.Log("Device Discovery Triggered.");
         await DiscoverDevicesAsync();
     }
 
@@ -59,41 +61,100 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
         {
             if (_currentlySearching || _cleaningUp) return;
             if (App.SharedVm != null) App.SharedVm.LmStatus = "LOOKING FOR DEVICES";
-            Logger.Log("BACKUP BLUETOOTH MANAGER LOOKING FOR DEVICES");
+            Logger.Log("BackupBluetooth: Looking for devices");
             _currentlySearching = true;
-            foreach (var pairedDevice in Bluetooth.GetPairedDevicesAsync().Result)
+            
+            
+            await CheckForKnownBtDevices();
+            // await Task.Delay(TimeSpan.FromSeconds(20));
+
+            var pairedDevices = Bluetooth.GetPairedDevicesAsync().Result;
+
+            foreach (var pairedDevice in pairedDevices)
             {
-                if (pairedDevice.Name.Contains("MLM2-") || pairedDevice.Name.Contains("BlueZ "))
+                Logger.Log("Found Paired Device: " +  pairedDevice.Name);
+                if (pairedDevice.Name.Contains("MLM2-") || pairedDevice.Name.Contains("BlueZ ")|| pairedDevice.Name.Contains("MLM2_BT_"))
                 {
                     if (App.SharedVm != null) App.SharedVm.LmStatus = "FOUND PAIRED DEVICE: " + pairedDevice.Name;
-                    Logger.Log("BACKUP BLUETOOTH MANAGER FOUND PAIRED DEVICE IN BT CACHE ATTEMPTING TO CONNECT CONNECTING: " + pairedDevice.Name);
+                    Logger.Log("BackupBluetooth: Found device in Bluetooth cache: " + pairedDevice.Name);
                     await ConnectToDeviceAsync(pairedDevice);
-                    return;
+                    if (BluetoothDevice != null) return;
                 }
                 else
                 {
                     if (App.SharedVm != null) App.SharedVm.LmStatus = "BLUETOOTH MANAGER FOUND NO MATCHES";
-                    Logger.Log("BACKUP BLUETOOTH MANAGER FOUND BUT NO MATCH: " + pairedDevice.Name);
+                    Logger.Log("BackupBluetooth: Found no match for device: " + pairedDevice.Name);
                     Logger.Log(pairedDevice.Id);
                 }
             }
+            //Logger.Log("BackupBluetooth: No paired devices found, checking for known devices...");
+
         }
         catch (Exception ex)
         {
             Logger.Log($"Error during device discovery: {ex.Message}");
         }
+        await Task.Delay(TimeSpan.FromSeconds(10));
         _currentlySearching = false;
     }
-    private async Task ConnectToDeviceAsync(BluetoothDevice device)
+
+    private async Task CheckForKnownBtDevices()
     {
         try
         {
+            if (SettingsManager.Instance.Settings?.LaunchMonitor?.KnownBluetoothIDs != null)
+            {
+                foreach (string device in SettingsManager.Instance.Settings.LaunchMonitor.KnownBluetoothIDs)
+                {
+                    Logger.Log("BackupBluetooth: KnownDevices: Searching: " + device);
+                    var btDevice = await GetDeviceFromIdAsync(device);
+                    Logger.Log("BackupBluetooth: KnownDevices: Found device: " + btDevice?.Name);
+                    if (btDevice == null) continue;
+                    Logger.Log("BackupBluetooth: KnownDevices: isConnected? : " + btDevice.Gatt.IsConnected);
+                    Logger.Log("BackupBluetooth: KnownDevices: trying to connect...: " + btDevice.Name);
+                    await ConnectToDeviceKnownAsync(btDevice);
+                    Logger.Log("BackupBluetooth: KnownDevices: returning. Device connected? " + BluetoothDevice?.Gatt.IsConnected);
+                    if (BluetoothDevice is { Gatt.IsConnected: true }) return;
+                }
+            }
+            Logger.Log("BackupBluetooth: No known devices found.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Log($"Error during device discovery: {ex.Message}");
+        }        
+    }
 
+    private static async Task<BluetoothDevice?> GetDeviceFromIdAsync(string deviceId)
+    {
+        try
+        {
+            return await BluetoothDevice.FromIdAsync(deviceId);
+        }
+        catch (Exception ex)
+        {
+            Logger.Log($"Failed to connect to device: {ex.Message}");
+            return null;
+        }
+    }
+    
+    private async Task ConnectToDeviceKnownAsync(BluetoothDevice device)
+    {
+        try
+        {
             if (App.SharedVm != null) App.SharedVm.LmStatus = "ATTEMPTING TO CONNECT: : " + device.Name;
             device.GattServerDisconnected += Device_GattServerDisconnected!; //@TODO: Sometimes this crashes, need ot figure that out
-            device.Gatt.ConnectAsync().Wait();
-            device.Gatt.AutoConnect = true;
-            _primaryService = await device.Gatt.GetPrimaryServiceAsync(ServiceUuid).WaitAsync(TimeSpan.FromSeconds(5));
+            Logger.Log("Connect Async Starting: " + device.Name);
+            Logger.Log("Connect Async attempting to connect to : " + device.Name);
+            await device.Gatt.ConnectAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            Logger.Log("Device Name     : " + device.Name);
+            Logger.Log("Device Connected: " + device.Gatt.IsConnected);
+            Logger.Log("Device ID       : " + device.Id);
+            Logger.Log("Device MTU      : " + device.Gatt.Mtu);
+            _primaryService = await device.Gatt.GetPrimaryServiceAsync(ServiceUuid).WaitAsync(TimeSpan.FromSeconds(10));
+            Logger.Log("Got Primary Service: " + device.Name);
+            
+            // device.Gatt.AutoConnect = true;
             if (_primaryService == null)
             {
                 Logger.Log("Primary service not found.");
@@ -109,9 +170,41 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             Logger.Log($"Error connecting to device: {ex.Message}");
         }
     }
+    private async Task ConnectToDeviceAsync(BluetoothDevice device)
+    {
+        try
+        {
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "ATTEMPTING TO CONNECT: : " + device.Name;
+            // device.GattServerDisconnected += Device_GattServerDisconnected!; //@TODO: Sometimes this crashes, need ot figure that out
+            Logger.Log("Connect Async Starting: " + device.Name);
+            Logger.Log("Connect Async attempting to connect to : " + device.Name);
+            await device.Gatt.ConnectAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            Logger.Log("Device Name     : " + device.Name);
+            Logger.Log("Device Connected: " + device.Gatt.IsConnected);
+            Logger.Log("Device ID       : " + device.Id);
+            Logger.Log("Device MTU      : " + device.Gatt.Mtu);
+            _primaryService = await device.Gatt.GetPrimaryServiceAsync(ServiceUuid).WaitAsync(TimeSpan.FromSeconds(20));
+            Logger.Log("Got Primary Service: " + device.Name);
+
+            // device.Gatt.AutoConnect = true;
+            if (_primaryService == null)
+            {
+               Logger.Log("Primary service not found.");
+                return;
+            }
+            BluetoothDevice = device;
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "CONNECTION ESTABLISHED: " + device.Name ;
+            await SetupBluetoothDevice();
+            _currentlySearching = false;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log($"Error connecting to device: {ex.Message}");
+        }
+    }
     private async void Device_GattServerDisconnected(object sender, EventArgs e)
     {
-        if (sender is not BluetoothDevice _ || _cleaningUp) return;
+        if (sender is not BluetoothDevice _ || _cleaningUp || _currentlySearching) return;
         Logger.Log("Device disconnected. Attempting to reconnect...");
         await TriggerDeviceDiscovery();
     }

@@ -79,8 +79,10 @@ namespace MLM2PRO_BT_APP.connections
             }
 
             var isConnected = false;
-            if (BluetoothDevice != null)
-                isConnected = await VerifyDeviceConnection(BluetoothDevice);
+            //if (BluetoothDevice != null)
+                //isConnected = await VerifyDeviceConnection(BluetoothDevice);
+
+            isConnected = true;
 
             // Only proceed with setup if the connection is successful
             if (App.SharedVm != null)

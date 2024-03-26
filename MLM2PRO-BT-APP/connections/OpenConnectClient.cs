@@ -333,19 +333,19 @@ namespace MLM2PRO_BT_APP.connections
     }
     public class BallData
     {
-        public double Speed { get; init; }
-        public double SpinAxis { get; init; }
-        public double TotalSpin { get; init; }
-        public double BackSpin { get; init; }
-        public double SideSpin { get; init; }
-        public double Hla { get; init; }
-        public double Vla { get; init; }
+        public double Speed { get; set; }
+        public double SpinAxis { get; set; }
+        public double TotalSpin { get; set; }
+        public double BackSpin { get; set; }
+        public double SideSpin { get; set; }
+        public double Hla { get; set; }
+        public double Vla { get; set; }
         // public double CarryDistance { get; set; }
 
     }
     public class ClubData
     {
-        public double Speed { get; init; }
+        public double Speed { get; set; }
         // public double AngleOfAttack { get; set; }
         // public double FaceToTarget { get; set; }
         // public double Lie { get; set; }
@@ -367,7 +367,7 @@ namespace MLM2PRO_BT_APP.connections
         public int Code { get; }
         public PlayerInfo? Player { get; set; }
     }
-    public abstract class PlayerInfo
+    public class PlayerInfo
     {
         [JsonConverter(typeof(StringEnumConverter))]
         public Handed? Handed { get; set; }

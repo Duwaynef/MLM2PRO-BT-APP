@@ -17,6 +17,7 @@ public partial class App
     private readonly OpenConnectTcpClient _client;
     private OpenConnectServer? _openConnectServerInstance;
     private string? _lastMessage = "";
+    private BluetoothScanner? _bluetoothScanner;
     public App()
     {
         DispatcherUnhandledException += OnDispatcherUnhandledException;
@@ -369,20 +370,21 @@ public partial class App
     }
     public void SendOpenConnectServerMessage(string? incomingMessage)
     {
-        if (_openConnectServerInstance?.IsStarted ?? false)
-        {
-            Logger.Log("OpenConnectServer: Sending message");
-            Logger.Log(incomingMessage);
-            Logger.Log("");
-            _openConnectServerInstance.Multicast(incomingMessage);
-        }
+        if (!(_openConnectServerInstance?.IsStarted ?? false && !string.IsNullOrEmpty(incomingMessage))) return;
+        Logger.Log("OpenConnectServer: Sending message");
+        Logger.Log(incomingMessage);
+        Logger.Log("");
+        _openConnectServerInstance.Multicast(incomingMessage);
     }
     public async Task RelayOpenConnectServerMessage(string? outgoingMessage)
     {
+        if (string.IsNullOrEmpty(outgoingMessage)) return;
         _lastMessage = outgoingMessage;
         Logger.Log("Relaying message to GSPro:");
         Logger.Log(outgoingMessage);
         Logger.Log("");
+        var messageToRow = JsonConvert.DeserializeObject<OpenConnectApiMessage>(outgoingMessage);
+        if (messageToRow != null) await InsertRow(messageToRow, "Relayed");
         await (_client.SendDirectJsonAsync(outgoingMessage) ?? Task.CompletedTask);
     }
     protected override void OnStartup(StartupEventArgs e)
@@ -414,14 +416,10 @@ public partial class App
         {
             StartOpenConnectServer();
         }
-
-        await Task.Run(AutoConnectGsPro);
-        
         Logger.Log("Bluetooth Backup Manager is " + (SettingsManager.Instance.Settings?.LaunchMonitor?.UseBackupManager ?? false ? "enabled" : "disabled"));
-        
+        _bluetoothScanner = new BluetoothScanner(); // @TODO - ble scanner?
+        await Task.Run(AutoConnectGsPro);
     }
-
-
 
     private static void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {

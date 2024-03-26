@@ -56,7 +56,7 @@ namespace MLM2PRO_BT_APP.connections
             }
             catch(Exception ex)
             {
-                Logger.Log("Putting incoming message exception" + ex);
+                Logger.Log("Putting incoming message exception \n" + ex);
                 SendResponseAsync(Response.MakeErrorResponse());
             }
 

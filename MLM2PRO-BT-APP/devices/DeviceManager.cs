@@ -15,6 +15,7 @@ namespace MLM2PRO_BT_APP.devices
         private double? TemperatureCelsius { get; set; } = 20.0; // Default value of 0.0
         private byte? QuitEvent { get; set; } = 0; // Default value of 0
         private byte? PowerMode { get; set; } = 0; // Default value of 0
+        public string DeviceRSSI { get; set; } = "0";
 
         // DeviceInfo fields
         private string SerialNumber { get; set; } = "";
