@@ -15,7 +15,7 @@ The main requirement is that you have a Rapsodo subscription for third party app
 
 Open Rapsodo MLM2PRO app, go to play, select third party, and authorize Awesome golf. **This does not require a Awesome Golf subscription**.
 
-Pair your device with windows: **MLM2-SerialNumber not MLM2_BT_**, you may need to turn on advanced bluetooth discovery to see the device on the list.
+Pair your device with windows: **MLM2-SerialNumber OR BlueZ not MLM2_BT_**, you may need to turn on advanced bluetooth discovery to see the device on the list.
 
 **Pairing is only required the first time.**
 
