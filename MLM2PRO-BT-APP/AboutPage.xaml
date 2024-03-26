@@ -22,6 +22,7 @@
             <WebBrowser MaxWidth="1000" Margin="5" Grid.Column="0" x:Name="MarkdownWebBrowser" Navigating="MarkdownWebBrowser_Navigating"/>
             
             <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Click="GitHub_Link_Click"
                     Margin="10"
                     Style="{StaticResource MaterialDesignFloatingActionButton}"
                     ToolTip="GitHub"
