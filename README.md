@@ -15,7 +15,7 @@ The main requirement is that you have a Rapsodo subscription for third party app
 
 Open Rapsodo MLM2PRO app, go to play, select third party, and authorize Awesome golf. **This does not require a Awesome Golf subscription**.
 
-Pair your device with windows, you may need to turn on advanced bluetooth discovery to see the device on the list.
+Pair your device with windows: **MLM2-SerialNumber not MLM2_BT_**, you may need to turn on advanced bluetooth discovery to see the device on the list.
 
 **Pairing is only required the first time. and should not be required if you have used the Awesome Golf pc app recently**
 
@@ -46,12 +46,36 @@ Next to launch monitor you will see a number when connected. This is the device 
 
 Shot Data shows the list of shots and the "Result" shows if GSPro sucessfully accept the data transmission.
 
-## KNOWN ISSUE
+## How to use Relay with other connectors
+- Open this connector
+- Go to Settings and Enabled API Relay under GSPro settings
+- Close and reopen this connector
+- Open the other connector
+- Go to settings and set GSPro port to **951** or the port you set in the settings of this connector if you changed it
+- hit connect on other connector. *some connectors require the GSPro API window to be open. so make sure its open when testing.*
+
+## Troubleshooting
 getting a connection can sometimes be unstable, easiest method is to turn device on, wait for it to be solid red. then open the app.
+
+Common ways to get the **first** connection working:
+- close app
+- unpair
+- toggle off and back on Bluetooth
+- pair the device and make sure to choose mlm2-serialnumber ( not MLM2_BT_ , however BlueZ is okay )
+- windows shows connected. just wait for it to flip to not connected
+- Open app and let it attempt to connect
+
+Putting cam location
+- if you need the putting cam to open and close in the same position each time
+- get on a green so the putting cam is triggered
+- place the cam window where you want it to be
+- hit Q in the putting cam window so it closes
+- it should auto re-open and remember the position for the future
 
 if you get it all connected and all seems well, and you have a green light, but you do not get shot data.
 press the **Resub** button. when the light is green avoid the other buttons as it may break the connection with the device.
 and if that happens you need to close the app, power cycle the device, and reopen the app when the device is solid red again.
+
 
 ## Thank you
 I just want to say thank you to the many projects that came before mine where i am using, have used as inpiration, used code, or even just design ideas.

@@ -36,5 +36,13 @@
     <Page Update="WebApiWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <None Include="..\readme.md">
+      <Link>readme.md</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include=".\img\githubbutton_sm.png">
+      <Link>img\githubbutton_sm.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
