@@ -17,7 +17,7 @@ Open Rapsodo MLM2PRO app, go to play, select third party, and authorize Awesome 
 
 Pair your device with windows: **MLM2-SerialNumber not MLM2_BT_**, you may need to turn on advanced bluetooth discovery to see the device on the list.
 
-**Pairing is only required the first time. and should not be required if you have used the Awesome Golf pc app recently**
+**Pairing is only required the first time.**
 
 Open the app and set the Web API Token if it has not been saved from before. **You will have to ask around for this key as it uses an api secret to get the device authorization, use this app at your own risk**
 
