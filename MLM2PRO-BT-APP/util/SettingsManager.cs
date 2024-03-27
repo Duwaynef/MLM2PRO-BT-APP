@@ -168,7 +168,9 @@ namespace MLM2PRO_BT_APP.util
             public bool AutoWake { get; set; } = true;
             public bool AutoDisarm { get; set; } = false;
             public string CustomExportPath { get; set; } = "Export";
-            public List<string> KnownBluetoothIDs { get; set; } = new List<string>();
+            public List<string> KnownBluetoothIDs { get; set; } = [];
+            //public bool UseMeters { get; set; } = false;
+            //public bool UseKPH { get; set; } = false;
             
             //public bool DebugLogging { get; set; } = false;
             //public int Altitude { get; set; } = 0;

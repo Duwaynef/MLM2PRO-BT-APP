@@ -32,7 +32,6 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
         _deviceDiscoveryTimer?.Dispose();
         _deviceDiscoveryTimer = new Timer(DeviceDiscoveryTimerSignal, null, 0, 10000);
     }
-
     private async void DeviceDiscoveryTimerSignal(object? state)
     {
         if (_currentlySearching) return;
@@ -54,7 +53,6 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
         Logger.Log("Device Discovery Triggered.");
         await DiscoverDevicesAsync();
     }
-
     private async Task DiscoverDevicesAsync()
     {
         try
@@ -97,7 +95,6 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
         await Task.Delay(TimeSpan.FromSeconds(10));
         _currentlySearching = false;
     }
-
     private async Task CheckForKnownBtDevices()
     {
         try
@@ -124,7 +121,6 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             Logger.Log($"Error during device discovery: {ex.Message}");
         }        
     }
-
     private static async Task<BluetoothDevice?> GetDeviceFromIdAsync(string deviceId)
     {
         try
@@ -136,8 +132,7 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             Logger.Log($"Failed to connect to device: {ex.Message}");
             return null;
         }
-    }
-    
+    }    
     private async Task ConnectToDeviceKnownAsync(BluetoothDevice device)
     {
         try
@@ -232,6 +227,7 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             if (_gaTTmeasurementCharacteristic == null) return false;
             _gaTTmeasurementCharacteristic.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _gaTTmeasurementCharacteristic.StartNotificationsAsync();
+            Logger.Log("Successfully Subscribed to all notifications");
         } 
         catch (Exception ex)
         {
@@ -293,7 +289,6 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             return false;
         }
     }
-
     protected override void VerifyConnection(object? state)
     {
         throw new NotImplementedException();

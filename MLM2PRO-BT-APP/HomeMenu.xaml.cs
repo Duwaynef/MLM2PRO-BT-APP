@@ -126,10 +126,16 @@ public partial class HomeMenu
     private async void LM_WebApiTest_Click(object sender, RoutedEventArgs e)
     {
         if (App.SharedVm != null)App.SharedVm.LmStatus = "TESTING WEBAPI";
-        
+
+        if (SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId == 0)
+        {
+            if (App.SharedVm != null) App.SharedVm.LmStatus = "FIRST DEVICE CONNECTION REQUIRED";
+            return;
+        }
+
         var webApiClient = new WebApiClient();
-        Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance.Settings?.WebApiSettings?.WebApiToken);
-        Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance.Settings?.WebApiSettings?.WebApiUserId);
+        Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance?.Settings.WebApiSettings?.WebApiToken);
+        Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance?.Settings.WebApiSettings?.WebApiUserId);
         var response = await webApiClient.SendRequestAsync(SettingsManager.Instance.Settings?.WebApiSettings?.WebApiUserId ?? 0);
 
         if (response is { Success: true } && SettingsManager.Instance.Settings?.WebApiSettings != null)

@@ -137,6 +137,7 @@ namespace MLM2PRO_BT_APP.connections
         }
         public async Task ArmDevice()
         {
+            if (BluetoothDevice == null) return;
             var data = ByteConversionUtils.HexStringToByteArray("010D0001000000"); //01180001000000 also found 010D0001000000 == arm device???
             await WriteCommand(data);
             _isDeviceArmed = true;
@@ -154,6 +155,7 @@ namespace MLM2PRO_BT_APP.connections
         }
         public async Task DisarmDevice()
         {
+            if (BluetoothDevice == null) return;
             var data = ByteConversionUtils.HexStringToByteArray("010D0000000000"); //01180000000000 also found 010D0000000000 == disarm device???
             await WriteCommand(data);
             _isDeviceArmed = false;
@@ -525,6 +527,7 @@ namespace MLM2PRO_BT_APP.connections
         }
         public async Task UnSubAndReSub()
         {
+            if (BluetoothDevice == null) return;
             if (App.SharedVm != null) App.SharedVm.LmStatus = "CONNECTED, NOT READY";
             await UnsubscribeFromAllNotifications();
             await SubscribeToCharacteristicsAsync();
