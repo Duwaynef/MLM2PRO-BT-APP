@@ -2,9 +2,6 @@ using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.Advertisement;
 using MLM2PRO_BT_APP.util;
 using MLM2PRO_BT_APP.devices;
-using System.Windows.Controls.Primitives;
-using Windows.Devices.Enumeration;
-using Windows.Devices.Bluetooth.GenericAttributeProfile;
 
 namespace MLM2PRO_BT_APP.connections
 {
@@ -50,13 +47,14 @@ namespace MLM2PRO_BT_APP.connections
                 _foundDevices.Add(args.BluetoothAddress);
                 Logger.Log($"Device found: BluetoothAddress: {args.BluetoothAddress}, LocalName = {args.Advertisement.LocalName}, RSSI: {args.RawSignalStrengthInDBm}");
                 var device = await BluetoothLEDevice.FromBluetoothAddressAsync(args.BluetoothAddress);
-                // var deviceinfo = await DeviceInformation.CreateFromIdAsync(device.DeviceId);
+                //var deviceinfo = await DeviceInformation.CreateFromIdAsync(device.DeviceId);
 
                 //Logger.Log("Getting pairing protection level");
                 //var protectionLevel = deviceinfo.Pairing.ProtectionLevel;
                 //Logger.Log("Pairing protection level: " + protectionLevel.ToString());
                 //Logger.Log("Pairing device");
-                //deviceinfo.Pairing.PairAsync(protectionLevel);
+                //await deviceinfo.Pairing.PairAsync(protectionLevel);
+                //await deviceinfo.Pairing.UnpairAsync();
                 
                 Logger.Log($"Device found: BluetoothAddress: {device.DeviceId}, LocalName = {device.Name}, RSSI: {args.RawSignalStrengthInDBm}");
                 //var result = device.DeviceId.Split('-').Last().Replace(":", "").ToUpper();

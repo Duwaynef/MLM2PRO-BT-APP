@@ -63,7 +63,7 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             _currentlySearching = true;
             
             
-            await CheckForKnownBtDevices();
+            // await CheckForKnownBtDevices();
             // await Task.Delay(TimeSpan.FromSeconds(20));
 
             var pairedDevices = Bluetooth.GetPairedDevicesAsync().Result;
@@ -267,8 +267,11 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
                 var characteristic = await _primaryService.GetCharacteristicAsync(characteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
                 try
                 {
-                    await characteristic.WriteValueWithoutResponseAsync(data);
-                    return true;
+                    if (characteristic != null)
+                    {
+                        await characteristic.WriteValueWithoutResponseAsync(data);
+                        return true;
+                    }
                 }
                 catch (Exception ex)
                 {

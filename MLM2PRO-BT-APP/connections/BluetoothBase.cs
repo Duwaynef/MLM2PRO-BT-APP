@@ -235,7 +235,7 @@ namespace MLM2PRO_BT_APP.connections
                                             EventAggregator.Instance.PublishSnackBarMessage($"Your 3rd party token is close to expiry: {localDateTime:yyyy-MM-dd hh:mm:ss tt}", 10);
                                         });
                                     }
-                                    else if (response.User.ExpireDate < DateTimeOffset.Now.ToUnixTimeSeconds())
+                                    else if (response.User.ExpireDate > DateTimeOffset.Now.ToUnixTimeSeconds())
                                     {
                                         Application.Current.Dispatcher.Invoke(() =>
                                         {
