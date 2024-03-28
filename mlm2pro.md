@@ -1,4 +1,4 @@
-# MLM2PRO: How the bluetooth functions are implemented in the project
+# MLM2PRO: How the bluetooth functions
 
 ## Introduction
 
