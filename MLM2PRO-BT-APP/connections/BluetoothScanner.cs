@@ -2,6 +2,7 @@ using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.Advertisement;
 using MLM2PRO_BT_APP.util;
 using MLM2PRO_BT_APP.devices;
+using Windows.Devices.Enumeration;
 
 namespace MLM2PRO_BT_APP.connections
 {
