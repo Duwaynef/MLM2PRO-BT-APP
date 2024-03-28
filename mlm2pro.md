@@ -15,6 +15,7 @@ And how the device interactions work. From first connection to the device, to re
 Some of the data is transmitted encrypted and some is not, i will talk about the encryption and the code for it below.
 
 In case this file gets seperated from the original project here is a link to the original project:
+
 https://github.com/Duwaynef/MLM2PRO-BT-APP
 
 ## Bluetooth Characteristics
