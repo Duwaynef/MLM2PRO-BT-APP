@@ -595,6 +595,9 @@ If you like my work and want to support me, you can donate to me via ko-fi. I wo
 
 ## Reference
 **Here is a reference to the encryption class and the byte conversion class.**
+
+The prederminedKey value below is purely for simple debugging of peoples wireshark data.
+you can generate your own key at will or just use the encryption tools to make one so each connection has a unique key if you wanted.
 #### Encryption.cs
 ```csharp
 using System.Security.Cryptography;
