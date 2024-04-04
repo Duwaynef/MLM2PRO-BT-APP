@@ -107,15 +107,15 @@ namespace MLM2PRO_BT_APP.util
 
             if (int.TryParse(status, out int batteryLevel))
             {
-                if (batteryLevel is <= -60 and > -100)
+                if (batteryLevel is <= -80 and > -200)
                 {
                     return new SolidColorBrush(red);
                 }
-                else if (batteryLevel is <= -40 and > -60)
+                else if (batteryLevel is <= -50 and > -80)
                 {
                     return new SolidColorBrush(cyan);
                 }
-                else if (batteryLevel is <= 0 and > -40)
+                else if (batteryLevel is <= 0 and > -50)
                 {
                     return new SolidColorBrush(green);
                 }

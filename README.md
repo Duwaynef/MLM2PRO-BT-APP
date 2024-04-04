@@ -11,7 +11,7 @@ If you like my work and want to support me, you can donate to me via ko-fi. I wo
 ](https://ko-fi.com/D1D8VL7RV)
 
 ## HOW TO USE APP
-The main requirement is that you have a Rapsodo subscription for third party apps, **no other subscriptions are nessicary**.
+The main requirement is that you have a Rapsodo subscription for third party apps, **no other subscriptions are necessary**.
 
 Open Rapsodo MLM2PRO app, go to play, select third party, and authorize Awesome golf. **This does not require a Awesome Golf subscription**.
 
@@ -38,13 +38,13 @@ Config file was overhauled after a few updates. if you have been keeping a confi
 config file. then compare your old settings ( or go to settings in the app and set your desired settings ).
 
 ## MAIN WINDOW INFO
-It should be self explanitory however each text box below their respective labels are for status updates of that item.
+It should be self explanatory however each text box below their respective labels are for status updates of that item.
 
 next to GSPro after a communication has gone back and forth it will show the selected club, this is purely for knowing when to enable or disable putting. or if you want to track stats on a particular club batch, however GSPro may show the data better.
 
 Next to launch monitor you will see a number when connected. This is the device battery life.
 
-Shot Data shows the list of shots and the "Result" shows if GSPro sucessfully accept the data transmission.
+Shot Data shows the list of shots and the "Result" shows if GSPro successfully accept the data transmission.
 
 ## How to use Relay with other connectors
 - Open this connector
@@ -55,7 +55,17 @@ Shot Data shows the list of shots and the "Result" shows if GSPro sucessfully ac
 - hit connect on other connector. *some connectors require the GSPro API window to be open. so make sure its open when testing.*
 
 ## Troubleshooting
-getting a connection can sometimes be unstable, easiest method is to turn device on, wait for it to be solid red. then open the app.
+- **Unpairing with windows is not necessary for troubleshooting.**
+- **The Warning for the third party token expiring is based on what is stored on the device**
+
+When you authorize awesome golf in the mlm2pro app
+- It does not necessarily write a new token to the device. it only does that if its close to or expired.
+
+**Getting a connection can sometimes be unstable, easiest method is to turn device on, wait for it to be solid red. then open the app.**
+
+If the third party app token expires ( The Authorization for awesome golf in the mlm2pro app )
+- The device may just stay red and reject any connections
+- you will need to reauthorize awesome golf in the mlm2pro app
 
 Common ways to get the **first** connection working:
 - close app
@@ -76,9 +86,8 @@ if you get it all connected and all seems well, and you have a green light, but 
 press the **Resub** button. when the light is green avoid the other buttons as it may break the connection with the device.
 and if that happens you need to close the app, power cycle the device, and reopen the app when the device is solid red again.
 
-
 ## Thank you
-I just want to say thank you to the many projects that came before mine where i am using, have used as inpiration, used code, or even just design ideas.
+I just want to say thank you to the many projects that came before mine where i am using, have used as inspiration, used code, or even just design ideas.
 
 [cam-putting-py by alleexx](https://github.com/alleexx/cam-putting-py)
 

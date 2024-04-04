@@ -165,9 +165,9 @@ namespace MLM2PRO_BT_APP.connections
             if (args == null || sender == null) return;
             byte[] value = GetCharacteristicValueAsync(args);
             Guid senderUuid = GetSenderUuidAsync(sender);
+            _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds();
             if (HeartbeatCharacteristicUuid == senderUuid)
             {
-                _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds();
                 return;
             }
             else
@@ -255,7 +255,8 @@ namespace MLM2PRO_BT_APP.connections
                             }
                             else
                             {
-                                Logger.Log("Failed to get a valid response.");
+                                Logger.Log("Failed to get a valid api response.");
+                                if (App.SharedVm != null) App.SharedVm.LmStatus = "INVALID API RESPONSE, CORRECT API SECRET?";
                             }
                             return;
                         }
@@ -444,10 +445,10 @@ namespace MLM2PRO_BT_APP.connections
         private async void SendHeartbeatSignal(object? state)
         {
             if (BluetoothDevice == null) return;
-            if (_lastHeartbeatReceived < DateTimeOffset.Now.ToUnixTimeSeconds() - 20)
+            if (_lastHeartbeatReceived < DateTimeOffset.Now.ToUnixTimeSeconds() - 120)
             {
-                Logger.Log("Heartbeat not received for 20 seconds, resubscribing...");
-                _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
+                // Logger.Log("Heartbeat not received for 120 seconds, resubscribing...");
+                _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 120;
                 // await UnSubAndReSub();
                 await SubscribeToCharacteristicsAsync();
             }

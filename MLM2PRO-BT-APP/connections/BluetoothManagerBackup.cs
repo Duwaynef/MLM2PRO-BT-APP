@@ -24,7 +24,6 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
         {
             StartDeviceDiscoveryTimer();
         }
-
     }
 
     private void StartDeviceDiscoveryTimer()
@@ -259,8 +258,6 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
                 Logger.Log("Bluetooth device not connected.");
                 return false;
             }
-
-            _ = await BluetoothDevice.Gatt.GetPrimaryServiceAsync(ServiceUuid).WaitAsync(TimeSpan.FromSeconds(5));
 
             if (_primaryService != null)
             {
