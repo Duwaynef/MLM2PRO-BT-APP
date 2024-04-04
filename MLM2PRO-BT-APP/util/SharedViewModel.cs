@@ -111,11 +111,11 @@ namespace MLM2PRO_BT_APP.util
                 {
                     return new SolidColorBrush(red);
                 }
-                else if (batteryLevel is <= -50 and > -80)
+                else if (batteryLevel is <= -55 and > -80)
                 {
                     return new SolidColorBrush(cyan);
                 }
-                else if (batteryLevel is <= 0 and > -50)
+                else if (batteryLevel is <= 0 and > -55)
                 {
                     return new SolidColorBrush(green);
                 }
