@@ -134,11 +134,11 @@ public partial class HomeMenu
         }
 
         var webApiClient = new WebApiClient();
-        Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance?.Settings.WebApiSettings?.WebApiToken);
-        Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance?.Settings.WebApiSettings?.WebApiUserId);
-        var response = await webApiClient.SendRequestAsync(SettingsManager.Instance.Settings?.WebApiSettings?.WebApiUserId ?? 0);
+        Logger.Log("WebApiTest_Click: UserToken: " + SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiToken);
+        Logger.Log("WebApiTest_Click: UserId: " + SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId);
+        var response = await webApiClient.SendRequestAsync(SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiUserId ?? 0);
 
-        if (response is { Success: true } && SettingsManager.Instance.Settings?.WebApiSettings != null)
+        if (response is { Success: true } && SettingsManager.Instance?.Settings?.WebApiSettings != null)
         {
             if (response.User != null)
             {
@@ -258,5 +258,13 @@ public partial class HomeMenu
     private void HomeMenu_Unloaded(object sender, RoutedEventArgs e)
     {
         EventAggregator.Instance.SnackBarMessagePublished -= OnSnackBarMessagePublished;
+    }
+
+    private async void Putting_ToggleAutoClose_Click(object sender, RoutedEventArgs e)
+    {
+        await Task.Run(() =>
+        {
+            (Application.Current as App)?.PuttingToggleAutoClose();
+        });
     }
 }

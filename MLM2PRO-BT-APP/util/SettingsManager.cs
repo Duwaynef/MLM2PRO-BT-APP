@@ -201,6 +201,7 @@ namespace MLM2PRO_BT_APP.util
             public int PuttingPort { get; set; } = 8888;
             public bool LaunchBallTracker { get; set; } = true;
             public bool OnlyLaunchWhenPutting { get; set; } = true;
+            public bool AutoHidePuttingWhenAutoLaunchDisabled { get; set; } = true;
             public bool KeepPuttingCamOnTop { get; set; } = true;
             public int WebcamIndex { get; set; } = 0;
             public string BallColor { get; set; } = "white";

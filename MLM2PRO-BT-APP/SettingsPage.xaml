@@ -155,8 +155,12 @@
                             <CheckBox IsChecked="{Binding Settings.Putting.HideConsoleWindow, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </DockPanel>
                         <DockPanel Margin="10,5,10,5" Grid.Column="1" Grid.Row="0">
-                            <TextBlock Text="Launch When Putting  " FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Only Run When Putting  " FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <CheckBox IsChecked="{Binding Settings.Putting.OnlyLaunchWhenPutting, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </DockPanel>
+                        <DockPanel Margin="10,5,10,5" Grid.Column="1" Grid.Row="1">
+                            <TextBlock Text="Auto Hide" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <CheckBox IsChecked="{Binding Settings.Putting.AutoHidePuttingWhenAutoLaunchDisabled, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                         </DockPanel>
                         <DockPanel Margin="10,5,10,5" Grid.Column="0" Grid.Row="2">
                             <TextBlock Text="Cam On Top" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -182,7 +186,7 @@
                             <TextBlock Text="Additional Exe Args" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                             <TextBox Text="{Binding Settings.Putting.AdditionalExeArgs, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="220"/>
                         </DockPanel>
-                        <DockPanel Margin="10,5,10,5" Grid.Column="1" Grid.Row="1">
+                        <DockPanel Margin="10,5,10,5" Grid.Column="1" Grid.Row="2">
                             <TextBlock Text="Hide Exe Logs" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <CheckBox IsChecked="{Binding Settings.Putting.HideExeLogs, Mode=TwoWay}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                         </DockPanel>

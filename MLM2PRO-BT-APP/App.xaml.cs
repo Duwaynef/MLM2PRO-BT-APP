@@ -11,9 +11,10 @@ namespace MLM2PRO_BT_APP;
 public partial class App
 {
     public static SharedViewModel? SharedVm { get; private set; }
+    private readonly ManualResetEvent _cleanupComplete = new ManualResetEvent(false);
 
     private readonly IBluetoothBaseInterface? _manager;
-    private HttpPuttingServer? PuttingConnection { get; }
+    private HttpPuttingServer? _puttingConnection;
     private readonly OpenConnectTcpClient _client;
     private OpenConnectServer? _openConnectServerInstance;
     private string? _lastMessage = "";
@@ -24,7 +25,7 @@ public partial class App
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
         SharedVm = new SharedViewModel();
         LoadSettings();
-        PuttingConnection = new HttpPuttingServer();
+        _puttingConnection = new HttpPuttingServer();
         _client = new OpenConnectTcpClient();
         if (SettingsManager.Instance.Settings != null && SettingsManager.Instance.Settings.LaunchMonitor != null)
         {
@@ -37,6 +38,15 @@ public partial class App
                 _manager = new BluetoothManager();
             }
         }
+
+        AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+        {
+            if (s != null)
+            {
+                Application_Exit(s, null);
+                _cleanupComplete.WaitOne();
+            }
+        };
     }
 
     public byte[] GetEncryptedKeyFromHex(byte[]? input)
@@ -299,23 +309,23 @@ public partial class App
         if (File.Exists(fullPath))
         {
             Logger.Log("Putting executable exists.");
-            var puttingStarted = PuttingConnection is { IsStarted: true };
+            var puttingStarted = _puttingConnection is { IsStarted: true };
             Logger.Log("Putting started: " + puttingStarted);
             if (puttingStarted == false)
             {
                 Logger.Log("Starting putting server.");
-                var isStarted = PuttingConnection?.Start();
+                var isStarted = _puttingConnection?.Start();
                 if (isStarted != true) return;
                 if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
-                if (PuttingConnection != null) PuttingConnection.PuttingEnabled = true;
+                if (_puttingConnection != null) _puttingConnection.PuttingEnabled = true;
             } 
             else
             {
                 if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
-                if (PuttingConnection != null)
+                if (_puttingConnection != null)
                 {
-                    PuttingConnection.PuttingEnabled = true;
-                    PuttingConnection.LaunchBallTracker = true;
+                    _puttingConnection.PuttingEnabled = true;
+                    _puttingConnection.LaunchBallTracker = true;
                 }
             }
             if (DeviceManager.Instance?.ClubSelection == "PT")
@@ -332,17 +342,39 @@ public partial class App
     }
     public void PuttingDisable()
     {
-        if (PuttingConnection != null) PuttingConnection.PuttingEnabled = false;
+        if (_puttingConnection != null) _puttingConnection.PuttingEnabled = false;
         StopPutting();
     }
     public void StartPutting()
     {
-        PuttingConnection?.StartPutting();
+        _puttingConnection?.StartPutting();
     }
     public void StopPutting()
     {
-        PuttingConnection?.StopPutting();
+        if (App.SharedVm != null) App.SharedVm.PuttingStatus = "DISCONNECTED";
+        _puttingConnection?.StopPutting();
     }
+    public void KillPutting()
+    {
+        _puttingConnection?.Dispose();
+    }
+
+    public async Task PuttingToggleAutoClose()
+    {
+        if (SettingsManager.Instance?.Settings?.Putting != null)
+        {
+            SettingsManager.Instance.Settings.Putting.OnlyLaunchWhenPutting = !SettingsManager.Instance.Settings.Putting.OnlyLaunchWhenPutting;
+            SettingsManager.Instance.SaveSettings();
+        }
+        if (_puttingConnection != null)
+        {
+            _puttingConnection.StopPutting(true);
+            _puttingConnection.Dispose();
+        }
+        _puttingConnection = new HttpPuttingServer();
+        await PuttingEnable();
+    }
+
     private static void LoadSettings()
     {
         SettingsManager.Instance.LoadSettings();
@@ -431,5 +463,17 @@ public partial class App
     {
         var exception = e.ExceptionObject as Exception;
         Logger.Log($"AppCrash: " + exception);
+    }
+
+    private async void Application_Exit(object sender, ExitEventArgs? e)
+    {
+        await PerformCleanupAsync();
+        await Task.Delay(200);
+        _cleanupComplete.Set();
+    }
+
+    public async Task PerformCleanupAsync()
+    {
+        await Task.Run(KillPutting);
     }
 }

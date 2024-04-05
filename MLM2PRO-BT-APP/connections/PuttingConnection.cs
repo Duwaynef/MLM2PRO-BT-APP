@@ -104,18 +104,25 @@ namespace MLM2PRO_BT_APP.connections
         private static extern bool SetForegroundWindow(nint hWnd);
         [DllImport("User32.dll")]
         private static extern bool BringWindowToTop(nint handle);
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
         [DllImport("User32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
+
         private static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
         private static readonly nint HwndTopmost = new nint(-1);
+        private static readonly nint HwndNotTopmost = new nint(-2);
         private const uint SwpNosize = 0x0001;
         private const uint SwpNomove = 0x0002;
+        private const int SW_MINIMIZE = 6;
+        private const int SW_RESTORE = 9;
         private const uint TopmostFlags = SwpNomove | SwpNosize;
         public bool PuttingEnabled;
         private bool _mDisposing;
 
         private Process? PuttingProcess { get; set; }
         private bool OnlyLaunchWhenPutting { get; }
+        private bool AutoHidePuttingWhenAutoLaunchDisabled { get; }
         private bool KeepPuttingCamOnTop { get; }
         public bool LaunchBallTracker { get; set; }
         private int WebcamIndex { get; }
@@ -134,6 +141,7 @@ namespace MLM2PRO_BT_APP.connections
             Logger.Log($"Starting putting receiver on port {Port}");
 
             OnlyLaunchWhenPutting = SettingsManager.Instance?.Settings?.Putting?.OnlyLaunchWhenPutting ?? true;
+            AutoHidePuttingWhenAutoLaunchDisabled = SettingsManager.Instance?.Settings?.Putting?.AutoHidePuttingWhenAutoLaunchDisabled ?? true;
             KeepPuttingCamOnTop = SettingsManager.Instance?.Settings?.Putting?.KeepPuttingCamOnTop ?? true;
             LaunchBallTracker = SettingsManager.Instance?.Settings?.Putting?.PuttingEnabled ?? true;
             WebcamIndex = SettingsManager.Instance?.Settings?.Putting?.WebcamIndex ?? 0;
@@ -161,15 +169,20 @@ namespace MLM2PRO_BT_APP.connections
             {
                 LaunchProcess();
             }
-            if (KeepPuttingCamOnTop)
+            if (KeepPuttingCamOnTop || AutoHidePuttingWhenAutoLaunchDisabled)
                 FocusProcess();
         }
         public void StopPutting(bool force = false)
         {
             PuttingEnabled = false;
             if (LaunchBallTracker && OnlyLaunchWhenPutting || force)
+            {
                 KillProcess();
-            if (App.SharedVm != null) App.SharedVm.PuttingStatus = "DISCONNECTED";
+            } 
+            else if (AutoHidePuttingWhenAutoLaunchDisabled)
+            {
+                UnFocusProcess();
+            }
         }
 
 
@@ -278,15 +291,28 @@ namespace MLM2PRO_BT_APP.connections
                     SetWindowPos(handle, HwndTopmost, 0, 0, 0, 0, TopmostFlags);
                     BringWindowToTop(handle);
                     SetForegroundWindow(handle);
+                    ShowWindow(handle, SW_RESTORE);
                 }
                 if (App.SharedVm != null) App.SharedVm.PuttingStatus = "CONNECTED, READY";
             }
         }
 
+        private void UnFocusProcess()
+        {
+            if (PuttingProcess != null)
+            {
+                IntPtr handle = PuttingProcess.MainWindowHandle;
+                if (handle != IntPtr.Zero)
+                {
+                    ShowWindow(handle, SW_MINIMIZE);
+                    if (App.SharedVm != null)
+                        App.SharedVm.PuttingStatus = "CONNECTED, WINDOW UNFOCUSED";
+                }
+            }
+        }
+
         private void KillProcess()
         {
-            Logger.Log("Shutting down putting camera");
-
             PuttingProcess?.Kill();
             PuttingProcess = null;
         }

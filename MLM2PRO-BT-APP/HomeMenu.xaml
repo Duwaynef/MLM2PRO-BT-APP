@@ -155,6 +155,7 @@
                     </Grid.RowDefinitions>
                     <Button Grid.Row="0" Grid.Column="0" x:Name="PuttingConnect" Content="Connect" Padding="50,0,50,0" Margin="0,5,0,5" Click="Putting_Connect_Click" HorizontalAlignment="Center" Width="190"/>
                     <Button Grid.Row="0" Grid.Column="1" x:Name="PuttingDisconnect" Content="Disconnect" Padding="50,0,50,0" Margin="0,5,0,5" Click="Putting_Disconnect_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Button Grid.Row="1" Grid.Column="0" x:Name="PuttingToggleAutoClose" Content="Toggle Auto Close" Padding="30,0,30,0" Margin="0,5,0,5" Click="Putting_ToggleAutoClose_Click" HorizontalAlignment="Center" Width="190"/>
                 </Grid>
             </StackPanel>
         </materialDesign:Card>

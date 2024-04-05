@@ -3,7 +3,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"    
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:local="clr-namespace:MLM2PRO_BT_APP">
+             xmlns:local="clr-namespace:MLM2PRO_BT_APP"
+            Exit="Application_Exit">
 
     <Application.Resources>
         <ResourceDictionary>
