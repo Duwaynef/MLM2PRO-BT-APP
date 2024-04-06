@@ -119,9 +119,10 @@ namespace MLM2PRO_BT_APP.connections
         private const uint TopmostFlags = SwpNomove | SwpNosize;
         public bool PuttingEnabled;
         private bool _mDisposing;
+        public bool manualStopPutting;
 
         private Process? PuttingProcess { get; set; }
-        private bool OnlyLaunchWhenPutting { get; }
+        public bool OnlyLaunchWhenPutting { get; }
         private bool AutoHidePuttingWhenAutoLaunchDisabled { get; }
         private bool KeepPuttingCamOnTop { get; }
         public bool LaunchBallTracker { get; set; }
@@ -270,7 +271,7 @@ namespace MLM2PRO_BT_APP.connections
         private void OnPuttingProcessClosed(object? _, EventArgs? args)
         {
             PuttingProcess = null;
-            if ((PuttingEnabled || !OnlyLaunchWhenPutting) && !_mDisposing)
+            if ((PuttingEnabled || !OnlyLaunchWhenPutting) && !_mDisposing && !manualStopPutting)
             {
                 Logger.Log($"{ExecutableName} closed unexpectedly. Reopening...");
                 StartPutting();

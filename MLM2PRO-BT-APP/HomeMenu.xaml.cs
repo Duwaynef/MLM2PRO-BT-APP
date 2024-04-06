@@ -105,11 +105,11 @@ public partial class HomeMenu
             string fullPath = Path.Combine(folderPath, fileName);
 
             var csvContent = new StringBuilder();
-            csvContent.AppendLine("ShotNumber,Result,Club,ClubSpeed,BallSpeed,SpinAxis,SpinRate,HLA,VLA");
+            csvContent.AppendLine("ShotNumber,Result,Club,Smash,ClubSpeed,BallSpeed,SpinAxis,SpinRate,HLA,VLA,BackSpin,SideSpin");
 
             foreach (var shotData in shotDataCollection)
             {
-                csvContent.AppendLine($"{shotData.ShotNumber},{shotData.Result},{shotData.Club},{shotData.ClubSpeed},{shotData.BallSpeed},{shotData.SpinAxis},{shotData.SpinRate},{shotData.Hla},{shotData.Vla}");
+                csvContent.AppendLine($"{shotData.ShotNumber},{shotData.Result},{shotData.Club},{shotData.SmashFactor},{shotData.ClubSpeed},{shotData.BallSpeed},{shotData.SpinAxis},{shotData.SpinRate},{shotData.Hla},{shotData.Vla},{shotData.BackSpin},{shotData.SideSpin}");
             }
             File.WriteAllText(fullPath, csvContent.ToString());
 
@@ -203,7 +203,7 @@ public partial class HomeMenu
         await Task.Run(() =>
         {
             (Application.Current as App)?.PuttingDisable();
-        });        
+        });
     }
 
     private void HomeMenuSnackBarMessage(string message, int duration = 2)

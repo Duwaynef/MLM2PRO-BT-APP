@@ -306,29 +306,27 @@ public partial class App
     public async Task PuttingEnable()
     {
         var fullPath = Path.GetFullPath(SettingsManager.Instance.Settings?.Putting?.ExePath ?? "");
-        if (File.Exists(fullPath))
+        if (File.Exists(fullPath) && _puttingConnection != null)
         {
             Logger.Log("Putting executable exists.");
             var puttingStarted = _puttingConnection is { IsStarted: true };
+            _puttingConnection.manualStopPutting = false;
             Logger.Log("Putting started: " + puttingStarted);
             if (puttingStarted == false)
             {
                 Logger.Log("Starting putting server.");
-                var isStarted = _puttingConnection?.Start();
+                var isStarted = _puttingConnection.Start();
                 if (isStarted != true) return;
                 if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
-                if (_puttingConnection != null) _puttingConnection.PuttingEnabled = true;
+                _puttingConnection.PuttingEnabled = true;
             } 
             else
             {
                 if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
-                if (_puttingConnection != null)
-                {
-                    _puttingConnection.PuttingEnabled = true;
-                    _puttingConnection.LaunchBallTracker = true;
-                }
+                _puttingConnection.PuttingEnabled = true;
+                _puttingConnection.LaunchBallTracker = true;
             }
-            if (DeviceManager.Instance?.ClubSelection == "PT")
+            if (DeviceManager.Instance?.ClubSelection == "PT" || !_puttingConnection.OnlyLaunchWhenPutting)
             {
                 await Task.Delay(1000);
                 StartPutting();
@@ -342,13 +340,20 @@ public partial class App
     }
     public void PuttingDisable()
     {
-        if (_puttingConnection != null) _puttingConnection.PuttingEnabled = false;
-        StopPutting();
+        if (_puttingConnection != null)
+        {
+            if (App.SharedVm != null) App.SharedVm.PuttingStatus = "SHUTDOWN";
+            _puttingConnection.manualStopPutting = true;
+            _puttingConnection.StopPutting(true);
+            _puttingConnection.Stop();
+        }
     }
+
     public void StartPutting()
     {
         _puttingConnection?.StartPutting();
     }
+
     public void StopPutting()
     {
         if (App.SharedVm != null) App.SharedVm.PuttingStatus = "DISCONNECTED";
