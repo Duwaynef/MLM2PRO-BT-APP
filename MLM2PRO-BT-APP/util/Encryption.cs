@@ -85,5 +85,24 @@ namespace MLM2PRO_BT_APP.util
                 return Array.Empty<byte>();
             }
         }
+        public byte[] EncryptKnownKey(byte[] input, byte[] encryptionKeyInput)
+        {
+            try
+            {
+                using var aes = Aes.Create();
+                aes.Key = encryptionKeyInput;
+                aes.IV = _ivParameter;
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.PKCS7;
+
+                using var encrypted = aes.CreateEncryptor(aes.Key, aes.IV);
+                return encrypted.TransformFinalBlock(input, 0, input.Length);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Error encrypting data: {ex.Message}");
+                return Array.Empty<byte>();
+            }
+        }
     }
 }

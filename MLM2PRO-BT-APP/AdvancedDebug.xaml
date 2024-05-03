@@ -69,15 +69,27 @@
                         AcceptsReturn="True"
                         VerticalScrollBarVisibility="Auto"
                     />
-                    <Button x:Name="AdvancedDebugDecryptButton"
-                        Grid.Column="1"
-                        Grid.Row="1"
+                    <Grid Grid.Column="1" Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Button x:Name="AdvancedDebugDecryptButton"
+                        Grid.Row="0"
                         Margin="5"
                         materialDesign:ButtonAssist.CornerRadius="5" Click="AdvancedDebug_Decrypt_Button_Click"
                     >
-                        Decrypt
-                    </Button>
-                </Grid>
+                            Decrypt
+                        </Button>
+                        <Button x:Name="AdvancedDebugEncryptButton"
+                        Grid.Row="1"
+                        Margin="5"
+                        materialDesign:ButtonAssist.CornerRadius="5" Click="AdvancedDebug_Encrypt_Button_Click"
+                    >
+                            Encrypt
+                        </Button>
+                        </Grid>
+                    </Grid>
             </StackPanel>
     </Grid>
     </materialDesign:Card>

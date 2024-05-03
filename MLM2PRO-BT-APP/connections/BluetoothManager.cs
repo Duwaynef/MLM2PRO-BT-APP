@@ -67,8 +67,8 @@ public class BluetoothManager : BluetoothBase<BluetoothLEDevice>
     private async void DeviceWatcher_StartDeviceConnection(DeviceInformation deviceInfo)
     {
         Logger.Log("Device Watcher start device connection " + deviceInfo.Name);
-        if (SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret != "")
-        {
+        //if (SettingsManager.Instance?.Settings?.WebApiSettings?.WebApiSecret != "")
+        //{
             Logger.Log("Device Watcher connecting to device " + deviceInfo.Name);
             var device = await BluetoothLEDevice.FromIdAsync(deviceInfo.Id);
             Logger.Log("Device Watcher verifying the device connection " + deviceInfo.Name);
@@ -82,11 +82,11 @@ public class BluetoothManager : BluetoothBase<BluetoothLEDevice>
             {
                 Logger.Log("Device Watcher connection to device failed " + deviceInfo.Name);
             }
-        } else
-        {
-            Logger.Log("Device Watcher stopped device connection " + deviceInfo.Name + " web api token is blank or incorrect");
-            if (App.SharedVm != null) App.SharedVm.LmStatus = "WEB API TOKEN MISSING OR INCORRECT";
-        }
+        //} else
+        //{
+        //    Logger.Log("Device Watcher stopped device connection " + deviceInfo.Name + " web api token is blank or incorrect");
+        //    if (App.SharedVm != null) App.SharedVm.LmStatus = "WEB API TOKEN MISSING OR INCORRECT";
+        //}
     }
     public override async Task RestartDeviceWatcher()
     {

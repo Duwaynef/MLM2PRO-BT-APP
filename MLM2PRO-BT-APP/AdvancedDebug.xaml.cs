@@ -1,4 +1,5 @@
 ﻿using MLM2PRO_BT_APP.util;
+using System.Text;
 using System.Windows;
 
 namespace MLM2PRO_BT_APP
@@ -38,6 +39,10 @@ namespace MLM2PRO_BT_APP
                         Logger.Log("Decrypted Bytes: " + ByteConversionUtils.ByteArrayToHexString(outputByteArr));
                         AdvancedDebugOutput.Text += ByteConversionUtils.ByteArrayToHexString(outputByteArr);
                         AdvancedDebugOutput.Text += "\n";
+                        AdvancedDebugOutput.Text += Encoding.UTF8.GetString(byteArray);
+                        AdvancedDebugOutput.Text += "\n";
+
+                        
                     }
                     catch (Exception ex) when (ex.Message == "Error decrypting data: Padding is invalid and cannot be removed.")
                     {
@@ -49,6 +54,33 @@ namespace MLM2PRO_BT_APP
                     }
                 }
             }            
+        }
+
+        private void AdvancedDebug_Encrypt_Button_Click(object sender, RoutedEventArgs e)
+        {
+            string keyTextBoxInput = AdvancedDebugKey.Text;
+            string[] lines = AdvancedDebugInput.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            foreach (string line in lines)
+            {
+                try
+                {
+                    byte[] byteArray = Encoding.Default.GetBytes(line);
+                    //byte[] byteArray = _byteConversionUtils.StringToByteArray(line);
+                    byte[] byteArray2 = _byteConversionUtils.StringToByteArray(keyTextBoxInput);
+                    byte[] outputByteArr = _btEncryption.EncryptKnownKey(byteArray, byteArray2);
+                    Logger.Log("Encrypted Bytes: " + ByteConversionUtils.ByteArrayToHexString(outputByteArr));
+                    AdvancedDebugOutput.Text += ByteConversionUtils.ByteArrayToHexString(outputByteArr);
+                    AdvancedDebugOutput.Text += "\n";
+                }
+                catch (Exception ex) when (ex.Message == "Error Encrypting data: Padding is invalid and cannot be removed.")
+                {
+                    Logger.Log("Stopped processing due to padding error.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"An error occurred: {ex.Message}");
+                }
+            }
         }
     }
 }

@@ -100,6 +100,8 @@ namespace MLM2PRO_BT_APP.connections
 
     class HttpPuttingServer : HttpServer
     {
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
         [DllImport("User32.dll")]
         private static extern bool SetForegroundWindow(nint hWnd);
         [DllImport("User32.dll")]
@@ -286,6 +288,7 @@ namespace MLM2PRO_BT_APP.connections
         {
             if (PuttingProcess != null)
             {
+                IntPtr gsProHandle = FindWindow(null, "GSPro");
                 nint handle = PuttingProcess.MainWindowHandle;
                 if (handle != nint.Zero)
                 {
@@ -294,6 +297,13 @@ namespace MLM2PRO_BT_APP.connections
                     SetForegroundWindow(handle);
                     ShowWindow(handle, SW_RESTORE);
                 }
+
+                if (gsProHandle != IntPtr.Zero)
+                {
+                    SetForegroundWindow(gsProHandle);
+                    ShowWindow(gsProHandle, SW_RESTORE);
+                }
+
                 if (App.SharedVm != null) App.SharedVm.PuttingStatus = "CONNECTED, READY";
             }
         }

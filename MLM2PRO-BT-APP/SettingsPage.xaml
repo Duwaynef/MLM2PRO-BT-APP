@@ -100,10 +100,12 @@
                         <TextBlock Text="URL" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding Settings.WebApiSettings.WebApiUrl, Mode=OneWay}" FontSize="14" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
                     </DockPanel>
+                    <!-- 
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="Secret" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding Settings.WebApiSettings.WebApiSecret, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
                     </DockPanel>
+                    -->
                     <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="Token" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding Settings.WebApiSettings.WebApiToken, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>

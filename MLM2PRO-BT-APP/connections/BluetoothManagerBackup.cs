@@ -20,10 +20,10 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
         Logger.Log("BackupBluetooth: Running");
         if (!(SettingsManager.Instance.Settings?.LaunchMonitor?.AutoStartLaunchMonitor ?? true)) return;
         Logger.Log("BackupBluetooth: initialized");
-        if (!string.IsNullOrEmpty(SettingsManager.Instance.Settings?.WebApiSettings?.WebApiSecret))
-        {
-            StartDeviceDiscoveryTimer();
-        }
+        //if (!string.IsNullOrEmpty(SettingsManager.Instance.Settings?.WebApiSettings?.WebApiSecret))
+        //{
+        StartDeviceDiscoveryTimer();
+        //}
     }
 
     private void StartDeviceDiscoveryTimer()

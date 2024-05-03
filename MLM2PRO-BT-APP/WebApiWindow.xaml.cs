@@ -28,7 +28,7 @@ namespace MLM2PRO_BT_APP
                 {
                     if (SettingsManager.Instance.Settings?.WebApiSettings != null)
                     {
-                        SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret = WebAPITextBox.Text;
+                        //SettingsManager.Instance.Settings.WebApiSettings.WebApiSecret = WebAPITextBox.Text;
                         SettingsManager.Instance.SaveSettings();
                         Logger.Log("API Token saved");
                         Task.Run(() =>

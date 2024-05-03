@@ -54,6 +54,7 @@ public partial class App
         return _manager?.ConvertAuthRequest(input) ?? Array.Empty<byte>();
     }
 
+    /*
     private static void CheckWebApiToken()
     {
         if (string.IsNullOrWhiteSpace(SettingsManager.Instance.Settings?.WebApiSettings?.WebApiSecret))
@@ -69,6 +70,7 @@ public partial class App
             webApiWindow.ShowDialog();
         }
     }
+    */
 
     public async Task StartGsPro()
     {
@@ -433,7 +435,7 @@ public partial class App
     }
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        CheckWebApiToken();
+        // CheckWebApiToken();
 
         if (SettingsManager.Instance.Settings?.Putting?.PuttingEnabled ?? false)
         {

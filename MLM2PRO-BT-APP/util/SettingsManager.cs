@@ -152,7 +152,7 @@ namespace MLM2PRO_BT_APP.util
         public class WebApiSettings
         {
             public string WebApiUrl { get; set; } = "https://mlm.rapsodo.com/api/simulator/user/";
-            public string WebApiSecret { get; set; } = "";
+            // public string WebApiSecret { get; set; } = "";
             public string? WebApiToken { get; set; } = "";
             public int WebApiUserId { get; set; }
             public long WebApiExpireDate { get; set; }
