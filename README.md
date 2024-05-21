@@ -19,8 +19,6 @@ Pair your device with windows: **MLM2-SerialNumber OR BlueZ not MLM2_BT_**, you 
 
 **Pairing is only required the first time.**
 
-Open the app and set the Web API Token if it has not been saved from before. **You will have to ask around for this key as it uses an api secret to get the device authorization, use this app at your own risk**
-
 The app should handle everything, it should connect,and the main window should show "CONNECTED" as the launch monitor status
 
 Once you load into a round, the device should turn green automatically and be ready to read hits.
