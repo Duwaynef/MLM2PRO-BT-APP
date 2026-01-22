@@ -23,35 +23,35 @@
 
             <!-- GSPro Settings -->
             <materialDesign:Card Grid.Column="0" Grid.Row="0" Margin="5">
-                <StackPanel Margin="10">
+                <StackPanel Margin="5">
                     <TextBlock Text="Simulator Settings" FontSize="24" Margin="5" HorizontalAlignment="Center" FontWeight="Bold"/>
-                    <DockPanel Margin="10,5,10,5">
+                    <DockPanel Margin="10,2,10,2">
                         <TextBlock Text="Auto Launch" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         <CheckBox IsChecked="{Binding Settings.OpenConnect.AutoStartGsPro, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </DockPanel>
-                    <DockPanel Margin="10,5,10,5">
-                        <TextBlock Text="Skip Launcher" FontSize="16"/>
+                    <DockPanel Margin="10,2,10,2">
+                        <TextBlock Text="Skip Launcher" FontSize="16" Height="19"/>
                         <CheckBox IsChecked="{Binding Settings.OpenConnect.SkipGsProLauncher, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right"/>
                     </DockPanel>
-                    <DockPanel Margin="10,5,10,5">
+                    <DockPanel Margin="10,2,10,2">
                         <TextBlock Text="Simulator IP" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                        <TextBox Text="{Binding Settings.OpenConnect.GsProIp, Mode=TwoWay}" ToolTip="Enter GSPro IP" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                        <TextBox Text="{Binding Settings.OpenConnect.GsProIp, Mode=TwoWay}" ToolTip="Enter IP" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
                     </DockPanel>
-                    <DockPanel Margin="10,5,10,5">
+                    <DockPanel Margin="10,2,10,2">
                         <TextBlock Text="Simulator Port" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.OpenConnect.GsProPort, Mode=TwoWay}" ToolTip="Enter GSPro Port" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                        <TextBox Text="{Binding Settings.OpenConnect.GsProPort, Mode=TwoWay}" ToolTip="Enter Port" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
                     </DockPanel>
-                    <DockPanel Margin="10,5,10,5">
+                    <DockPanel Margin="10,2,10,2">
                         <TextBlock Text="Executable" FontSize="16" HorizontalAlignment="Left"/>
-                        <TextBox Text="{Binding Settings.OpenConnect.GsProExe, Mode=TwoWay}" ToolTip="Enter GSPro exe path" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
+                        <TextBox Text="{Binding Settings.OpenConnect.GsProExe, Mode=TwoWay}" ToolTip="Enter exe path" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
                     </DockPanel>
-                    <DockPanel Margin="10,5,10,5">
+                    <DockPanel Margin="10,2,10,2">
                         <TextBlock Text="Enable API Relay" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         <CheckBox IsChecked="{Binding Settings.OpenConnect.EnableApiRelay, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </DockPanel>
-                    <DockPanel Margin="10,5,10,5">
+                    <DockPanel Margin="10,2,10,2">
                         <TextBlock Text="API Relay Port" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.OpenConnect.ApiRelayPort, Mode=TwoWay}" ToolTip="Enter GSPro exe path" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="240"/>
+                        <TextBox Text="{Binding Settings.OpenConnect.ApiRelayPort, Mode=TwoWay}" ToolTip="Enter Relay Port" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="240"/>
                     </DockPanel>
                 </StackPanel>
             </materialDesign:Card>
