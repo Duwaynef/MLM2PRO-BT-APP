@@ -1,5 +1,5 @@
-# MLM2PRO-BT-GSPRO
-Connector for the MLM2PRO to connect to GSPro via direct bluetooth connection.
+# MLM2PRO-BT-APP
+Connector for the MLM2PRO to connect to OpenAPI via direct bluetooth connection.
 This is in beta to say the least.. there will be bugs and crashes.
 
 please open an issue if crash
@@ -25,7 +25,7 @@ Once you load into a round, the device should turn green automatically and be re
 
 When you leave a round it will turn blue again until you start a new round.
 
-Selected club in GSPro does nothing for the app outside of labeling the club in the Shot Data section, and discovering when you are putting to enable the putting cam ( if enabled ).
+Selected club in the simulator software does nothing for the app outside of labeling the club in the Shot Data section, and discovering when you are putting to enable the putting cam ( if enabled ).
 
 ## CONFIGURATION
 On first load of the application a settings.json file is created in the same directory as the executable, it will prompt for the Web Api secret if it is not set.
@@ -38,19 +38,19 @@ config file. then compare your old settings ( or go to settings in the app and s
 ## MAIN WINDOW INFO
 It should be self explanatory however each text box below their respective labels are for status updates of that item.
 
-next to GSPro after a communication has gone back and forth it will show the selected club, this is purely for knowing when to enable or disable putting. or if you want to track stats on a particular club batch, however GSPro may show the data better.
+next to simulator software after a communication has gone back and forth it will show the selected club, this is purely for knowing when to enable or disable putting. or if you want to track stats on a particular club batch, however the simulator software may show the data better.
 
 Next to launch monitor you will see a number when connected. This is the device battery life.
 
-Shot Data shows the list of shots and the "Result" shows if GSPro successfully accept the data transmission.
+Shot Data shows the list of shots and the "Result" shows if the simulator software successfully accept the data transmission.
 
 ## How to use Relay with other connectors
 - Open this connector
-- Go to Settings and Enabled API Relay under GSPro settings
+- Go to Settings and Enabled API Relay under simulator settings
 - Close and reopen this connector
 - Open the other connector
-- Go to settings and set GSPro port to **951** or the port you set in the settings of this connector if you changed it
-- hit connect on other connector. *some connectors require the GSPro API window to be open. so make sure its open when testing.*
+- Go to settings and set the simulator port to **951** or the port you set in the settings of this connector if you changed it
+- hit connect on other connector. *some connectors require the Open API window to be open. so make sure its open when testing.*
 
 ## Troubleshooting
 - **Unpairing with windows is not necessary for troubleshooting.**

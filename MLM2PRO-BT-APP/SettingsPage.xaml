@@ -24,9 +24,9 @@
             <!-- GSPro Settings -->
             <materialDesign:Card Grid.Column="0" Grid.Row="0" Margin="5">
                 <StackPanel Margin="10">
-                    <TextBlock Text="GSPro Settings" FontSize="24" Margin="5" HorizontalAlignment="Center" FontWeight="Bold"/>
+                    <TextBlock Text="Simulator Settings" FontSize="24" Margin="5" HorizontalAlignment="Center" FontWeight="Bold"/>
                     <DockPanel Margin="10,5,10,5">
-                        <TextBlock Text="Auto Launch GSPro" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="Auto Launch" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         <CheckBox IsChecked="{Binding Settings.OpenConnect.AutoStartGsPro, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
@@ -34,11 +34,11 @@
                         <CheckBox IsChecked="{Binding Settings.OpenConnect.SkipGsProLauncher, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
-                        <TextBlock Text="GSPro IP" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Simulator IP" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                         <TextBox Text="{Binding Settings.OpenConnect.GsProIp, Mode=TwoWay}" ToolTip="Enter GSPro IP" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">
-                        <TextBlock Text="GSPro Port" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <TextBlock Text="Simulator Port" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         <TextBox Text="{Binding Settings.OpenConnect.GsProPort, Mode=TwoWay}" ToolTip="Enter GSPro Port" FontSize="14" VerticalAlignment="Center" Width="240" HorizontalAlignment="Right"/>
                     </DockPanel>
                     <DockPanel Margin="10,5,10,5">

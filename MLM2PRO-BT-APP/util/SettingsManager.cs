@@ -140,7 +140,7 @@ namespace MLM2PRO_BT_APP.util
         public class OpenConnectSettings
         {
             public bool AutoStartGsPro { get; set; } = false;
-            public bool SkipGsProLauncher { get; set; } = true;
+            public bool SkipGsProLauncher { get; set; } = false;
             public string GsProIp { get; set; } = "127.0.0.1";
             public int GsProPort { get; set; } = 921;
             public string GsProExe { get; set; } = "C:\\GSProV1\\Core\\GSP\\GSPro.exe";
