@@ -60,12 +60,31 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             if (App.SharedVm != null) App.SharedVm.LmStatus = "LOOKING FOR DEVICES";
             Logger.Log("BackupBluetooth: Looking for devices");
             _currentlySearching = true;
-            
-            
-            // await CheckForKnownBtDevices();
-            // await Task.Delay(TimeSpan.FromSeconds(20));
 
-            var pairedDevices = Bluetooth.GetPairedDevicesAsync().Result;
+            if (!await InTheHand.Bluetooth.Bluetooth.GetAvailabilityAsync())
+            {
+                Logger.Log("Bluetooth not available on this machine/platform.");
+                _currentlySearching = false;
+                return;
+            }
+
+            IReadOnlyCollection<BluetoothDevice> pairedDevices;
+            try
+            {
+                pairedDevices = await InTheHand.Bluetooth.Bluetooth.GetPairedDevicesAsync();
+            }
+            catch (PlatformNotSupportedException pns)
+            {
+                Logger.Log($"Bluetooth not supported on this platform: {pns.Message}");
+                _currentlySearching = false;
+                return;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Error getting paired devices: {ex.Message}");
+                _currentlySearching = false;
+                return;
+            }
 
             foreach (var pairedDevice in pairedDevices)
             {
