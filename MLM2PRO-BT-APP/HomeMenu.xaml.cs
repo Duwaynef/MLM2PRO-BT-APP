@@ -2,6 +2,8 @@
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Threading;
 using MaterialDesignThemes.Wpf;
 using MLM2PRO_BT_APP.connections;
 using MLM2PRO_BT_APP.util;
@@ -11,6 +13,9 @@ namespace MLM2PRO_BT_APP;
 
 public partial class HomeMenu
 {
+    private readonly DispatcherTimer _testShotPressHoldTimer;
+    private bool _isTestShotPressAndHold;
+
     public HomeMenu()
     {
         InitializeComponent();
@@ -19,6 +24,9 @@ public partial class HomeMenu
         DataContext = App.SharedVm;
         ShotDataDataGrid.ItemsSource = SharedViewModel.Instance.ShotDataCollection;
         DataGridSnackBar.MessageQueue = new SnackbarMessageQueue(TimeSpan.FromMilliseconds(2000));
+
+        _testShotPressHoldTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+        _testShotPressHoldTimer.Tick += TestShotPressHoldTimer_Tick;
     }
     private void OnSnackBarMessagePublished(string message, int duration)
     {
@@ -41,12 +49,45 @@ public partial class HomeMenu
     }
     private async void GSPro_Send_TestShot_Click(object sender, RoutedEventArgs e)
     {
+        if (_isTestShotPressAndHold)
+        {
+            _isTestShotPressAndHold = false;
+            return;
+        }
+
         await Task.Run(() =>
         {
             (Application.Current as App)?.SendTestShotData();
         });        
-    } 
-    
+    }
+
+    private void GSPro_Send_TestShot_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        _testShotPressHoldTimer.Start();
+    }
+
+    private void GSPro_Send_TestShot_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        _testShotPressHoldTimer.Stop();
+    }
+
+    private void TestShotPressHoldTimer_Tick(object? sender, EventArgs e)
+    {
+        _isTestShotPressAndHold = true;
+        _testShotPressHoldTimer.Stop();
+        OpenAdvancedTestShotWindow();
+    }
+
+    private void OpenAdvancedTestShotWindow()
+    {
+        var advancedTestShotWindow = new AdvancedTestShot
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = Window.GetWindow(this)
+        };
+        advancedTestShotWindow.Show();
+    }
+
     /* interesting code to hold on to
     private async Task Write05(object sender, RoutedEventArgs e)
     {
@@ -71,7 +112,7 @@ public partial class HomeMenu
         Logger.Log("Decrypted Bytes: " + byteConversionUtils.ByteArrayToHexString(outputByteArr));
     }
     */
-    
+
     public class ShotData
     {
         public int ShotNumber { get; init; }
@@ -257,6 +298,7 @@ public partial class HomeMenu
     }
     private void HomeMenu_Unloaded(object sender, RoutedEventArgs e)
     {
+        _testShotPressHoldTimer.Stop();
         EventAggregator.Instance.SnackBarMessagePublished -= OnSnackBarMessagePublished;
     }
 

@@ -32,5 +32,13 @@ namespace MLM2PRO_BT_APP
         {
             SettingsManager.Instance.SaveSettings();
         }
+        private void Settings_GSPRO_Button(object sender, RoutedEventArgs e)
+        {
+            SettingsManager.Instance.GSProSettingsUpdated();
+        }
+        private void Settings_InfiniteTees_Button(object sender, RoutedEventArgs e)
+        {
+            SettingsManager.Instance.InfiniteTeesSettingsUpdated();
+        }
     }
 }

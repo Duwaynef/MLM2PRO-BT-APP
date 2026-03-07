@@ -26,10 +26,77 @@ namespace MLM2PRO_BT_APP.util
         }
 
         private readonly object _lockObject = new();
+
+        public void GSProSettingsUpdated()
+        {
+            lock (_lockObject)
+            {
+                // Ensure Settings exists
+                if (Settings == null)
+                {
+                    InitializeDefaultSettings();
+                }
+
+                // Ensure OpenConnect exists. AppSettings properties are init-only, so build a new AppSettings
+                if (Settings.OpenConnect == null)
+                {
+                    Settings = new AppSettings
+                    {
+                        ApplicationSettings = Settings.ApplicationSettings ?? new ApplicationSettings(),
+                        OpenConnect = new OpenConnectSettings(),
+                        WebApiSettings = Settings.WebApiSettings ?? new WebApiSettings(),
+                        LaunchMonitor = Settings.LaunchMonitor ?? new LaunchMonitorSettings(),
+                        Putting = Settings.Putting ?? new PuttingSettings()
+                    };
+                }
+
+                // At this point Settings and Settings.OpenConnect are non-null
+                Settings.OpenConnect.GsProPort = 921;
+                Settings.OpenConnect.GsProExe = @"C:\GSProV1\Core\GSP\GSPro.exe";
+
+                SaveSettings();
+            }
+        }
+
+        public void InfiniteTeesSettingsUpdated()
+        {
+            lock (_lockObject)
+            {
+                // Ensure Settings exists
+                if (Settings == null)
+                {
+                    InitializeDefaultSettings();
+                }
+
+                // Ensure OpenConnect exists. AppSettings properties are init-only, so build a new AppSettings
+                if (Settings.OpenConnect == null)
+                {
+                    Settings = new AppSettings
+                    {
+                        ApplicationSettings = Settings.ApplicationSettings ?? new ApplicationSettings(),
+                        OpenConnect = new OpenConnectSettings(),
+                        WebApiSettings = Settings.WebApiSettings ?? new WebApiSettings(),
+                        LaunchMonitor = Settings.LaunchMonitor ?? new LaunchMonitorSettings(),
+                        Putting = Settings.Putting ?? new PuttingSettings()
+                    };
+                }
+
+                // At this point Settings and Settings.OpenConnect are non-null
+                Settings.OpenConnect.GsProPort = 999;
+
+                SaveSettings();
+            }
+        }
         public void SaveSettings()
         {
             lock (_lockObject)
             {
+                // Ensure we never attempt to serialize a null Settings reference
+                if (Settings == null)
+                {
+                    InitializeDefaultSettings();
+                }
+
                 string settingsJson = JsonConvert.SerializeObject(Settings, Formatting.Indented);
                 File.WriteAllText(_settingsFilePath, settingsJson);
                 SettingsUpdated?.Invoke(this, EventArgs.Empty);

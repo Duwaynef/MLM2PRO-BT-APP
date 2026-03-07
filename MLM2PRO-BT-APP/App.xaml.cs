@@ -15,7 +15,7 @@ public partial class App
 
     private readonly IBluetoothBaseInterface? _manager;
     private HttpPuttingServer? _puttingConnection;
-    private readonly OpenConnectTcpClient _client;
+    private OpenConnectTcpClient _client;
     private OpenConnectServer? _openConnectServerInstance;
     private string? _lastMessage = "";
     private BluetoothScanner? _bluetoothScanner;
@@ -27,6 +27,7 @@ public partial class App
         LoadSettings();
         _puttingConnection = new HttpPuttingServer();
         _client = new OpenConnectTcpClient();
+        SettingsManager.Instance.SettingsUpdated += OnSettingsUpdated;
         if (SettingsManager.Instance.Settings != null && SettingsManager.Instance.Settings.LaunchMonitor != null)
         {
             if (SettingsManager.Instance.Settings?.LaunchMonitor?.UseBackupManager ?? false)
@@ -157,6 +158,24 @@ public partial class App
         {
             Logger.Log("Exception in connecting: " + ex.Message);
         }
+    }
+    private void OnSettingsUpdated(object? sender, EventArgs e)
+    {
+        string savedIp = SettingsManager.Instance?.Settings?.OpenConnect?.GsProIp ?? "127.0.0.1";
+        int savedPort = SettingsManager.Instance?.Settings?.OpenConnect?.GsProPort ?? 921;
+
+        if (_client.Address == savedIp && _client.Port == savedPort) return;
+
+        bool wasConnected = _client.IsConnected;
+        Logger.Log($"GSPro settings updated from {_client.Address}:{_client.Port} to {savedIp}:{savedPort}. Recreating client.");
+
+        _client.DisconnectAndStop();
+        _client = new OpenConnectTcpClient();
+
+        if (!wasConnected) return;
+
+        Logger.Log("Reconnecting to OpenConnect API using updated settings.");
+        _client.ConnectAsync();
     }
     public void ConnectGsProButton()
     {
@@ -474,6 +493,7 @@ public partial class App
 
     private async void Application_Exit(object sender, ExitEventArgs? e)
     {
+        SettingsManager.Instance.SettingsUpdated -= OnSettingsUpdated;
         await PerformCleanupAsync();
         await Task.Delay(200);
         _cleanupComplete.Set();

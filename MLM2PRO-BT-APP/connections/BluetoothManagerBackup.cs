@@ -68,39 +68,51 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
                 return;
             }
 
-            IReadOnlyCollection<BluetoothDevice> pairedDevices;
+            // 1. Check for already paired devices first
             try
             {
-                pairedDevices = await InTheHand.Bluetooth.Bluetooth.GetPairedDevicesAsync();
-            }
-            catch (PlatformNotSupportedException pns)
-            {
-                Logger.Log($"Bluetooth not supported on this platform: {pns.Message}");
-                _currentlySearching = false;
-                return;
+                var pairedDevices = await InTheHand.Bluetooth.Bluetooth.GetPairedDevicesAsync();
+                foreach (var pairedDevice in pairedDevices)
+                {
+                    if (pairedDevice.Name.Contains("MLM2-") || pairedDevice.Name.Contains("BlueZ "))
+                    {
+                        Logger.Log("BackupBluetooth: Found Paired Device: " + pairedDevice.Name);
+                        if (App.SharedVm != null) App.SharedVm.LmStatus = "FOUND PAIRED DEVICE: " + pairedDevice.Name;
+                        await ConnectToDeviceAsync(pairedDevice);
+                        if (BluetoothDevice != null) return; // Connection successful, exit discovery
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Logger.Log($"Error getting paired devices: {ex.Message}");
-                _currentlySearching = false;
-                return;
+                Logger.Log($"Error checking paired devices: {ex.Message}");
             }
 
-            foreach (var pairedDevice in pairedDevices)
+            // Create options to scan for all devices. 
+            // You can also use filters (e.g. by Service UUID) to narrow this down, 
+            // but AcceptAllDevices = true ensures we catch everything for your manual name check.
+            Logger.Log("BackupBluetooth: Scanning for devices.");
+            var options = new RequestDeviceOptions { AcceptAllDevices = true };
+
+            // Scan for devices. This is an async operation that listens for advertisements.
+            // Note: This replaces Bluetooth.GetPairedDevicesAsync().Result
+            var discoveredDevices = await Bluetooth.ScanForDevicesAsync(options);
+
+            Logger.Log($"BackupBluetooth: Scan complete. {discoveredDevices.Count} devices found.");
+            foreach (var device in discoveredDevices)
             {
-                Logger.Log("Found Paired Device: " +  pairedDevice.Name);
-                if (pairedDevice.Name.Contains("MLM2-") || pairedDevice.Name.Contains("BlueZ ")|| pairedDevice.Name.Contains("MLM2_BT_"))
+                // Existing logic to check for specific device names
+                if (device.Name.Contains("MLM2-") || device.Name.Contains("BlueZ ") || device.Name.Contains("MLM2_BT_"))
                 {
-                    if (App.SharedVm != null) App.SharedVm.LmStatus = "FOUND PAIRED DEVICE: " + pairedDevice.Name;
-                    Logger.Log("BackupBluetooth: Found device in Bluetooth cache: " + pairedDevice.Name);
-                    await ConnectToDeviceAsync(pairedDevice);
+                    Logger.Log("BackupBluetooth: Found device in Bluetooth: " + device.Name);
+                    await ConnectToDeviceAsync(device);
+                    
+                    // If connection was successful, stop processing
                     if (BluetoothDevice != null) return;
-                }
-                else
+                } else
                 {
-                    if (App.SharedVm != null) App.SharedVm.LmStatus = "BLUETOOTH MANAGER FOUND NO MATCHES";
-                    Logger.Log("BackupBluetooth: Found no match for device: " + pairedDevice.Name);
-                    Logger.Log(pairedDevice.Id);
+                    Logger.Log("BackupBluetooth: Found no match for device: " + device.Name);
+                    Logger.Log(device.Id);
                 }
             }
             //Logger.Log("BackupBluetooth: No paired devices found, checking for known devices...");
@@ -191,7 +203,9 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             // device.GattServerDisconnected += Device_GattServerDisconnected!; //@TODO: Sometimes this crashes, need ot figure that out
             Logger.Log("Connect Async Starting: " + device.Name);
             Logger.Log("Connect Async attempting to connect to : " + device.Name);
-            await device.Gatt.ConnectAsync().WaitAsync(TimeSpan.FromSeconds(20));
+            
+            // Increased timeout to 60s to allow time for the Windows Pairing Prompt interaction
+            await device.Gatt.ConnectAsync().WaitAsync(TimeSpan.FromSeconds(60));
             Logger.Log("Device Name     : " + device.Name);
             Logger.Log("Device Connected: " + device.Gatt.IsConnected);
             Logger.Log("Device ID       : " + device.Id);
@@ -205,6 +219,10 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
                Logger.Log("Primary service not found.");
                 return;
             }
+
+            // Give Windows time to settle the GATT table after pairing/connection
+            await Task.Delay(5000);
+
             BluetoothDevice = device;
             if (App.SharedVm != null) App.SharedVm.LmStatus = "CONNECTION ESTABLISHED: " + device.Name ;
             await SetupBluetoothDevice();
@@ -228,21 +246,41 @@ public class BluetoothManagerBackup : BluetoothBase<BluetoothDevice>
             if (_primaryService == null) return false;
             _gaTTeventsCharacteristicUuid = await _primaryService.GetCharacteristicAsync(EventsCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (_gaTTeventsCharacteristicUuid == null) return false;
+            if (_gaTTeventsCharacteristicUuid == null)
+            {
+                Logger.Log("Failed to find Events Characteristic");
+                return false;
+            }
             _gaTTeventsCharacteristicUuid.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _gaTTeventsCharacteristicUuid.StartNotificationsAsync();
 
             _gaTTheartbeatCharacteristicUuid = await _primaryService.GetCharacteristicAsync(HeartbeatCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (_gaTTheartbeatCharacteristicUuid == null) return false;
+            if (_gaTTheartbeatCharacteristicUuid == null)
+            {
+                Logger.Log("Failed to find Heartbeat Characteristic");
+                return false;
+            }
             _gaTTheartbeatCharacteristicUuid.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _gaTTheartbeatCharacteristicUuid.StartNotificationsAsync();
 
             _gaTTwriteResponseCharacteristicUuid = await _primaryService.GetCharacteristicAsync(WriteResponseCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (_gaTTwriteResponseCharacteristicUuid == null) return false;
+            if (_gaTTwriteResponseCharacteristicUuid == null)
+            {
+                Logger.Log("Failed to find WriteResponse Characteristic");
+                return false;
+            }
             _gaTTwriteResponseCharacteristicUuid.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _gaTTwriteResponseCharacteristicUuid.StartNotificationsAsync();
 
             _gaTTmeasurementCharacteristic = await _primaryService.GetCharacteristicAsync(MeasurementCharacteristicUuid).WaitAsync(TimeSpan.FromSeconds(5));
             if (_gaTTmeasurementCharacteristic == null) return false;
+            if (_gaTTmeasurementCharacteristic == null)
+            {
+                Logger.Log("Failed to find Measurement Characteristic");
+                return false;
+            }
             _gaTTmeasurementCharacteristic.CharacteristicValueChanged += Characteristic_ValueChanged;
             await _gaTTmeasurementCharacteristic.StartNotificationsAsync();
             Logger.Log("Successfully Subscribed to all notifications");

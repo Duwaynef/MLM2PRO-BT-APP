@@ -8,12 +8,13 @@ using TcpClient = NetCoreServer.TcpClient;
 
 namespace MLM2PRO_BT_APP.connections
 {
-    internal class OpenConnectTcpClient() : TcpClient(SettingsManager.Instance?.Settings?.OpenConnect?.GsProIp ?? "127.0.0.1", SettingsManager.Instance?.Settings?.OpenConnect?.GsProPort ?? 931)
+    internal class OpenConnectTcpClient() : TcpClient(SettingsManager.Instance?.Settings?.OpenConnect?.GsProIp ?? "127.0.0.1", SettingsManager.Instance?.Settings?.OpenConnect?.GsProPort ?? 921)
     {
         private long _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
         private long _howRecentlyTakenShot = DateTimeOffset.Now.ToUnixTimeSeconds();
         private bool _isPutting;
         private bool _isDeviceArmed;
+
         public void DisconnectAndStop()
         {
             DisconnectAsync();

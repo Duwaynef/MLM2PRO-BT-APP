@@ -262,12 +262,17 @@ namespace MLM2PRO_BT_APP.connections
                         }
                         else if (byte2 != 1)
                         {
-                            if (byte2 != 0)
+                            if (byte2 == 0)
                             {
-                                Logger.Log("### Unknown WRITE RESPONSE type");
+                                Logger.Log("Device returned 0 (Configuration Accepted).");
                             }
-
-                            Logger.Log("byte2 not equal to 1 : " + byte2.ToString());
+                            else
+                            {
+                                Logger.Log("### Unknown WRITE RESPONSE type: " + byte2.ToString());
+                                await DisconnectAndCleanup();
+                                await RetryBtConnection();
+                                return;
+                            }
                             /*
                             else if (mAwaitingInitialConfigureResponse)
                             {
