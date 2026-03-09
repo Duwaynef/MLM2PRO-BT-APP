@@ -40,5 +40,19 @@ namespace MLM2PRO_BT_APP
         {
             SettingsManager.Instance.InfiniteTeesSettingsUpdated();
         }
+
+        private void ToggleWebApiDetails_Click(object sender, RoutedEventArgs e)
+        {
+            if (WebApiDetailsPanel.Visibility == Visibility.Collapsed)
+            {
+                WebApiDetailsPanel.Visibility = Visibility.Visible;
+                ToggleWebApiDetailsButton.Content = "Hide Details";
+            }
+            else
+            {
+                WebApiDetailsPanel.Visibility = Visibility.Collapsed;
+                ToggleWebApiDetailsButton.Content = "Show Details";
+            }
+        }
     }
 }

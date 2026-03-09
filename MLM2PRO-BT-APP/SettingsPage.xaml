@@ -7,7 +7,11 @@
         Background="{DynamicResource MaterialDesign.Brush.Background}"
         TextElement.FontWeight="Medium"
         TextElement.FontSize="14"
-        FontFamily="{materialDesign:MaterialDesignFont}">
+        FontFamily="{materialDesign:MaterialDesignFont}"
+        xmlns:util="clr-namespace:MLM2PRO_BT_APP.util">
+    <Page.Resources>
+        <util:UnixTimestampToDateConverter x:Key="UnixTimestampConverter"/>
+    </Page.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10">
             <Grid.ColumnDefinitions>
@@ -53,7 +57,7 @@
                         <TextBlock Text="Enable API Relay" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <CheckBox IsChecked="{Binding Settings.OpenConnect.EnableApiRelay, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0"/>
                         <TextBlock Text="API Relay Port" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.OpenConnect.ApiRelayPort, Mode=TwoWay}" ToolTip="Enter Relay Port" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="240"/>
+                        <TextBox Text="{Binding Settings.OpenConnect.ApiRelayPort, Mode=TwoWay}" ToolTip="Enter Relay Port" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Right" Width="80"/>
                     </DockPanel>
                 </StackPanel>
             </materialDesign:Card>
@@ -99,31 +103,37 @@
                 <StackPanel Margin="10">
                     <TextBlock Text="WebApi Settings" FontSize="24" Margin="5" HorizontalAlignment="Center" FontWeight="Bold"/>
                     <DockPanel Margin="10,5,10,5">
-                        <TextBlock Text="URL" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.WebApiSettings.WebApiUrl, Mode=OneWay}" FontSize="14" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
-                    </DockPanel>
-                    <!-- 
-                    <DockPanel Margin="10,5,10,5">
-                        <TextBlock Text="Secret" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.WebApiSettings.WebApiSecret, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
-                    </DockPanel>
-                    -->
-                    <DockPanel Margin="10,5,10,5">
-                        <TextBlock Text="Token" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.WebApiSettings.WebApiToken, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    </DockPanel>
-                    <DockPanel Margin="10,5,10,5">
-                        <TextBlock Text="User ID" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.WebApiSettings.WebApiUserId, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    </DockPanel>
-                    <DockPanel Margin="10,5,10,5">
                         <TextBlock Text="Expire Date" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.WebApiSettings.WebApiExpireDate, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Right">
+                            <TextBlock Text="{Binding Settings.WebApiSettings.WebApiExpireDate, Mode=OneWay}" FontSize="12" Foreground="Gray" HorizontalAlignment="Right"/>
+                            <TextBlock Text="{Binding Settings.WebApiSettings.WebApiExpireDate, Mode=OneWay, Converter={StaticResource UnixTimestampConverter}}" FontSize="14" HorizontalAlignment="Right"/>
+                        </StackPanel>
                     </DockPanel>
-                    <DockPanel Margin="10,5,10,5">
-                        <TextBlock Text="Device ID" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding Settings.WebApiSettings.WebApiDeviceId, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    </DockPanel>
+                    <Button x:Name="ToggleWebApiDetailsButton" Content="Show Details" Click="ToggleWebApiDetails_Click" Height="30" Width="120" FontSize="14" HorizontalAlignment="Center" Margin="5"/>
+                    <StackPanel x:Name="WebApiDetailsPanel" Visibility="Collapsed" Margin="0,5,0,0">
+                        <DockPanel Margin="10,5,10,5">
+                            <TextBlock Text="URL" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Settings.WebApiSettings.WebApiUrl, Mode=OneWay}" FontSize="14" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
+                        </DockPanel>
+                        <!-- 
+                        <DockPanel Margin="10,5,10,5">
+                            <TextBlock Text="Secret" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Settings.WebApiSettings.WebApiSecret, Mode=TwoWay}" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Center" Width="300"/>
+                        </DockPanel>
+                        -->
+                        <DockPanel Margin="10,5,10,5">
+                            <TextBlock Text="Token" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Settings.WebApiSettings.WebApiToken, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Margin="10,5,10,5">
+                            <TextBlock Text="User ID" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Settings.WebApiSettings.WebApiUserId, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <DockPanel Margin="10,5,10,5">
+                            <TextBlock Text="Device ID" FontSize="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Settings.WebApiSettings.WebApiDeviceId, Mode=OneWay}" FontSize="14" IsEnabled="False" Width="240" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </StackPanel>
                 </StackPanel>
             </materialDesign:Card>
 

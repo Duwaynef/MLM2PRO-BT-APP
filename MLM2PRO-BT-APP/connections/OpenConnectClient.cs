@@ -1,9 +1,10 @@
-﻿using System.Text;
-using System.Windows;
-using MLM2PRO_BT_APP.devices;
+﻿using MLM2PRO_BT_APP.devices;
 using MLM2PRO_BT_APP.util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Windows;
 using TcpClient = NetCoreServer.TcpClient;
 
 namespace MLM2PRO_BT_APP.connections
@@ -14,6 +15,7 @@ namespace MLM2PRO_BT_APP.connections
         private long _howRecentlyTakenShot = DateTimeOffset.Now.ToUnixTimeSeconds();
         private bool _isPutting;
         private bool _isDeviceArmed;
+        private readonly StringBuilder _messageBuffer = new StringBuilder();
 
         public void DisconnectAndStop()
         {
@@ -54,93 +56,117 @@ namespace MLM2PRO_BT_APP.connections
         }
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
-            var message = Encoding.UTF8.GetString(buffer, (int)offset, (int)size);
-            try
+            var data = Encoding.UTF8.GetString(buffer, (int)offset, (int)size);
+            _messageBuffer.Append(data);
+            
+            var fullMessage = _messageBuffer.ToString();
+            var messages = fullMessage.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            // Check if the last message is complete (ends with } and we have more data in buffer than just the messages we split)
+            bool lastMessageIncomplete = !fullMessage.TrimEnd().EndsWith("}");
+            
+            // Process all complete messages
+            int messagesToProcess = lastMessageIncomplete ? messages.Length - 1 : messages.Length;
+            
+            for (int i = 0; i < messagesToProcess; i++)
             {
-                var response = JsonConvert.DeserializeObject<OpenConnectApiResponse>(message);
-                if (response != null)
+                var message = messages[i].Trim();
+                if (string.IsNullOrWhiteSpace(message)) continue;
+                
+                try
                 {
-                    Logger.Log($"OpenConnectTCPClient: Processing message:");
-                    Logger.Log(message);
-                    var fiveSecondsAgo = DateTimeOffset.Now.ToUnixTimeSeconds() - 5;
-                    var delayAfterShotForDisarm = DateTimeOffset.Now.ToUnixTimeSeconds() - 20;
-                    bool autoDisarmEnabled = SettingsManager.Instance?.Settings?.LaunchMonitor?.AutoDisarm ?? false;
-                    (Application.Current as App)?.SendOpenConnectServerMessage(message);
-                    switch (response.Code)
+                    var response = JsonConvert.DeserializeObject<OpenConnectApiResponse>(message);
+                    if (response != null)
                     {
-                        case 200:
-                            {
-                                Logger.Log($"OpenConnectTCPClient: Received 200:");
-                                Logger.Log(message);
-                                _howRecentlyTakenShot = DateTimeOffset.Now.ToUnixTimeSeconds();
-                                break;
-                            }
-                        case 201 when response.Player?.DistanceToTarget != 0:
-                            {
-                                Logger.Log($"OpenConnectTCPClient: Received 201:");
-                                Logger.Log(message);
-                                ProcessResponse(response);
-                                if (!_isDeviceArmed)
+                        Logger.Log($"OpenConnectTCPClient: Processing message:");
+                        Logger.Log(message);
+                        var fiveSecondsAgo = DateTimeOffset.Now.ToUnixTimeSeconds() - 5;
+                        var delayAfterShotForDisarm = DateTimeOffset.Now.ToUnixTimeSeconds() - 20;
+                        bool autoDisarmEnabled = SettingsManager.Instance?.Settings?.LaunchMonitor?.AutoDisarm ?? false;
+                        (Application.Current as App)?.SendOpenConnectServerMessage(message);
+                        switch (response.Code)
+                        {
+                            case 200:
                                 {
-                                    _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
-                                    _isDeviceArmed = true;
-                                    Task.Run(() =>
-                                    {
-                                        (Application.Current as App)?.LmArmDevice();
-                                    });
-
-
+                                    Logger.Log($"OpenConnectTCPClient: Received 200:");
+                                    Logger.Log(message);
+                                    _howRecentlyTakenShot = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                    break;
                                 }
-                                else if (!_isDeviceArmed)
+                            case 201 when response.Player?.DistanceToTarget != 0:
                                 {
-                                    _isDeviceArmed = true;
-                                    Task.Run(() =>
+                                    Logger.Log($"OpenConnectTCPClient: Received 201:");
+                                    Logger.Log(message);
+                                    ProcessResponse(response);
+                                    if (!_isDeviceArmed)
                                     {
-                                        (Application.Current as App)?.LmArmDeviceWithDelay();
-                                    });
-                                    Task.Run(() =>
+                                        _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                        _isDeviceArmed = true;
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.LmArmDevice();
+                                        });
+
+
+                                    }
+                                    else if (!_isDeviceArmed)
                                     {
-                                    });
+                                        _isDeviceArmed = true;
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.LmArmDeviceWithDelay();
+                                        });
+                                        Task.Run(() =>
+                                        {
+                                        });
+                                    }
+                                    break;
                                 }
-                                break;
-                            }
-                        case 203 when _howRecentlyTakenShot <= delayAfterShotForDisarm && autoDisarmEnabled:
-                            {
-                                Logger.Log($"OpenConnectTCPClient: Received 203:");
-                                Logger.Log(message);
-                                if (_howRecentlyArmedOrDisarmed < fiveSecondsAgo && _isDeviceArmed)
+                            case 203 when _howRecentlyTakenShot <= delayAfterShotForDisarm && autoDisarmEnabled:
                                 {
-
-                                    Logger.Log("OpenConnectTCPClient: Sending disarm message");
-                                    _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
-                                    _isDeviceArmed = false;
-                                    Task.Run(() =>
+                                    Logger.Log($"OpenConnectTCPClient: Received 203:");
+                                    Logger.Log(message);
+                                    if (_howRecentlyArmedOrDisarmed < fiveSecondsAgo && _isDeviceArmed)
                                     {
-                                        (Application.Current as App)?.LmDisarmDevice();
-                                    });
 
-                                }
-                                else if (_isDeviceArmed)
-                                {
-                                    Logger.Log("OpenConnectTCPClient: Sending disarm message");
-                                    _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
-                                    _isDeviceArmed = false;
-                                    Task.Run(() =>
+                                        Logger.Log("OpenConnectTCPClient: Sending disarm message");
+                                        _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                        _isDeviceArmed = false;
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.LmDisarmDevice();
+                                        });
+
+                                    }
+                                    else if (_isDeviceArmed)
                                     {
-                                        (Application.Current as App)?.LmDisarmDeviceWithDelay();
-                                    });
+                                        Logger.Log("OpenConnectTCPClient: Sending disarm message");
+                                        _howRecentlyArmedOrDisarmed = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                        _isDeviceArmed = false;
+                                        Task.Run(() =>
+                                        {
+                                            (Application.Current as App)?.LmDisarmDeviceWithDelay();
+                                        });
 
+                                    }
+                                    break;
                                 }
-                                break;
-                            }
+                        }
                     }
                 }
+                catch (JsonException ex)
+                {
+                    Logger.Log($"Error deserializing JSON: {ex.Message}");
+                    Logger.Log($"Problematic message: {message}");
+                }
             }
-            catch (JsonException ex)
+            
+            // Clear buffer and keep only the incomplete message (if any)
+            _messageBuffer.Clear();
+            if (lastMessageIncomplete && messages.Length > 0)
             {
-                Logger.Log($"Error deserializing JSON: {ex.Message}");
+                _messageBuffer.Append(messages[messages.Length - 1]);
             }
-
         }
         protected override void OnError(System.Net.Sockets.SocketError error)
         {
@@ -400,6 +426,24 @@ namespace MLM2PRO_BT_APP.connections
         I7,
         I8,
         I9,
+        [EnumMember(Value = "1I")]
+        _1I,
+        [EnumMember(Value = "2I")]
+        _2I,
+        [EnumMember(Value = "3I")]
+        _3I,
+        [EnumMember(Value = "4I")]
+        _4I,
+        [EnumMember(Value = "5I")]
+        _5I,
+        [EnumMember(Value = "6I")]
+        _6I,
+        [EnumMember(Value = "7I")]
+        _7I,
+        [EnumMember(Value = "8I")]
+        _8I,
+        [EnumMember(Value = "9I")]
+        _9I,
         H2,
         H3,
         H4,
