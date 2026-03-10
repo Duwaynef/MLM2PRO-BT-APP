@@ -7,6 +7,8 @@ using System.Net;
 using MLM2PRO_BT_APP.connections;
 using MLM2PRO_BT_APP.devices;
 using MLM2PRO_BT_APP.util;
+using System.Net.NetworkInformation;
+
 namespace MLM2PRO_BT_APP;
 public partial class App
 {
@@ -138,19 +140,52 @@ public partial class App
             Logger.Log("Window did not appear in time.");
         }
     }
+
+    private static bool IsTcpPortListening(int port)
+    {
+        try
+        {
+            var ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
+            var listeners = ipGlobalProperties.GetActiveTcpListeners();
+            return listeners.Any(endpoint => endpoint.Port == port);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static async Task<bool> WaitForPortListener(int port, TimeSpan timeout)
+    {
+        var sw = Stopwatch.StartNew();
+        while (sw.Elapsed < timeout)
+        {
+            if (IsTcpPortListening(port))
+            {
+                return true;
+            }
+
+            await Task.Delay(500);
+        }
+
+        return false;
+    }
+
     private async Task AutoConnectGsPro()
     {
         try
         {
-            bool gsProOpenApiLoaded = await WaitForWindow("APIv1 Connect", TimeSpan.FromSeconds(120));
-            if (gsProOpenApiLoaded && !_client.IsConnected)
+            int port = SettingsManager.Instance?.Settings?.OpenConnect?.GsProPort ?? 921;
+            bool portListening = await WaitForPortListener(port, TimeSpan.FromSeconds(120));
+
+            if (portListening && !_client.IsConnected)
             {
-                Logger.Log("GSPro OpenAPI window loaded.");
+                Logger.Log($"Detected listener on OpenAPI port {port}. Connecting...");
                 _client.ConnectAsync();
             }
             else
             {
-                Logger.Log("GSPro OpenAPI window did not load in time.");
+                Logger.Log($"No listener detected on OpenAPI port {port} within timeout.");
                 if (SharedVm != null) SharedVm.GsProStatus = "NOT CONNECTED";
             }
         }
@@ -220,8 +255,11 @@ public partial class App
         try
         {
             string result;
-            Logger.Log(messageToSend?.ToString());
-            JsonConvert.SerializeObject(messageToSend);
+            if (messageToSend != null)
+            {
+                var payload = JsonConvert.SerializeObject(messageToSend);
+                Logger.Log($"Sending shot payload: {payload}");
+            }
             if (messageToSend is { BallData.Speed: 0 })
             {
                 result = "Fail";
