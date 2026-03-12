@@ -41,6 +41,8 @@ namespace MLM2PRO_BT_APP
         {
             InitializeComponent();
             AttachSliderValueChangeHandlers();
+            PretendSquareGolfCheckBox.IsChecked = SettingsManager.Instance.Settings?.OpenConnect?.PretendSquareGolf ?? false;
+            LogSquareGolfHeartbeatCheckBox.IsChecked = SettingsManager.Instance.Settings?.OpenConnect?.LogSquareGolfHeartbeatMessages ?? true;
         }
 
         private void AttachSliderValueChangeHandlers()
@@ -147,6 +149,28 @@ namespace MLM2PRO_BT_APP
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void PretendSquareGolfCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (SettingsManager.Instance.Settings?.OpenConnect == null)
+            {
+                return;
+            }
+
+            SettingsManager.Instance.Settings.OpenConnect.PretendSquareGolf = PretendSquareGolfCheckBox.IsChecked == true;
+            SettingsManager.Instance.SaveSettings();
+        }
+
+        private void LogSquareGolfHeartbeatCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (SettingsManager.Instance.Settings?.OpenConnect == null)
+            {
+                return;
+            }
+
+            SettingsManager.Instance.Settings.OpenConnect.LogSquareGolfHeartbeatMessages = LogSquareGolfHeartbeatCheckBox.IsChecked == true;
+            SettingsManager.Instance.SaveSettings();
         }
     }
 }

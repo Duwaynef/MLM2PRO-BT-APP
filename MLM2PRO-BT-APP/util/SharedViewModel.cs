@@ -33,6 +33,13 @@ namespace MLM2PRO_BT_APP.util
             set => SetProperty(ref _gsProClub, value, nameof(GsProClub));
         }
 
+        private string? _gsProHanded;
+        public string? GsProHanded
+        {
+            get => _gsProHanded;
+            set => SetProperty(ref _gsProHanded, value, nameof(GsProHanded));
+        }
+
         private string? _lmStatus;
         public string? LmStatus
         {

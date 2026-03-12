@@ -213,6 +213,8 @@ namespace MLM2PRO_BT_APP.util
             public string GsProExe { get; set; } = "C:\\GSProV1\\Core\\GSP\\GSPro.exe";
             public bool EnableApiRelay { get; set; } = false;
             public int ApiRelayPort { get; set; } = 951;
+            public bool PretendSquareGolf { get; set; } = false;
+            public bool LogSquareGolfHeartbeatMessages { get; set; } = true;
         }
         
 

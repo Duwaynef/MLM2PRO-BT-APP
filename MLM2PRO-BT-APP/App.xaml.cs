@@ -257,7 +257,7 @@ public partial class App
             string result;
             if (messageToSend != null)
             {
-                var payload = JsonConvert.SerializeObject(messageToSend);
+                var payload = _client.BuildPayloadForSend(messageToSend);
                 Logger.Log($"Sending shot payload: {payload}");
             }
             if (messageToSend is { BallData.Speed: 0 })

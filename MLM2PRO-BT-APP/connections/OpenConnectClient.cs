@@ -16,9 +16,12 @@ namespace MLM2PRO_BT_APP.connections
         private bool _isPutting;
         private bool _isDeviceArmed;
         private readonly StringBuilder _messageBuffer = new StringBuilder();
+        private CancellationTokenSource? _squareGolfSpoofCts;
+        private Task? _squareGolfSpoofTask;
 
         public void DisconnectAndStop()
         {
+            StopSquareGolfSpoofLoop();
             DisconnectAsync();
             while (IsConnected)
                 Thread.Yield();
@@ -26,6 +29,7 @@ namespace MLM2PRO_BT_APP.connections
         protected override void OnConnected()
         {
             Logger.Log("OpenConnectTCPClient: Connected to server.");
+            StartSquareGolfSpoofLoop();
             // Update shared view model status
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -34,6 +38,7 @@ namespace MLM2PRO_BT_APP.connections
         }
         protected override void OnDisconnected()
         {
+            StopSquareGolfSpoofLoop();
             Logger.Log("OpenConnectTCPClient: Disconnected from server.");
             // Update shared view model status
             Application.Current.Dispatcher.Invoke(() =>
@@ -42,9 +47,125 @@ namespace MLM2PRO_BT_APP.connections
             });
 
         }
+
+        private void StartSquareGolfSpoofLoop()
+        {
+            StopSquareGolfSpoofLoop();
+            _squareGolfSpoofCts = new CancellationTokenSource();
+            _squareGolfSpoofTask = Task.Run(() => RunSquareGolfSpoofLoop(_squareGolfSpoofCts.Token));
+        }
+
+        private void StopSquareGolfSpoofLoop()
+        {
+            if (_squareGolfSpoofCts == null) return;
+            _squareGolfSpoofCts.Cancel();
+            _squareGolfSpoofCts.Dispose();
+            _squareGolfSpoofCts = null;
+            _squareGolfSpoofTask = null;
+        }
+
+        private async Task RunSquareGolfSpoofLoop(CancellationToken cancellationToken)
+        {
+            try
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+
+                    if (!IsConnected) continue;
+                    if (SettingsManager.Instance.Settings?.OpenConnect?.PretendSquareGolf != true) continue;
+
+                    var keepAliveJson = CreateSquareGolfSpoofMessage();
+                    bool sent = SendAsync(Encoding.UTF8.GetBytes(keepAliveJson));
+                    bool logHeartbeat = SettingsManager.Instance.Settings?.OpenConnect?.LogSquareGolfHeartbeatMessages ?? true;
+
+                    if (sent)
+                    {
+                        if (logHeartbeat)
+                        {
+                            Logger.Log("OpenConnectTCPClient: SquareGolf keepalive sent.");
+                            Logger.Log(keepAliveJson);
+                        }
+                    }
+                    else
+                    {
+                        if (logHeartbeat)
+                        {
+                            Logger.Log("OpenConnectTCPClient: Failed to send SquareGolf spoof message.");
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"OpenConnectTCPClient: SquareGolf spoof loop error: {ex.Message}");
+            }
+        }
+
+        private static string CreateSquareGolfSpoofMessage()
+        {
+            return "{\"DeviceID\":\"SquareGolf\",\"Units\":\"Yards\",\"ShotNumber\":2,\"APIversion\":\"1\",\"BallData\":{\"Speed\":0.0,\"SpinAxis\":0.0,\"TotalSpin\":0.0,\"BackSpin\":0.0,\"SideSpin\":0.0,\"HLA\":0.0,\"VLA\":0.0,\"CarryDistance\":0.0},\"ClubData\":{\"Speed\":0.0,\"AngleOfAttack\":0.0,\"FaceToTarget\":0.0,\"Lie\":0.0,\"Loft\":0.0,\"Path\":0.0,\"SpeedAtImpact\":0.0,\"VerticalFaceImpact\":0.0,\"HorizontalFaceImpact\":0.0,\"ClosureRate\":0.0},\"ShotDataOptions\":{\"ContainsBallData\":false,\"ContainsClubData\":false,\"LaunchMonitorIsReady\":true,\"LaunchMonitorBallDetected\":true,\"IsHeartBeat\":false}}";
+        }
+
+        private static string CreateSquareGolfShotMessage(OpenConnectApiMessage message)
+        {
+            var payload = new
+            {
+                DeviceID = "SquareGolf",
+                Units = "Yards",
+                ShotNumber = message.ShotNumber,
+                APIversion = "1",
+                BallData = new
+                {
+                    Speed = message.BallData?.Speed ?? 0.0,
+                    SpinAxis = message.BallData?.SpinAxis ?? 0.0,
+                    TotalSpin = message.BallData?.TotalSpin ?? 0.0,
+                    BackSpin = message.BallData?.BackSpin ?? 0.0,
+                    SideSpin = message.BallData?.SideSpin ?? 0.0,
+                    HLA = message.BallData?.Hla ?? 0.0,
+                    VLA = message.BallData?.Vla ?? 0.0,
+                    CarryDistance = 200.0
+                },
+                ClubData = new
+                {
+                    Speed = message.ClubData?.Speed ?? 100.0,
+                    AngleOfAttack = 0.1,
+                    FaceToTarget = 0.6,
+                    Lie = 50.0,
+                    Loft = 12.5,
+                    Path = 1.1,
+                    SpeedAtImpact = 110.0,
+                    VerticalFaceImpact = 0.1,
+                    HorizontalFaceImpact = -0.1,
+                    ClosureRate = 1.4
+                },
+                ShotDataOptions = new
+                {
+                    ContainsBallData = true,
+                    ContainsClubData = true,
+                    LaunchMonitorIsReady = true,
+                    LaunchMonitorBallDetected = true,
+                    IsHeartBeat = true
+                }
+            };
+
+            return JsonConvert.SerializeObject(payload);
+        }
+
+        public string BuildPayloadForSend(OpenConnectApiMessage message)
+        {
+            return SettingsManager.Instance.Settings?.OpenConnect?.PretendSquareGolf == true
+                ? CreateSquareGolfShotMessage(message)
+                : JsonConvert.SerializeObject(message);
+        }
+
         public Task<bool> SendDataAsync(OpenConnectApiMessage message)
         {
-            var jsonMessage = JsonConvert.SerializeObject(message);
+            var jsonMessage = BuildPayloadForSend(message);
+
             var data = Encoding.UTF8.GetBytes(jsonMessage);
             return Task.FromResult(SendAsync(data));
         }
@@ -181,6 +302,17 @@ namespace MLM2PRO_BT_APP.connections
         {
             if (response.Player != null)
             {
+                var playerHanded = response.Player.Handed;
+                if (App.SharedVm != null)
+                {
+                    App.SharedVm.GsProHanded = playerHanded switch
+                    {
+                        Handed.Rh => "RIGHT",
+                        Handed.Lh => "LEFT",
+                        _ => ""
+                    };
+                }
+
                 var playerClub = response.Player.Club;
                 if (playerClub.HasValue)
                 {
@@ -204,7 +336,7 @@ namespace MLM2PRO_BT_APP.connections
                     {
                         Logger.Log($"OpenConnectTCPClient: Club selection is NOT a putter, it is {playerClub.Value}");
                         if (DeviceManager.Instance != null) DeviceManager.Instance.ClubSelection = playerClub.Value.ToString();
-                        if (App.SharedVm != null) App.SharedVm.GsProClub = playerClub.Value.ToString();
+                        if (App.SharedVm != null) App.SharedVm.GsProClub = playerClub.Value.ToString().ToUpperInvariant();
                         if (_isPutting)
                         {
                             _isPutting = false; 
@@ -221,12 +353,18 @@ namespace MLM2PRO_BT_APP.connections
                 {
                     Logger.Log("OpenConnectTCPClient: No club information available");
                     if (DeviceManager.Instance != null) DeviceManager.Instance.ClubSelection = "";
+                    if (App.SharedVm != null) App.SharedVm.GsProClub = "";
                 }
             }
             else
             {
                 Logger.Log("OpenConnectTCPClient: Invalid response or no player information");
                 if (DeviceManager.Instance != null) DeviceManager.Instance.ClubSelection = "";
+                if (App.SharedVm != null)
+                {
+                    App.SharedVm.GsProClub = "";
+                    App.SharedVm.GsProHanded = "";
+                }
             }
         }
 
@@ -243,7 +381,7 @@ namespace MLM2PRO_BT_APP.connections
             }
         }
 
-        public string DeviceId { get => "GSPRO-MLM2PRO"; }
+        public string DeviceId => SettingsManager.Instance.Settings?.OpenConnect?.PretendSquareGolf == true ? "SquareGolf" : "GSPRO-MLM2PRO"; // GSPRO-MLM2PRO SquareGolf
         public string Units { get => "Yards"; }
         public int ShotNumber { get; set; }
         public string ApiVersion { get => "1"; }
@@ -404,7 +542,9 @@ namespace MLM2PRO_BT_APP.connections
     }
     public enum Handed
     {
+        [EnumMember(Value = "RH")]
         Rh,
+        [EnumMember(Value = "LH")]
         Lh
     }
     public enum Club
