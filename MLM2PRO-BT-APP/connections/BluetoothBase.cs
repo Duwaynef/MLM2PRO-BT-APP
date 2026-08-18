@@ -444,8 +444,8 @@ namespace MLM2PRO_BT_APP.connections
             _heartbeatTimer?.Dispose();
 
             // Start the timer to call the SendHeartbeatSignal method every 2 seconds (2000 milliseconds)
-            _heartbeatTimer = new Timer(SendHeartbeatSignal, null, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(2));
-            _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 20;
+            _heartbeatTimer = new Timer(SendHeartbeatSignal, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2));
+            _lastHeartbeatReceived = DateTimeOffset.Now.ToUnixTimeSeconds() + 5;
         }
         private async void SendHeartbeatSignal(object? state)
         {
