@@ -33,6 +33,21 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Reference Include="RightEdge.Core">
+        <HintPath>RightEdge\lib\RightEdge.Core.dll</HintPath>
+		<Private>true</Private>
+      </Reference>
+      <Reference Include="RightEdge.Device">
+        <HintPath>RightEdge\lib\RightEdge.Device.dll</HintPath>
+		<Private>true</Private>
+      </Reference>
+      <Reference Include="RightEdge.Storage">
+        <HintPath>RightEdge\lib\RightEdge.Storage.dll</HintPath>
+		<Private>true</Private>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
       <Compile Update="Properties\Settings.Designer.cs">
         <DesignTimeSharedInput>True</DesignTimeSharedInput>
         <AutoGen>True</AutoGen>

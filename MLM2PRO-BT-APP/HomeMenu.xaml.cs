@@ -1,12 +1,16 @@
-﻿using System.Collections.ObjectModel;
+﻿using MaterialDesignThemes.Wpf;
+using MLM2PRO_BT_APP.connections;
+using MLM2PRO_BT_APP.RightEdge;
+using MLM2PRO_BT_APP.RightEdge.Controls;
+using MLM2PRO_BT_APP.util;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using MaterialDesignThemes.Wpf;
-using MLM2PRO_BT_APP.connections;
-using MLM2PRO_BT_APP.util;
 using static System.DateTime;
 
 namespace MLM2PRO_BT_APP;
@@ -15,6 +19,34 @@ public partial class HomeMenu
 {
     private readonly DispatcherTimer _testShotPressHoldTimer;
     private bool _isTestShotPressAndHold;
+
+    //private KnownDeviceSelector? _reKnownDeviceSelector;
+
+    public PuttingSystem SelectedPuttingSystem
+    {
+        get
+        {
+            PuttingSystem retVal = PuttingSystem.WEBCAM_PUTTING;
+            try
+            {
+                string spsTag = PuttingSystemSelectorCurrentSelectionValue.Tag.ToString();
+                switch(spsTag)
+                {
+                    case "reputttracker":
+                        retVal = PuttingSystem.RIGHTEDGE_PUTT_TRACKER;
+                        break;
+
+                    case "webcam":
+                    default:
+                        retVal = PuttingSystem.WEBCAM_PUTTING;
+                        break;
+                }
+            }
+            catch { }
+
+            return (retVal);
+        }
+    }
 
     public HomeMenu()
     {
@@ -27,6 +59,8 @@ public partial class HomeMenu
 
         _testShotPressHoldTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         _testShotPressHoldTimer.Tick += TestShotPressHoldTimer_Tick;
+
+        populatePuttingSystemsSelector();
     }
     private void OnSnackBarMessagePublished(string message, int duration)
     {
@@ -234,9 +268,10 @@ public partial class HomeMenu
     }
     private async void Putting_Connect_Click(object sender, RoutedEventArgs e)
     {
+        PuttingSystem puttingSystemToConnect = SelectedPuttingSystem;
         await Task.Run(() =>
         {
-            (Application.Current as App)?.PuttingEnable();
+            (Application.Current as App)?.PuttingEnable(puttingSystemToConnect);
         });
     }
     private async void Putting_Disconnect_Click(object sender, RoutedEventArgs e)
@@ -309,4 +344,208 @@ public partial class HomeMenu
             (Application.Current as App)?.PuttingToggleAutoClose();
         });
     }
+
+    // =======================================================================================
+    //
+    // The methods below added to create/utilize means to switch between putting systems
+    // and currently include Webcam Putting and Right Edge Putt Tracker
+    //
+    //========================================================================================
+    private void populatePuttingSystemsSelector()
+    {
+        PuttingSystemSelector.ContextMenu.Items.Clear();
+
+        if( SettingsManager.Instance.Settings?.Putting?.IncludeSystemWebcamPutting ?? true )
+        {
+            MenuItem pssItem = new MenuItem();
+            pssItem.Tag = "webcam";
+            pssItem.Header = "Webcam Putting";
+            pssItem.Click += PuttingSystemSelectorMenuItem_Click;
+
+            PuttingSystemSelector.ContextMenu.Items.Add(pssItem);
+
+            PuttingSystemSelectorCurrentSelectionValue.Text = pssItem.Header.ToString();
+            PuttingSystemSelectorCurrentSelectionValue.Tag = pssItem.Tag;
+        }
+
+        if( SettingsManager.Instance.Settings?.Putting?.IncludeSystemRightEdgePuttTracker ?? false )
+        {
+            MenuItem pssItem = new MenuItem();
+            pssItem.Tag = "reputttracker";
+            pssItem.Header = "Right Edge Putt Tracker";
+            pssItem.Click += PuttingSystemSelectorMenuItem_Click;
+
+            PuttingSystemSelector.ContextMenu.Items.Add(pssItem);
+
+            if(PuttingSystemSelectorCurrentSelectionValue.Text.Equals(String.Empty))
+            {
+                PuttingSystemSelectorCurrentSelectionValue.Text = pssItem.Header.ToString();
+                PuttingSystemSelectorCurrentSelectionValue.Tag = pssItem.Tag;
+            }
+        }
+
+        if(PuttingSystemSelector.ContextMenu.Items.Count > 0)
+        {
+            PuttingSystemSelector.IsEnabled = (PuttingSystemSelector.ContextMenu.Items.Count > 1);
+            PuttingSystemSelector.Visibility = Visibility.Visible;
+            PuttingConnect.IsEnabled = true;
+
+            // If exactly one, activate that one...
+            if ( PuttingSystemSelector.ContextMenu.Items.Count == 1 )
+            {
+                switch (PuttingSystemSelectorCurrentSelectionValue.Tag)
+                {
+                    case "reputttracker":
+                        setPuttingUI_RightEdgePuttTracker();
+                        break;
+
+                    case "webcam":
+                    default:
+                        setPuttingUI_WebcamPutting();
+                        break;
+                }
+            }    
+        }
+        else
+        {
+            PuttingConnect.IsEnabled = false;
+            PuttingSystemSelector.Visibility = Visibility.Collapsed;
+            PuttingControlsInfo.Child = PuttingMessageBorderControl("No putting systems enabled.");
+            PuttingControlsInfo.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void PuttingSystemSelector_Click(object sender, RoutedEventArgs e)
+    {
+        if (PuttingSystemSelector.ContextMenu != null)
+        {
+            PuttingSystemSelector.ContextMenu.PlacementTarget = PuttingSystemSelector;
+            PuttingSystemSelector.ContextMenu.IsOpen = true;
+        }
+    }
+
+    private void PuttingSystemSelectorMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem item)
+        {
+            PuttingSystemSelectorCurrentSelectionValue.Text = item.Header.ToString();
+            PuttingSystemSelectorCurrentSelectionValue.Tag = item.Tag?.ToString();
+
+            switch(PuttingSystemSelectorCurrentSelectionValue.Tag)
+            {
+                case "reputttracker":
+                    setPuttingUI_RightEdgePuttTracker();
+                    break;
+
+                case "webcam":
+                default:
+                    setPuttingUI_WebcamPutting();
+                    break;
+            }
+        }
+    }
+
+    private void setPuttingUI_WebcamPutting()
+    {
+        if (SharedViewModel.REDeviceSelectorControl != null)
+            SharedViewModel.REDeviceSelectorControl.Visibility = Visibility.Collapsed;
+
+        if (SharedViewModel.REHandednessSelectorControl != null)
+            SharedViewModel.REHandednessSelectorControl.Visibility = Visibility.Collapsed;
+
+        PuttingToggleAutoClose.Visibility = Visibility.Visible;
+        PuttingControlsInfo.Child = null;
+        PuttingControlsInfo.Visibility = Visibility.Visible;
+
+        PuttingConnect.IsEnabled = true;
+    }
+
+    private void setPuttingUI_RightEdgePuttTracker()
+    {
+        if( RightEdgeHelper.IsPuttTrackerInstalled )
+        {
+            // Create the Right Edge Device Selector...
+            if (SharedViewModel.REDeviceSelectorControl == null)
+            {
+                KnownDeviceSelector kdsControl = new KnownDeviceSelector();
+                PuttingControlsGrid.Children.Add(kdsControl);
+                Grid.SetRow(kdsControl, 2);
+                Grid.SetColumn(kdsControl, 0);
+
+                SharedViewModel.REDeviceSelectorControl = kdsControl;
+            }
+            else
+                SharedViewModel.REDeviceSelectorControl.ReInit();
+
+            // Create the Right Edge Handedness Selector...
+            if (SharedViewModel.REHandednessSelectorControl == null)
+            {
+                HandednessSelector hsControl = new HandednessSelector();
+                hsControl.Width = 190;
+                hsControl.HorizontalAlignment = HorizontalAlignment.Center;
+                PuttingControlsGrid.Children.Add(hsControl);
+                Grid.SetRow(hsControl, 2);
+                Grid.SetColumn(hsControl, 1);
+
+                SharedViewModel.REHandednessSelectorControl = hsControl;
+            }
+
+            PuttingConnect.IsEnabled = true;
+            SharedViewModel.REDeviceSelectorControl.Visibility = Visibility.Visible;
+            SharedViewModel.REHandednessSelectorControl.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            // No Right Edge Putt Tracker installation on this computer (for this user)
+            Border RightEdgePuttTrackerNotice = RightEdgeHelper.PuttTrackerNotInstalledNoticeBorderControl(MouseDown_GoRightEdgePuttingWebsite);
+            RightEdgePuttTrackerNotice.VerticalAlignment = VerticalAlignment.Center;
+            PuttingControlsInfo.Child = RightEdgePuttTrackerNotice;
+            PuttingControlsInfo.Visibility = Visibility.Visible;
+
+            PuttingConnect.IsEnabled = false;
+        }
+
+            
+        PuttingToggleAutoClose.Visibility = Visibility.Collapsed;
+    }
+
+    private void MouseDown_GoRightEdgePuttingWebsite(object sender, MouseButtonEventArgs e)
+    {
+        RightEdgeHelper.LaunchRightEdgePuttingHomePage();
+    }
+
+    public static Border PuttingMessageBorderControl( string message1, string message2 = "" )
+    {
+        Border borderCtl = new Border();
+        borderCtl.HorizontalAlignment = HorizontalAlignment.Stretch;
+        borderCtl.VerticalAlignment = VerticalAlignment.Stretch;
+
+        TextBlock msgTb1 = new TextBlock();
+        msgTb1.Text = message1;
+        msgTb1.TextWrapping = TextWrapping.Wrap;
+
+        StackPanel outerSP = new StackPanel();
+        outerSP.Orientation = Orientation.Vertical;
+        outerSP.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
+        outerSP.Children.Add(msgTb1);
+
+        // If second message was supplied...
+        if(!message2.Equals(""))
+        {
+            TextBlock msgTb2 = new TextBlock();
+
+            msgTb2.Text = String.Empty;
+            msgTb2.TextWrapping = TextWrapping.Wrap;
+
+            outerSP.Children.Add(msgTb2);
+        }
+
+        borderCtl.Child = outerSP;
+
+        return (borderCtl);
+    }
+
+    // ====================================================================================
+    // END: Methods added for putting system selector and Right Edge Putt Tracker
+    // ====================================================================================
 }

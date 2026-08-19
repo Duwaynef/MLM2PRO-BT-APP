@@ -1,17 +1,20 @@
-﻿using System.Collections.ObjectModel;
+﻿using MaterialDesignColors;
+using MLM2PRO_BT_APP.RightEdge.Controls;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 using static MLM2PRO_BT_APP.HomeMenu;
-using MaterialDesignColors;
-using System.Text.RegularExpressions;
 
 namespace MLM2PRO_BT_APP.util
 {
     public sealed partial class SharedViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<ShotData> ShotDataCollection { get; private set; } = [];
+        public static KnownDeviceSelector? REDeviceSelectorControl = null;
+        public static HandednessSelector? REHandednessSelectorControl = null;
 
         private static SharedViewModel? _instance;
         public static SharedViewModel Instance

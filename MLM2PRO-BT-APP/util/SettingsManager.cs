@@ -264,6 +264,8 @@ namespace MLM2PRO_BT_APP.util
 
         public class PuttingSettings
         {
+            public bool IncludeSystemWebcamPutting { get; set; } = true;
+            public bool IncludeSystemRightEdgePuttTracker { get; set; } = true;
             public bool PuttingEnabled { get; set; } = false;
             public bool AutoStartPutting { get; set; } = true;
             public bool HideConsoleWindow { get; set; } = true;

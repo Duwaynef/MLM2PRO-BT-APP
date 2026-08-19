@@ -13,6 +13,12 @@
     <Compile Update="HomeMenu.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="RightEdge\Controls\HandednessSelector.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="RightEdge\Controls\KnownDeviceSelector.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="SettingsPage.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

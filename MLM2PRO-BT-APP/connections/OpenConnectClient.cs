@@ -19,6 +19,8 @@ namespace MLM2PRO_BT_APP.connections
         private CancellationTokenSource? _squareGolfSpoofCts;
         private Task? _squareGolfSpoofTask;
 
+        public event EventHandler<PlayerInfo>? PlayerInfoReceived;
+
         public void DisconnectAndStop()
         {
             StopSquareGolfSpoofLoop();
@@ -355,6 +357,9 @@ namespace MLM2PRO_BT_APP.connections
                     if (DeviceManager.Instance != null) DeviceManager.Instance.ClubSelection = "";
                     if (App.SharedVm != null) App.SharedVm.GsProClub = "";
                 }
+
+                // Invoke PlayerInfoReceived event handler (if one supplied)
+                PlayerInfoReceived?.Invoke(this, response.Player);
             }
             else
             {

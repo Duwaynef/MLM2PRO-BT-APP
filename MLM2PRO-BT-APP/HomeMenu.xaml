@@ -11,7 +11,7 @@
         TextElement.FontSize="14"
         FontFamily="{materialDesign:MaterialDesignFont}" >
 
-
+    
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -159,7 +159,7 @@
                     Text="{Binding PuttingStatus, Mode=OneWay}" Background="{Binding PuttingStatusBackground, Mode=OneWay}" IsHitTestVisible="False" FontSize="22" Grid.ColumnSpan="2"
                     Grid.Column="0" Grid.Row="1"/>
                 </Grid>
-                <Grid Height="135">
+                <Grid x:Name="PuttingControlsGrid" Height="135">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
@@ -169,10 +169,31 @@
                         <RowDefinition Height="*" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
+
                     <Button Grid.Row="0" Grid.Column="0" x:Name="PuttingConnect" Content="Connect" Padding="50,0,50,0" Margin="0,5,0,5" Click="Putting_Connect_Click" HorizontalAlignment="Center" Width="190"/>
                     <Button Grid.Row="0" Grid.Column="1" x:Name="PuttingDisconnect" Content="Disconnect" Padding="50,0,50,0" Margin="0,5,0,5" Click="Putting_Disconnect_Click" HorizontalAlignment="Center" Width="190"/>
-                    <Button Grid.Row="1" Grid.Column="0" x:Name="PuttingToggleAutoClose" Content="Toggle Auto Close" Padding="30,0,30,0" Margin="0,5,0,5" Click="Putting_ToggleAutoClose_Click" HorizontalAlignment="Center" Width="190"/>
+
+                    <Button Grid.Row="1" Grid.Column="0" x:Name="PuttingSystemSelector" Width="190" HorizontalContentAlignment="Stretch" Margin="0,5,0,5" ToolTip="What system for putting?" Click="PuttingSystemSelector_Click">
+                        <Grid HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" x:Name="PuttingSystemSelectorCurrentSelectionValue" HorizontalAlignment="Left" FontSize="13" Text="" Tag="default" />
+                            <TextBlock Grid.Column="1" Text=" ▼" HorizontalAlignment="Right" Margin="5,0,0,0"/>
+                        </Grid>
+
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Webcam Putting" Tag="webcam" Click="PuttingSystemSelectorMenuItem_Click"/>
+                                <MenuItem Header="Right Edge Putt Tracker" Tag="reputttracker" Click="PuttingSystemSelectorMenuItem_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                    <Button Grid.Row="1" Grid.Column="1" x:Name="PuttingToggleAutoClose" Content="Toggle Auto Close" Padding="30,0,30,0" Margin="0,5,0,5" Click="Putting_ToggleAutoClose_Click" HorizontalAlignment="Center" Width="190"/>
+                    <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" x:Name="PuttingControlsInfo" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,5" Visibility="Collapsed"></Border>
                 </Grid>
+                
             </StackPanel>
         </materialDesign:Card>
 

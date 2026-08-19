@@ -1,15 +1,27 @@
-﻿using Newtonsoft.Json;
-using System.IO;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Automation;
-using System.Net;
-using MLM2PRO_BT_APP.connections;
+﻿using MLM2PRO_BT_APP.connections;
 using MLM2PRO_BT_APP.devices;
 using MLM2PRO_BT_APP.util;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RightEdge.Core;
+using RightEdge.Core.Helpers;
+using RightEdge.Device;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
 using System.Net.NetworkInformation;
+using System.Windows;
+using System.Windows.Automation;
+using Windows.System;
 
 namespace MLM2PRO_BT_APP;
+
+public enum PuttingSystem
+{
+    WEBCAM_PUTTING,
+    RIGHTEDGE_PUTT_TRACKER
+}
+
 public partial class App
 {
     public static SharedViewModel? SharedVm { get; private set; }
@@ -17,6 +29,9 @@ public partial class App
 
     private readonly IBluetoothBaseInterface? _manager;
     private HttpPuttingServer? _puttingConnection;
+    private ManagedPuttTrackerDevice? _rightEdgeDevice;
+    private bool _silentRightEdgeHandednessChangeInProgress = false;
+    private PuttingSystem _activePuttingSystem = PuttingSystem.WEBCAM_PUTTING;
     private OpenConnectTcpClient _client;
     private OpenConnectServer? _openConnectServerInstance;
     private string? _lastMessage = "";
@@ -29,6 +44,7 @@ public partial class App
         LoadSettings();
         _puttingConnection = new HttpPuttingServer();
         _client = new OpenConnectTcpClient();
+        _client.PlayerInfoReceived += OpenConnectClient_PlayerDataReceived;
         SettingsManager.Instance.SettingsUpdated += OnSettingsUpdated;
         if (SettingsManager.Instance.Settings != null && SettingsManager.Instance.Settings.LaunchMonitor != null)
         {
@@ -362,40 +378,88 @@ public partial class App
     {
         _ = _manager?.UnSubAndReSub();
     }
-    public async Task PuttingEnable()
+    public async Task PuttingEnable(PuttingSystem puttingsystem = PuttingSystem.WEBCAM_PUTTING)
     {
-        var fullPath = Path.GetFullPath(SettingsManager.Instance.Settings?.Putting?.ExePath ?? "");
-        if (File.Exists(fullPath) && _puttingConnection != null)
+        _activePuttingSystem = puttingsystem;
+
+        if (puttingsystem == PuttingSystem.RIGHTEDGE_PUTT_TRACKER)
         {
-            Logger.Log("Putting executable exists.");
-            var puttingStarted = _puttingConnection is { IsStarted: true };
-            _puttingConnection.manualStopPutting = false;
-            Logger.Log("Putting started: " + puttingStarted);
-            if (puttingStarted == false)
+            try
             {
-                Logger.Log("Starting putting server.");
-                var isStarted = _puttingConnection.Start();
-                if (isStarted != true) return;
-                if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
-                _puttingConnection.PuttingEnabled = true;
-            } 
-            else
-            {
-                if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
-                _puttingConnection.PuttingEnabled = true;
-                _puttingConnection.LaunchBallTracker = true;
+                if (_rightEdgeDevice != null)
+                    _rightEdgeDevice.CloseConnections();
+
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                {
+                    if (SharedViewModel.REDeviceSelectorControl != null)
+                    {
+                        SwingDirection initialHandedness = SwingDirection.RIGHT;
+                        if (SharedViewModel.REHandednessSelectorControl != null)
+                        {
+                            initialHandedness = SharedViewModel.REHandednessSelectorControl.SelectedHandedness;
+                            SharedViewModel.REHandednessSelectorControl.SelectionChanged += RightEdgeHandednessSelector_Changed;
+                        }
+
+                        _rightEdgeDevice = SharedViewModel.REDeviceSelectorControl.CreateSelectedDeviceObject();
+                        _rightEdgeDevice.NewPuttReceived = newRightEdgePuttTrackerPuttDataReceived;
+                        _rightEdgeDevice.ConnectionStatusChanged = rightEdgePuttTracker_ConnectionStatusChanged;
+
+                        if (await _rightEdgeDevice.EstablishConnection(initialHandedness))
+                        {
+                            rightEdgePuttTracker_ConnectionStatusChanged(ManagedDeviceStatus.CONNECTED);
+                            Logger.Log($"Right Edge Putt Tracker device connected. Selected device: {_rightEdgeDevice.Name}");
+                        }
+                        else
+                        {
+                            rightEdgePuttTracker_ConnectionStatusChanged(ManagedDeviceStatus.FAILED);
+                            Logger.Log($"Failed to connect to Putt Tracker device. Selected device: {_rightEdgeDevice.Name}");
+
+                            _rightEdgeDevice.ResetFailover();
+                        }
+                    }
+                });       
             }
-            if (DeviceManager.Instance?.ClubSelection == "PT" || !_puttingConnection.OnlyLaunchWhenPutting)
+            catch (Exception ex)
             {
-                await Task.Delay(1000);
-                StartPutting();
+                Logger.Log($"ERROR refreshing Right Edge Putt Tracker device: {ex.Message}");
             }
         }
         else
         {
-            Logger.Log("Putting executable missing.");
-            if (SharedVm != null) SharedVm.PuttingStatus = "ball_tracking.exe missing";
+            var fullPath = Path.GetFullPath(SettingsManager.Instance.Settings?.Putting?.ExePath ?? "");
+            if (File.Exists(fullPath) && _puttingConnection != null)
+            {
+                Logger.Log("Putting executable exists.");
+                var puttingStarted = _puttingConnection is { IsStarted: true };
+                _puttingConnection.manualStopPutting = false;
+                Logger.Log("Putting started: " + puttingStarted);
+                if (puttingStarted == false)
+                {
+                    Logger.Log("Starting putting server.");
+                    var isStarted = _puttingConnection.Start();
+                    if (isStarted != true) return;
+                    if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
+                    _puttingConnection.PuttingEnabled = true;
+                }
+                else
+                {
+                    if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
+                    _puttingConnection.PuttingEnabled = true;
+                    _puttingConnection.LaunchBallTracker = true;
+                }
+                if (DeviceManager.Instance?.ClubSelection == "PT" || !_puttingConnection.OnlyLaunchWhenPutting)
+                {
+                    await Task.Delay(1000);
+                    StartPutting();
+                }
+            }
+            else
+            {
+                Logger.Log("Putting executable missing.");
+                if (SharedVm != null) SharedVm.PuttingStatus = "ball_tracking.exe missing";
+            }
         }
+            
     }
     public void PuttingDisable()
     {
@@ -406,11 +470,20 @@ public partial class App
             _puttingConnection.StopPutting(true);
             _puttingConnection.Stop();
         }
+
+        if (_rightEdgeDevice != null)
+            _rightEdgeDevice.CloseConnections();
     }
 
     public void StartPutting()
     {
-        _puttingConnection?.StartPutting();
+        if (_activePuttingSystem == PuttingSystem.RIGHTEDGE_PUTT_TRACKER)
+        {
+            if( _rightEdgeDevice != null )
+                rightEdgePuttTracker_ConnectionStatusChanged(_rightEdgeDevice.ManagedStatus);
+        }
+        else
+            _puttingConnection?.StartPutting();
     }
 
     public void StopPutting()
@@ -421,6 +494,7 @@ public partial class App
     public void KillPutting()
     {
         _puttingConnection?.Dispose();
+        _rightEdgeDevice?.CloseConnections();
     }
 
     public async Task PuttingToggleAutoClose()
@@ -438,6 +512,190 @@ public partial class App
         _puttingConnection = new HttpPuttingServer();
         await PuttingEnable();
     }
+
+    // ===================================================
+    //
+    // Right Edge Putt Tracker Device Interface Event Handlers and Methods
+    //
+    // ===================================================
+    private void rightEdgePuttTracker_ConnectionStatusChanged( ManagedDeviceStatus newStatus )
+    {
+        switch( newStatus )
+        {
+            case ManagedDeviceStatus.CONNECTING:
+                if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTING";
+                break;
+
+            case ManagedDeviceStatus.CONNECTED:
+                if (SharedVm != null)
+                {
+                    SharedVm.PuttingStatus = "CONNECTED";
+
+                    if (SharedVm.GsProClub != null)
+                        SharedVm.PuttingStatus += SharedVm.GsProClub.Equals("PT", StringComparison.CurrentCultureIgnoreCase) ? "" : ", PUTTER NOT SELECTED";
+                }
+
+                break;
+
+            case ManagedDeviceStatus.LOSING_CONNECTION:
+                if (SharedVm != null) SharedVm.PuttingStatus = "RECONNECTING";
+                break;
+
+            case ManagedDeviceStatus.DISCONNECTED:
+                if (SharedVm != null) SharedVm.PuttingStatus = "DISCONNECTED";
+                break;
+
+            case ManagedDeviceStatus.FAILED:
+                if (SharedVm != null) SharedVm.PuttingStatus = "FAILED";
+                break;
+        }
+
+        return;
+    }
+
+    private async void newRightEdgePuttTrackerPuttDataReceived(RightEdgePuttData new_putt_data)
+    {
+        Logger.Log("Received new putt from Right Edge Putt Tracker...");
+        try
+        {
+
+            if (!_client.IsConnected)
+            {
+                Logger.Log("Cannot send putt from Right Edge Putt Tracker because not connected to GSPro OpenConnect.");
+                return;
+            }
+
+            if(DeviceManager.Instance?.ClubSelection == "PT")
+            {
+                try
+                {
+                    OpenConnectApiMessage.Instance.ShotNumber++;
+                    OpenConnectApiMessage messageToSend = new OpenConnectApiMessage()
+                    {
+                        ShotNumber = OpenConnectApiMessage.Instance.ShotNumber,
+                        BallData = new BallData()
+                        {
+                            Speed = BasicHelpers.toMilesPerHour(new_putt_data.speed),
+                            SpinAxis = 0,
+                            TotalSpin = 0,
+                            Hla = new_putt_data.degOffCenter,
+                            Vla = 0,
+                        },
+                        ShotDataOptions = new ShotDataOptions()
+                        {
+                            ContainsBallData = true,
+                            ContainsClubData = false,
+                            LaunchMonitorIsReady = true,
+                            IsHeartBeat = false
+                        }
+                    };
+
+                    await (Application.Current as App)?.SendShotData(messageToSend);
+                    if (App.SharedVm != null)
+                        App.SharedVm.PuttingStatus = "SHOT SENT";
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"ERROR sending putt received from Right Edge Putt Tracker to GSPro OpenConnect: {ex.Message}");
+                }
+            }
+            else
+            {
+                rightEdgePuttTracker_ConnectionStatusChanged(ManagedDeviceStatus.CONNECTED);
+                //if (App.SharedVm != null)
+                //    App.SharedVm.PuttingStatus = "CONNECTED";
+
+                Logger.Log("Not sending putt received from Right Edge Putt Tracker to GSPro because selected club in GS Pro is not putter");
+            }
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Log($"ERROR processing/sending putt received from Right Edge Putt Tracker: {ex.Message}");
+        }
+    }
+
+    private void RightEdgeHandednessSelector_Changed(object sender, SwingDirection swing_direction)
+    {
+        if (_silentRightEdgeHandednessChangeInProgress)
+        {
+            _silentRightEdgeHandednessChangeInProgress = false;
+            return;
+        }
+
+        setRightEdgeDeviceHandedness(swing_direction);
+
+        return;
+    }
+
+    private async void setRightEdgeDeviceHandedness(SwingDirection swing_direction)
+    {
+        if ((_rightEdgeDevice != null) && (_rightEdgeDevice.ManagedStatus == ManagedDeviceStatus.CONNECTED))
+        {
+            if (!await _rightEdgeDevice.resetReadyPutt(swing_direction))
+            {
+                rightEdgePuttTracker_ConnectionStatusChanged(_rightEdgeDevice.ManagedStatus);
+                Logger.Log("Failed attempt to set Right Edge device handedness to " + ((swing_direction == SwingDirection.LEFT) ? "LEFT" : "RIGHT") + ".");
+
+                if( SharedViewModel.REHandednessSelectorControl != null )
+                {
+                    //_silentRightEdgeHandednessChangeInProgress = true;
+                    SharedViewModel.REHandednessSelectorControl.SelectedHandedness = _rightEdgeDevice.PuttHandedness;
+                }
+                    
+            }
+            else
+            {
+                //if (SharedVm != null) SharedVm.PuttingStatus = "CONNECTED";
+                rightEdgePuttTracker_ConnectionStatusChanged(ManagedDeviceStatus.CONNECTED);
+                Logger.Log("Set Right Edge device handedness to " + ((swing_direction == SwingDirection.LEFT) ? "LEFT" : "RIGHT") + ".");
+
+                if (SharedViewModel.REHandednessSelectorControl != null)
+                {
+                    //_silentRightEdgeHandednessChangeInProgress = true;
+                    SharedViewModel.REHandednessSelectorControl.SelectedHandedness = swing_direction;
+                }
+            }
+        }
+
+        return;
+    }
+
+    private async void OpenConnectClient_PlayerDataReceived(object? sender, PlayerInfo ocPlayerObj)
+    {
+        
+        await Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            Logger.Log($"Keeping Right Edge device in sync with handedness received from GSPro OpenConnect...");
+            if ((SharedViewModel.REHandednessSelectorControl != null) && (ocPlayerObj != null))
+            {
+                //
+                // If we got Player info with the response, if it has handedness, make sure our handedness (device + display) is in sync...
+                //
+                Handed handednessValueReceived = ocPlayerObj.Handed.GetValueOrDefault(Handed.Rh);
+                SwingDirection receivedHandedness = (handednessValueReceived == Handed.Lh) ? SwingDirection.LEFT : SwingDirection.RIGHT;
+                if (receivedHandedness != SharedViewModel.REHandednessSelectorControl.SelectedHandedness)
+                {
+                    SharedViewModel.REHandednessSelectorControl.SelectedHandedness = receivedHandedness;
+                    /*
+                    if ((_rightEdgeDevice != null) && (_rightEdgeDevice.ManagedStatus == ManagedDeviceStatus.CONNECTED))
+                        setRightEdgeDeviceHandedness(receivedHandedness);
+                    else
+                    {
+                        _silentRightEdgeHandednessChangeInProgress = true;
+                        SharedViewModel.REHandednessSelectorControl.SelectedHandedness = receivedHandedness;
+                    }*/
+                }
+            }
+            else
+                Logger.Log($"Unexpected: Right Edge handedness control not found.");
+        });
+    }
+    // ========================================================================
+    //
+    // Right Edge Putt Tracker Device Interface Event Handlers and Methods
+    //
+    // ========================================================================
 
     private static void LoadSettings()
     {
@@ -498,7 +756,8 @@ public partial class App
         {
             if (SettingsManager.Instance.Settings.Putting.AutoStartPutting)
             {
-                await Task.Run(PuttingEnable);
+                PuttingSystem lastRunPuttingSystem = PuttingSystem.WEBCAM_PUTTING; // <-- Update to get this value from settings.
+                await Task.Run(() => PuttingEnable(lastRunPuttingSystem));
             }
         }
 
